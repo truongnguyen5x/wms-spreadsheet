@@ -164,6 +164,14 @@
   &.selectionOverlaySingle {
     background: transparent;
   }
+
+  &.hideLeftBorder {
+    border-left-width: 0;
+  }
+
+  &.hideRightBorder {
+    border-right-width: 0;
+  }
 }
 
 .clipboardOverlay {
@@ -173,6 +181,14 @@
   border: 2px dashed #1a73e8;
   pointer-events: none;
   z-index: 3;
+
+  &.hideLeftBorder {
+    border-left-width: 0;
+  }
+
+  &.hideRightBorder {
+    border-right-width: 0;
+  }
 }
 
 .selectionHandle {

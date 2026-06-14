@@ -8,12 +8,16 @@ export interface IClipboardOverlayProps {
   range: INormalizedRange;
   dimensions: IGridDimensions;
   columnLeftOffset?: number;
+  hideLeftBorder?: boolean;
+  hideRightBorder?: boolean;
 }
 
 export const ClipboardOverlay = memo(function ClipboardOverlay({
   range,
   dimensions,
   columnLeftOffset = 0,
+  hideLeftBorder = false,
+  hideRightBorder = false,
 }: IClipboardOverlayProps) {
   const rowBounds = computeRangeBounds(
     dimensions.rowHeights,
@@ -26,9 +30,17 @@ export const ClipboardOverlay = memo(function ClipboardOverlay({
     range.endCol,
   );
 
+  const className = [
+    styles.clipboardOverlay,
+    hideLeftBorder ? styles.hideLeftBorder : "",
+    hideRightBorder ? styles.hideRightBorder : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <div
-      className={styles.clipboardOverlay}
+      className={className}
       style={{
         top: rowBounds.offset,
         left: colBounds.offset - columnLeftOffset,

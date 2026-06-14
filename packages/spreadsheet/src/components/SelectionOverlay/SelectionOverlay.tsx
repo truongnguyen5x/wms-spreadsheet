@@ -9,6 +9,9 @@ export interface ISelectionOverlayProps {
   dimensions: IGridDimensions;
   columnLeftOffset?: number;
   showFillHandle?: boolean;
+  hideLeftBorder?: boolean;
+  hideRightBorder?: boolean;
+  showHandle?: boolean;
 }
 
 export const SelectionOverlay = memo(function SelectionOverlay({
@@ -16,6 +19,9 @@ export const SelectionOverlay = memo(function SelectionOverlay({
   dimensions,
   columnLeftOffset = 0,
   showFillHandle = false,
+  hideLeftBorder = false,
+  hideRightBorder = false,
+  showHandle = true,
 }: ISelectionOverlayProps) {
   const rowBounds = computeRangeBounds(
     dimensions.rowHeights,
@@ -28,9 +34,18 @@ export const SelectionOverlay = memo(function SelectionOverlay({
     range.endCol,
   );
 
+  const className = [
+    styles.selectionOverlay,
+    showFillHandle ? styles.selectionOverlaySingle : "",
+    hideLeftBorder ? styles.hideLeftBorder : "",
+    hideRightBorder ? styles.hideRightBorder : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <div
-      className={`${styles.selectionOverlay}${showFillHandle ? ` ${styles.selectionOverlaySingle}` : ""}`}
+      className={className}
       style={{
         top: rowBounds.offset,
         left: colBounds.offset - columnLeftOffset,
@@ -39,11 +54,12 @@ export const SelectionOverlay = memo(function SelectionOverlay({
       }}
       aria-hidden
     >
-      {showFillHandle ? (
-        <span className={styles.fillHandle} />
-      ) : (
-        <span className={styles.selectionHandle} />
-      )}
+      {showHandle &&
+        (showFillHandle ? (
+          <span className={styles.fillHandle} />
+        ) : (
+          <span className={styles.selectionHandle} />
+        ))}
     </div>
   );
 });

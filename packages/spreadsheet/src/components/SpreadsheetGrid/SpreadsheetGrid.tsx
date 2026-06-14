@@ -14,7 +14,9 @@ import {
 } from "../../utils/normalizeRange";
 import {
   getScrollableColumnLeft,
+  getSplitRangePaneBorderFlags,
   isFrozenColumn,
+  isRangeEndInPane,
   normalizeFrozenColumnCount,
   splitRangeByFrozenColumns,
 } from "../../utils/frozenColumns";
@@ -377,11 +379,21 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
       pane === "frozen" ? splitSelection.frozen : splitSelection.scrollable;
     if (range === null) return null;
 
+    const { hideLeftBorder, hideRightBorder } = getSplitRangePaneBorderFlags(
+      splitSelection,
+      pane,
+    );
+
     const showFillHandle =
       isSingleSelection &&
       (pane === "frozen"
         ? isFrozenColumn(selection.focus.col, frozenColumnCount)
         : !isFrozenColumn(selection.focus.col, frozenColumnCount));
+
+    const showHandle = isSingleSelection
+      ? showFillHandle
+      : selectionRange !== null &&
+        isRangeEndInPane(selectionRange.endCol, pane, frozenColumnCount);
 
     return (
       <SelectionOverlay
@@ -389,6 +401,9 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
         dimensions={dimensions}
         columnLeftOffset={columnLeftOffset}
         showFillHandle={showFillHandle}
+        hideLeftBorder={hideLeftBorder}
+        hideRightBorder={hideRightBorder}
+        showHandle={showHandle}
       />
     );
   };
@@ -403,11 +418,18 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
       pane === "frozen" ? splitClipboard.frozen : splitClipboard.scrollable;
     if (range === null) return null;
 
+    const { hideLeftBorder, hideRightBorder } = getSplitRangePaneBorderFlags(
+      splitClipboard,
+      pane,
+    );
+
     return (
       <ClipboardOverlay
         range={range}
         dimensions={dimensions}
         columnLeftOffset={columnLeftOffset}
+        hideLeftBorder={hideLeftBorder}
+        hideRightBorder={hideRightBorder}
       />
     );
   };

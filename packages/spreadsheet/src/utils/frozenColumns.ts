@@ -70,3 +70,29 @@ export function isFrozenColumn(
 ): boolean {
   return frozenColumnCount > 0 && col < frozenColumnCount;
 }
+
+export interface ISplitRangePaneBorderFlags {
+  hideLeftBorder: boolean;
+  hideRightBorder: boolean;
+}
+
+export function getSplitRangePaneBorderFlags(
+  split: ISplitFrozenRange,
+  pane: "frozen" | "scrollable",
+): ISplitRangePaneBorderFlags {
+  const spansBoth = split.frozen !== null && split.scrollable !== null;
+  return {
+    hideLeftBorder: spansBoth && pane === "scrollable",
+    hideRightBorder: spansBoth && pane === "frozen",
+  };
+}
+
+export function isRangeEndInPane(
+  endCol: number,
+  pane: "frozen" | "scrollable",
+  frozenColumnCount: number,
+): boolean {
+  return pane === "frozen"
+    ? endCol < frozenColumnCount
+    : endCol >= frozenColumnCount;
+}
