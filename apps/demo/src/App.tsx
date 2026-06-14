@@ -65,13 +65,39 @@ const COLUMNS: ISpreadsheetColumn[] = [
   { colName: "name", width: 200 },
   { colName: "choice", colText: "Lựa chọn", width: 140 },
   { colName: "active", colText: "Kích hoạt", width: 90 },
-  { colName: "status", colText: "Trạng thái", width: 130, customKey: "statusBadge" },
+  {
+    colName: "status",
+    colText: "Trạng thái",
+    width: 130,
+    customKey: "statusBadge",
+  },
 ];
 
 const INITIAL_DATA = [
-  { sku: "A001", qty: "10", name: "Item A", choice: "1", active: "true", status: "pending" },
-  { sku: "A002", qty: "5", name: "Item B", choice: "2", active: "false", status: "done" },
-  { sku: "A003", qty: "3", name: "Item C", choice: "", active: "true", status: "pending" },
+  {
+    sku: "A001",
+    qty: "10",
+    name: "Item A",
+    choice: "1",
+    active: "true",
+    status: "pending",
+  },
+  {
+    sku: "A002",
+    qty: "5",
+    name: "Item B",
+    choice: "2",
+    active: "false",
+    status: "done",
+  },
+  {
+    sku: "A003",
+    qty: "3",
+    name: "Item C",
+    choice: "",
+    active: "true",
+    status: "pending",
+  },
 ];
 
 let renderCount = 0;
@@ -85,9 +111,21 @@ export default function App() {
     if (!ref) return;
 
     ref.setCellsMeta([
-      { row: 0, colName: "choice", meta: { type: "select", options: SELECT_OPTIONS } },
-      { row: 1, colName: "choice", meta: { type: "select", options: SELECT_OPTIONS } },
-      { row: 2, colName: "choice", meta: { type: "select", options: SELECT_OPTIONS } },
+      {
+        row: 0,
+        colName: "choice",
+        meta: { type: "select", options: SELECT_OPTIONS },
+      },
+      {
+        row: 1,
+        colName: "choice",
+        meta: { type: "select", options: SELECT_OPTIONS },
+      },
+      {
+        row: 2,
+        colName: "choice",
+        meta: { type: "select", options: SELECT_OPTIONS },
+      },
       { row: 0, colName: "active", meta: { type: "boolean" } },
       { row: 1, colName: "active", meta: { type: "boolean" } },
       { row: 2, colName: "active", meta: { type: "boolean" } },
@@ -99,7 +137,12 @@ export default function App() {
   };
 
   const setupSelectCell = () => {
-    sheetRef.current?.setCellMeta(5, null, { type: "select", options: SELECT_OPTIONS }, "choice");
+    sheetRef.current?.setCellMeta(
+      5,
+      null,
+      { type: "select", options: SELECT_OPTIONS },
+      "choice",
+    );
     sheetRef.current?.setCellValue(5, null, "1", "choice");
   };
 
