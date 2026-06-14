@@ -4,7 +4,6 @@ import type { ISelection } from "../../types";
 import { useVirtualWindow } from "../../hooks/useVirtualWindow";
 import { useDragAutoScroll } from "../../hooks/useDragAutoScroll";
 import {
-  isSingleCellSelection,
   normalizeSelection,
 } from "../../utils/normalizeRange";
 import { CornerCell } from "../CornerCell";
@@ -76,9 +75,6 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
 
   const focusCell = selection?.focus ?? null;
   const selectionRange = selection ? normalizeSelection(selection) : null;
-  const isSingleSelection = selection
-    ? isSingleCellSelection(selection)
-    : true;
 
   useEffect(() => {
     if (!focusCell || isDragging) return;
@@ -112,16 +108,12 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     const result: React.ReactNode[] = [];
     for (let row = visibleRange.startRow; row <= visibleRange.endRow; row++) {
       for (let col = visibleRange.startCol; col <= visibleRange.endCol; col++) {
-        const isFocus =
-          focusCell?.row === row && focusCell?.col === col;
         result.push(
           <SpreadsheetCell
             key={`${row}:${col}`}
             store={store}
             row={row}
             col={col}
-            isFocus={isFocus}
-            isSingleSelection={isSingleSelection}
             top={row * rowHeight}
             left={col * columnWidth}
             width={columnWidth}
@@ -136,8 +128,6 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     return result;
   }, [
     visibleRange,
-    focusCell,
-    isSingleSelection,
     store,
     rowHeight,
     columnWidth,
@@ -170,7 +160,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     ) : null;
 
   const selectionOverlay =
-    selection && !isSingleSelection ? (
+    selection !== null ? (
       <SelectionOverlay
         selection={selection}
         rowHeight={rowHeight}

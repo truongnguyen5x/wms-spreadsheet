@@ -7,8 +7,6 @@ export interface ISpreadsheetCellProps {
   store: CellStore;
   row: number;
   col: number;
-  isFocus: boolean;
-  isSingleSelection: boolean;
   top: number;
   left: number;
   width: number;
@@ -22,8 +20,6 @@ export const SpreadsheetCell = memo(function SpreadsheetCell({
   store,
   row,
   col,
-  isFocus,
-  isSingleSelection,
   top,
   left,
   width,
@@ -41,16 +37,14 @@ export const SpreadsheetCell = memo(function SpreadsheetCell({
 
   return (
     <div
-      className={`${styles.cell}${isFocus ? ` ${styles.active}` : ""}`}
+      className={styles.cell}
       style={{ top, left, width, height }}
       onMouseDown={handleMouseDown}
       onMouseEnter={() => onMouseEnter(row, col)}
       onDoubleClick={() => onDoubleClick(row, col)}
       role="gridcell"
-      aria-selected={isFocus}
     >
       {value}
-      {isFocus && isSingleSelection && <span className={styles.fillHandle} />}
     </div>
   );
 });

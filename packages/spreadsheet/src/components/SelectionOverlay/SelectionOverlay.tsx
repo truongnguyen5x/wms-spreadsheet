@@ -25,11 +25,15 @@ export const SelectionOverlay = memo(function SelectionOverlay({
 
   return (
     <div
-      className={styles.selectionOverlay}
+      className={`${styles.selectionOverlay}${isSingle ? ` ${styles.selectionOverlaySingle}` : ""}`}
       style={{ top, left, width, height }}
       aria-hidden
     >
-      {!isSingle && <span className={styles.selectionHandle} />}
+      {isSingle ? (
+        <span className={styles.fillHandle} />
+      ) : (
+        <span className={styles.selectionHandle} />
+      )}
     </div>
   );
 });
