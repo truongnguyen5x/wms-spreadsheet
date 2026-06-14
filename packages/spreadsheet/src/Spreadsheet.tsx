@@ -55,8 +55,13 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       setSelection,
       handleCellMouseDown: onRangeMouseDown,
       handleCellMouseEnter,
+      handleColumnHeaderMouseDown: onColumnHeaderMouseDown,
+      handleColumnHeaderMouseEnter,
+      handleRowHeaderMouseDown: onRowHeaderMouseDown,
+      handleRowHeaderMouseEnter,
       isDragging,
-    } = useRangeSelection({ row: 0, col: 0 });
+      dragMode,
+    } = useRangeSelection({ rowCount, columnCount });
 
     const [editingCell, setEditingCell] = useState<ICellAddress | null>(null);
     const gridContainerRef = useRef<HTMLDivElement>(null);
@@ -121,6 +126,24 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         gridContainerRef.current?.focus();
       },
       [onRangeMouseDown],
+    );
+
+    const handleColumnHeaderMouseDown = useCallback(
+      (col: number) => {
+        onColumnHeaderMouseDown(col);
+        setEditingCell(null);
+        gridContainerRef.current?.focus();
+      },
+      [onColumnHeaderMouseDown],
+    );
+
+    const handleRowHeaderMouseDown = useCallback(
+      (row: number) => {
+        onRowHeaderMouseDown(row);
+        setEditingCell(null);
+        gridContainerRef.current?.focus();
+      },
+      [onRowHeaderMouseDown],
     );
 
     const handleCellDoubleClick = useCallback(
@@ -193,8 +216,13 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           selection={selection}
           editingCell={editingCell}
           isDragging={isDragging}
+          dragMode={dragMode}
           onCellMouseDown={handleCellMouseDown}
           onCellMouseEnter={handleCellMouseEnter}
+          onColumnHeaderMouseDown={handleColumnHeaderMouseDown}
+          onColumnHeaderMouseEnter={handleColumnHeaderMouseEnter}
+          onRowHeaderMouseDown={handleRowHeaderMouseDown}
+          onRowHeaderMouseEnter={handleRowHeaderMouseEnter}
           onCellDoubleClick={handleCellDoubleClick}
           onCommitEdit={handleCommitEdit}
           onCancelEdit={handleCancelEdit}

@@ -51,3 +51,24 @@ export function* iterRangeCells(
 export function createSelection(cell: ICellAddress): ISelection {
   return { anchor: cell, focus: cell };
 }
+
+export function createColumnSelection(col: number, rowCount: number): ISelection {
+  return { anchor: { row: 0, col }, focus: { row: rowCount - 1, col } };
+}
+
+export function createRowSelection(row: number, columnCount: number): ISelection {
+  return { anchor: { row, col: 0 }, focus: { row, col: columnCount - 1 } };
+}
+
+export function isHeaderStyleSelection(
+  selection: ISelection,
+  rowCount: number,
+  columnCount: number,
+): boolean {
+  const range = normalizeSelection(selection);
+  const spansAllRows =
+    range.startRow === 0 && range.endRow === rowCount - 1;
+  const spansAllCols =
+    range.startCol === 0 && range.endCol === columnCount - 1;
+  return spansAllRows || spansAllCols;
+}

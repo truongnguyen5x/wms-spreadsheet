@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, type Ref } from "react";
 import { ROW_HEADER_WIDTH, type INormalizedRange } from "../../types";
 import type { IVisibleRange } from "../../utils/computeVisibleRange";
 import styles from "../../styles/spreadsheet.module.scss";
@@ -9,6 +9,9 @@ export interface IRowHeaderColumnProps {
   scrollTop: number;
   totalHeight: number;
   selectionRange: INormalizedRange | null;
+  headerPaneRef?: Ref<HTMLDivElement>;
+  onRowMouseDown: (row: number) => void;
+  onRowMouseEnter: (row: number) => void;
 }
 
 export const RowHeaderColumn = memo(function RowHeaderColumn({
@@ -17,6 +20,9 @@ export const RowHeaderColumn = memo(function RowHeaderColumn({
   scrollTop,
   totalHeight,
   selectionRange,
+  headerPaneRef,
+  onRowMouseDown,
+  onRowMouseEnter,
 }: IRowHeaderColumnProps) {
   const headers: React.ReactNode[] = [];
 
@@ -34,6 +40,11 @@ export const RowHeaderColumn = memo(function RowHeaderColumn({
           width: ROW_HEADER_WIDTH,
           height: rowHeight,
         }}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          onRowMouseDown(row);
+        }}
+        onMouseEnter={() => onRowMouseEnter(row)}
       >
         {row + 1}
       </div>,
@@ -41,7 +52,7 @@ export const RowHeaderColumn = memo(function RowHeaderColumn({
   }
 
   return (
-    <div className={styles.rowHeaderPane}>
+    <div ref={headerPaneRef} className={styles.rowHeaderPane}>
       <div
         className={styles.headerCanvas}
         style={{

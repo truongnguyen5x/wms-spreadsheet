@@ -1,17 +1,24 @@
 import { useCallback, useEffect, useRef, type RefObject } from "react";
+import type { TSelectionDragMode } from "./useRangeSelection";
 import { pointerToCell } from "../utils/pointerToCell";
+import { pointerToColumn, pointerToRow } from "../utils/pointerToHeader";
 
 const EDGE_THRESHOLD = 40;
 const MAX_SCROLL_SPEED = 16;
 
 export interface IUseDragAutoScrollOptions {
   isDragging: boolean;
+  dragMode: TSelectionDragMode;
   scrollRef: RefObject<HTMLDivElement | null>;
+  columnHeaderRef?: RefObject<HTMLDivElement | null>;
+  rowHeaderRef?: RefObject<HTMLDivElement | null>;
   rowHeight: number;
   columnWidth: number;
   rowCount: number;
   columnCount: number;
   onCellFocus: (row: number, col: number) => void;
+  onColumnFocus?: (col: number) => void;
+  onRowFocus?: (row: number) => void;
 }
 
 function computeScrollSpeed(distance: number): number {
@@ -23,6 +30,8 @@ function getEdgeScrollDeltas(
   clientX: number,
   clientY: number,
   rect: DOMRect,
+  horizontal: boolean,
+  vertical: boolean,
 ): { scrollDx: number; scrollDy: number; nearEdge: boolean } {
   let scrollDx = 0;
   let scrollDy = 0;
@@ -33,36 +42,40 @@ function getEdgeScrollDeltas(
   const distLeft = clientX - rect.left;
   const distRight = rect.right - clientX;
 
-  if (clientY < rect.top) {
-    scrollDy = -MAX_SCROLL_SPEED;
-    nearEdge = true;
-  } else if (distTop >= 0 && distTop < EDGE_THRESHOLD) {
-    scrollDy = -computeScrollSpeed(distTop);
-    nearEdge = true;
+  if (vertical) {
+    if (clientY < rect.top) {
+      scrollDy = -MAX_SCROLL_SPEED;
+      nearEdge = true;
+    } else if (distTop >= 0 && distTop < EDGE_THRESHOLD) {
+      scrollDy = -computeScrollSpeed(distTop);
+      nearEdge = true;
+    }
+
+    if (clientY > rect.bottom) {
+      scrollDy = MAX_SCROLL_SPEED;
+      nearEdge = true;
+    } else if (distBottom >= 0 && distBottom < EDGE_THRESHOLD) {
+      scrollDy = computeScrollSpeed(distBottom);
+      nearEdge = true;
+    }
   }
 
-  if (clientY > rect.bottom) {
-    scrollDy = MAX_SCROLL_SPEED;
-    nearEdge = true;
-  } else if (distBottom >= 0 && distBottom < EDGE_THRESHOLD) {
-    scrollDy = computeScrollSpeed(distBottom);
-    nearEdge = true;
-  }
+  if (horizontal) {
+    if (clientX < rect.left) {
+      scrollDx = -MAX_SCROLL_SPEED;
+      nearEdge = true;
+    } else if (distLeft >= 0 && distLeft < EDGE_THRESHOLD) {
+      scrollDx = -computeScrollSpeed(distLeft);
+      nearEdge = true;
+    }
 
-  if (clientX < rect.left) {
-    scrollDx = -MAX_SCROLL_SPEED;
-    nearEdge = true;
-  } else if (distLeft >= 0 && distLeft < EDGE_THRESHOLD) {
-    scrollDx = -computeScrollSpeed(distLeft);
-    nearEdge = true;
-  }
-
-  if (clientX > rect.right) {
-    scrollDx = MAX_SCROLL_SPEED;
-    nearEdge = true;
-  } else if (distRight >= 0 && distRight < EDGE_THRESHOLD) {
-    scrollDx = computeScrollSpeed(distRight);
-    nearEdge = true;
+    if (clientX > rect.right) {
+      scrollDx = MAX_SCROLL_SPEED;
+      nearEdge = true;
+    } else if (distRight >= 0 && distRight < EDGE_THRESHOLD) {
+      scrollDx = computeScrollSpeed(distRight);
+      nearEdge = true;
+    }
   }
 
   return { scrollDx, scrollDy, nearEdge };
@@ -70,20 +83,40 @@ function getEdgeScrollDeltas(
 
 export function useDragAutoScroll({
   isDragging,
+  dragMode,
   scrollRef,
+  columnHeaderRef,
+  rowHeaderRef,
   rowHeight,
   columnWidth,
   rowCount,
   columnCount,
   onCellFocus,
+  onColumnFocus,
+  onRowFocus,
 }: IUseDragAutoScrollOptions): void {
   const pointerRef = useRef({ clientX: 0, clientY: 0 });
   const rafRef = useRef<number | null>(null);
   const onCellFocusRef = useRef(onCellFocus);
+  const onColumnFocusRef = useRef(onColumnFocus);
+  const onRowFocusRef = useRef(onRowFocus);
+  const dragModeRef = useRef(dragMode);
 
   useEffect(() => {
     onCellFocusRef.current = onCellFocus;
   }, [onCellFocus]);
+
+  useEffect(() => {
+    onColumnFocusRef.current = onColumnFocus;
+  }, [onColumnFocus]);
+
+  useEffect(() => {
+    onRowFocusRef.current = onRowFocus;
+  }, [onRowFocus]);
+
+  useEffect(() => {
+    dragModeRef.current = dragMode;
+  }, [dragMode]);
 
   const tick = useCallback(() => {
     const el = scrollRef.current;
@@ -93,11 +126,28 @@ export function useDragAutoScroll({
     }
 
     const { clientX, clientY } = pointerRef.current;
-    const rect = el.getBoundingClientRect();
+    const mode = dragModeRef.current;
+
+    let edgeRect = el.getBoundingClientRect();
+    let horizontal = true;
+    let vertical = true;
+
+    if (mode === "column" && columnHeaderRef?.current) {
+      edgeRect = columnHeaderRef.current.getBoundingClientRect();
+      horizontal = true;
+      vertical = false;
+    } else if (mode === "row" && rowHeaderRef?.current) {
+      edgeRect = rowHeaderRef.current.getBoundingClientRect();
+      horizontal = false;
+      vertical = true;
+    }
+
     const { scrollDx, scrollDy, nearEdge } = getEdgeScrollDeltas(
       clientX,
       clientY,
-      rect,
+      edgeRect,
+      horizontal,
+      vertical,
     );
 
     if (scrollDx !== 0 || scrollDy !== 0) {
@@ -107,16 +157,36 @@ export function useDragAutoScroll({
       el.scrollTop = Math.max(0, Math.min(maxScrollTop, el.scrollTop + scrollDy));
     }
 
-    const cell = pointerToCell(
-      clientX,
-      clientY,
-      el,
-      rowHeight,
-      columnWidth,
-      rowCount,
-      columnCount,
-    );
-    onCellFocusRef.current(cell.row, cell.col);
+    if (mode === "column" && columnHeaderRef?.current) {
+      const col = pointerToColumn(
+        clientX,
+        columnHeaderRef.current,
+        el.scrollLeft,
+        columnWidth,
+        columnCount,
+      );
+      onColumnFocusRef.current?.(col);
+    } else if (mode === "row" && rowHeaderRef?.current) {
+      const row = pointerToRow(
+        clientY,
+        rowHeaderRef.current,
+        el.scrollTop,
+        rowHeight,
+        rowCount,
+      );
+      onRowFocusRef.current?.(row);
+    } else {
+      const cell = pointerToCell(
+        clientX,
+        clientY,
+        el,
+        rowHeight,
+        columnWidth,
+        rowCount,
+        columnCount,
+      );
+      onCellFocusRef.current(cell.row, cell.col);
+    }
 
     if (nearEdge) {
       rafRef.current = requestAnimationFrame(tick);
@@ -125,6 +195,8 @@ export function useDragAutoScroll({
     }
   }, [
     scrollRef,
+    columnHeaderRef,
+    rowHeaderRef,
     rowHeight,
     columnWidth,
     rowCount,
