@@ -9,6 +9,7 @@ import {
 import { CellStore } from "./store/CellStore";
 import { SpreadsheetGrid } from "./components/SpreadsheetGrid";
 import { useKeyboardNavigation } from "./hooks/useKeyboardNavigation";
+import { useRangeSelection } from "./hooks/useRangeSelection";
 import {
   DEFAULT_COLUMN_WIDTH,
   DEFAULT_OVERSCAN,
@@ -17,7 +18,9 @@ import {
   type ISheetData,
   type ISpreadsheetProps,
   type ISpreadsheetRef,
+  type ISelection,
 } from "./types";
+import { createSelection } from "./utils/normalizeRange";
 
 export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
   function Spreadsheet(
@@ -47,17 +50,24 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       }
     }, [initialData, store]);
 
-    const [activeCell, setActiveCellState] = useState<ICellAddress | null>({
-      row: 0,
-      col: 0,
-    });
+    const {
+      selection,
+      setSelection,
+      handleCellMouseDown: onRangeMouseDown,
+      handleCellMouseEnter,
+      isDragging,
+    } = useRangeSelection({ row: 0, col: 0 });
+
     const [editingCell, setEditingCell] = useState<ICellAddress | null>(null);
     const gridContainerRef = useRef<HTMLDivElement>(null);
 
-    const setActiveCell = useCallback((cell: ICellAddress) => {
-      setActiveCellState(cell);
-      setEditingCell(null);
-    }, []);
+    const setActiveCell = useCallback(
+      (cell: ICellAddress) => {
+        setSelection(createSelection(cell));
+        setEditingCell(null);
+      },
+      [setSelection],
+    );
 
     useImperativeHandle(
       ref,
@@ -78,13 +88,19 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           return store.getAllData();
         },
         getActiveCell() {
-          return activeCell;
+          return selection?.focus ?? null;
         },
         setActiveCell(cell: ICellAddress) {
           setActiveCell(cell);
         },
+        getSelection() {
+          return selection;
+        },
+        setSelection(next: ISelection) {
+          setSelection(next);
+        },
       }),
-      [store, activeCell, setActiveCell],
+      [store, selection, setActiveCell, setSelection],
     );
 
     const startEditing = useCallback(
@@ -92,18 +108,19 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         if (initialValue !== undefined) {
           store.setValue(cell.row, cell.col, initialValue);
         }
-        setActiveCellState(cell);
+        setSelection(createSelection(cell));
         setEditingCell(cell);
       },
-      [store],
+      [store, setSelection],
     );
 
-    const handleCellClick = useCallback(
+    const handleCellMouseDown = useCallback(
       (row: number, col: number) => {
-        setActiveCell({ row, col });
+        onRangeMouseDown(row, col);
+        setEditingCell(null);
         gridContainerRef.current?.focus();
       },
-      [setActiveCell],
+      [onRangeMouseDown],
     );
 
     const handleCellDoubleClick = useCallback(
@@ -126,18 +143,20 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         onCellChange?.(row, col, value);
 
         if (direction === "down") {
-          setActiveCellState({
+          const next = {
             row: Math.min(rowCount - 1, row + 1),
             col,
-          });
+          };
+          setSelection(createSelection(next));
         } else if (direction === "right") {
-          setActiveCellState({
+          const next = {
             row,
             col: Math.min(columnCount - 1, col + 1),
-          });
+          };
+          setSelection(createSelection(next));
         }
       },
-      [store, onCellChange, rowCount, columnCount],
+      [store, onCellChange, rowCount, columnCount, setSelection],
     );
 
     const handleCancelEdit = useCallback(() => {
@@ -147,13 +166,14 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
     useKeyboardNavigation({
       rowCount,
       columnCount,
-      activeCell,
+      selection,
       editingCell,
-      setActiveCell,
+      setSelection,
       startEditing,
       stopEditing: handleCancelEdit,
       store,
       containerRef: gridContainerRef,
+      onCellChange,
     });
 
     return (
@@ -170,9 +190,11 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           rowHeight={rowHeight}
           columnWidth={columnWidth}
           overscan={overscan}
-          activeCell={activeCell}
+          selection={selection}
           editingCell={editingCell}
-          onCellClick={handleCellClick}
+          isDragging={isDragging}
+          onCellMouseDown={handleCellMouseDown}
+          onCellMouseEnter={handleCellMouseEnter}
           onCellDoubleClick={handleCellDoubleClick}
           onCommitEdit={handleCommitEdit}
           onCancelEdit={handleCancelEdit}

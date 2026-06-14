@@ -3,6 +3,18 @@ export interface ICellAddress {
   col: number;
 }
 
+export interface ISelection {
+  anchor: ICellAddress;
+  focus: ICellAddress;
+}
+
+export interface INormalizedRange {
+  startRow: number;
+  endRow: number;
+  startCol: number;
+  endCol: number;
+}
+
 export type ISheetData = Record<string, string>;
 
 export interface ICellInput {
@@ -19,6 +31,8 @@ export interface ISpreadsheetRef {
   getData(): ISheetData;
   getActiveCell(): ICellAddress | null;
   setActiveCell(cell: ICellAddress): void;
+  getSelection(): ISelection | null;
+  setSelection(selection: ISelection): void;
 }
 
 export interface ISpreadsheetProps {

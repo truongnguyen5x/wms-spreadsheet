@@ -1,7 +1,5 @@
 import { memo } from "react";
-import {
-  ROW_HEADER_WIDTH,
-} from "../../types";
+import { ROW_HEADER_WIDTH, type INormalizedRange } from "../../types";
 import type { IVisibleRange } from "../../utils/computeVisibleRange";
 import styles from "../../styles/spreadsheet.module.scss";
 
@@ -10,7 +8,7 @@ export interface IRowHeaderColumnProps {
   rowHeight: number;
   scrollTop: number;
   totalHeight: number;
-  activeRow: number | null;
+  selectionRange: INormalizedRange | null;
 }
 
 export const RowHeaderColumn = memo(function RowHeaderColumn({
@@ -18,12 +16,15 @@ export const RowHeaderColumn = memo(function RowHeaderColumn({
   rowHeight,
   scrollTop,
   totalHeight,
-  activeRow,
+  selectionRange,
 }: IRowHeaderColumnProps) {
   const headers: React.ReactNode[] = [];
 
   for (let row = visibleRange.startRow; row <= visibleRange.endRow; row++) {
-    const isActive = activeRow === row;
+    const isActive =
+      selectionRange !== null &&
+      row >= selectionRange.startRow &&
+      row <= selectionRange.endRow;
     headers.push(
       <div
         key={row}

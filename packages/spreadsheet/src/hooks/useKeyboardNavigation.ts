@@ -1,18 +1,20 @@
 import { useCallback, useEffect, type RefObject } from "react";
 import type { CellStore } from "../store/CellStore";
-import type { ICellAddress } from "../types";
+import type { ICellAddress, ISelection } from "../types";
+import { clearSelectionValues } from "../utils/clearSelection";
+import { createSelection, normalizeSelection } from "../utils/normalizeRange";
 
 export interface IUseKeyboardNavigationOptions {
   rowCount: number;
   columnCount: number;
-  activeCell: ICellAddress | null;
+  selection: ISelection | null;
   editingCell: ICellAddress | null;
-  setActiveCell: (cell: ICellAddress) => void;
+  setSelection: (selection: ISelection) => void;
   startEditing: (cell: ICellAddress, initialValue?: string) => void;
   stopEditing: () => void;
   store: CellStore;
   containerRef: RefObject<HTMLElement | null>;
-  onAfterCommit?: (row: number, col: number, direction: "down" | "right") => void;
+  onCellChange?: (row: number, col: number, value: string) => void;
 }
 
 function isPrintableKey(key: string): boolean {
@@ -22,32 +24,23 @@ function isPrintableKey(key: string): boolean {
 export function useKeyboardNavigation({
   rowCount,
   columnCount,
-  activeCell,
+  selection,
   editingCell,
-  setActiveCell,
+  setSelection,
   startEditing,
-  stopEditing,
   store,
   containerRef,
-  onAfterCommit,
+  onCellChange,
 }: IUseKeyboardNavigationOptions): void {
-  const moveActive = useCallback(
+  const moveFocus = useCallback(
     (deltaRow: number, deltaCol: number) => {
-      if (!activeCell) {
-        setActiveCell({ row: 0, col: 0 });
-        return;
-      }
-      const newRow = Math.max(
-        0,
-        Math.min(rowCount - 1, activeCell.row + deltaRow),
-      );
-      const newCol = Math.max(
-        0,
-        Math.min(columnCount - 1, activeCell.col + deltaCol),
-      );
-      setActiveCell({ row: newRow, col: newCol });
+      const focus = selection?.focus ?? { row: 0, col: 0 };
+      const newRow = Math.max(0, Math.min(rowCount - 1, focus.row + deltaRow));
+      const newCol = Math.max(0, Math.min(columnCount - 1, focus.col + deltaCol));
+      const newCell = { row: newRow, col: newCol };
+      setSelection(createSelection(newCell));
     },
-    [activeCell, rowCount, columnCount, setActiveCell],
+    [selection, rowCount, columnCount, setSelection],
   );
 
   useEffect(() => {
@@ -56,42 +49,50 @@ export function useKeyboardNavigation({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (editingCell) return;
-
-      if (!activeCell) return;
+      if (!selection) return;
 
       switch (e.key) {
         case "ArrowUp":
           e.preventDefault();
-          moveActive(-1, 0);
+          moveFocus(-1, 0);
           break;
         case "ArrowDown":
           e.preventDefault();
-          moveActive(1, 0);
+          moveFocus(1, 0);
           break;
         case "ArrowLeft":
           e.preventDefault();
-          moveActive(0, -1);
+          moveFocus(0, -1);
           break;
         case "ArrowRight":
           e.preventDefault();
-          moveActive(0, 1);
+          moveFocus(0, 1);
           break;
         case "Enter":
           e.preventDefault();
-          startEditing(activeCell);
+          startEditing(selection.focus);
           break;
         case "Tab":
           e.preventDefault();
-          moveActive(0, e.shiftKey ? -1 : 1);
+          moveFocus(0, e.shiftKey ? -1 : 1);
           break;
         case "F2":
           e.preventDefault();
-          startEditing(activeCell);
+          startEditing(selection.focus);
+          break;
+        case "Delete":
+        case "Backspace":
+          e.preventDefault();
+          clearSelectionValues(
+            store,
+            normalizeSelection(selection),
+            onCellChange,
+          );
           break;
         default:
           if (isPrintableKey(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
             e.preventDefault();
-            startEditing(activeCell, e.key);
+            startEditing(selection.focus, e.key);
           }
           break;
       }
@@ -100,13 +101,12 @@ export function useKeyboardNavigation({
     container.addEventListener("keydown", handleKeyDown);
     return () => container.removeEventListener("keydown", handleKeyDown);
   }, [
-    activeCell,
+    selection,
     editingCell,
-    moveActive,
+    moveFocus,
     startEditing,
-    stopEditing,
     containerRef,
     store,
-    onAfterCommit,
+    onCellChange,
   ]);
 }

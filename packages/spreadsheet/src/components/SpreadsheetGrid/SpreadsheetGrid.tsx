@@ -1,12 +1,18 @@
 import { memo, useCallback, useEffect, useMemo } from "react";
 import type { CellStore } from "../../store/CellStore";
-import type { ICellAddress } from "../../types";
+import type { ISelection } from "../../types";
 import { useVirtualWindow } from "../../hooks/useVirtualWindow";
+import { useDragAutoScroll } from "../../hooks/useDragAutoScroll";
+import {
+  isSingleCellSelection,
+  normalizeSelection,
+} from "../../utils/normalizeRange";
 import { CornerCell } from "../CornerCell";
 import { ColumnHeaderRow } from "../ColumnHeaderRow";
 import { RowHeaderColumn } from "../RowHeaderColumn";
 import { SpreadsheetCell } from "../SpreadsheetCell";
 import { CellEditor } from "../CellEditor";
+import { SelectionOverlay } from "../SelectionOverlay";
 import styles from "../../styles/spreadsheet.module.scss";
 
 export interface ISpreadsheetGridProps {
@@ -16,9 +22,11 @@ export interface ISpreadsheetGridProps {
   rowHeight: number;
   columnWidth: number;
   overscan: number;
-  activeCell: ICellAddress | null;
-  editingCell: ICellAddress | null;
-  onCellClick: (row: number, col: number) => void;
+  selection: ISelection | null;
+  editingCell: { row: number; col: number } | null;
+  isDragging: boolean;
+  onCellMouseDown: (row: number, col: number) => void;
+  onCellMouseEnter: (row: number, col: number) => void;
   onCellDoubleClick: (row: number, col: number) => void;
   onCommitEdit: (
     row: number,
@@ -36,9 +44,11 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
   rowHeight,
   columnWidth,
   overscan,
-  activeCell,
+  selection,
   editingCell,
-  onCellClick,
+  isDragging,
+  onCellMouseDown,
+  onCellMouseEnter,
   onCellDoubleClick,
   onCommitEdit,
   onCancelEdit,
@@ -54,13 +64,29 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
   const { visibleRange, scrollTop, scrollLeft, totalWidth, totalHeight } =
     virtual;
 
+  useDragAutoScroll({
+    isDragging,
+    scrollRef: virtual.scrollRef,
+    rowHeight,
+    columnWidth,
+    rowCount,
+    columnCount,
+    onCellFocus: onCellMouseEnter,
+  });
+
+  const focusCell = selection?.focus ?? null;
+  const selectionRange = selection ? normalizeSelection(selection) : null;
+  const isSingleSelection = selection
+    ? isSingleCellSelection(selection)
+    : true;
+
   useEffect(() => {
-    if (!activeCell) return;
+    if (!focusCell || isDragging) return;
     const el = virtual.scrollRef.current;
     if (!el) return;
 
-    const cellTop = activeCell.row * rowHeight;
-    const cellLeft = activeCell.col * columnWidth;
+    const cellTop = focusCell.row * rowHeight;
+    const cellLeft = focusCell.col * columnWidth;
     const cellBottom = cellTop + rowHeight;
     const cellRight = cellLeft + columnWidth;
 
@@ -80,26 +106,28 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     } else if (cellRight > viewRight) {
       el.scrollLeft = cellRight - el.clientWidth;
     }
-  }, [activeCell, rowHeight, columnWidth, virtual.scrollRef]);
+  }, [focusCell, isDragging, rowHeight, columnWidth, virtual.scrollRef]);
 
   const cells = useMemo(() => {
     const result: React.ReactNode[] = [];
     for (let row = visibleRange.startRow; row <= visibleRange.endRow; row++) {
       for (let col = visibleRange.startCol; col <= visibleRange.endCol; col++) {
-        const isActive =
-          activeCell?.row === row && activeCell?.col === col;
+        const isFocus =
+          focusCell?.row === row && focusCell?.col === col;
         result.push(
           <SpreadsheetCell
             key={`${row}:${col}`}
             store={store}
             row={row}
             col={col}
-            isActive={isActive}
+            isFocus={isFocus}
+            isSingleSelection={isSingleSelection}
             top={row * rowHeight}
             left={col * columnWidth}
             width={columnWidth}
             height={rowHeight}
-            onClick={onCellClick}
+            onMouseDown={onCellMouseDown}
+            onMouseEnter={onCellMouseEnter}
             onDoubleClick={onCellDoubleClick}
           />,
         );
@@ -108,11 +136,13 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     return result;
   }, [
     visibleRange,
-    activeCell,
+    focusCell,
+    isSingleSelection,
     store,
     rowHeight,
     columnWidth,
-    onCellClick,
+    onCellMouseDown,
+    onCellMouseEnter,
     onCellDoubleClick,
   ]);
 
@@ -139,6 +169,15 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
       />
     ) : null;
 
+  const selectionOverlay =
+    selection && !isSingleSelection ? (
+      <SelectionOverlay
+        selection={selection}
+        rowHeight={rowHeight}
+        columnWidth={columnWidth}
+      />
+    ) : null;
+
   return (
     <div className={styles.spreadsheet} role="grid">
       <div className={styles.topRow}>
@@ -148,7 +187,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
           columnWidth={columnWidth}
           scrollLeft={scrollLeft}
           totalWidth={totalWidth}
-          activeCol={activeCell?.col ?? null}
+          selectionRange={selectionRange}
         />
       </div>
       <div className={styles.bottomRow}>
@@ -157,7 +196,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
           rowHeight={rowHeight}
           scrollTop={scrollTop}
           totalHeight={totalHeight}
-          activeRow={activeCell?.row ?? null}
+          selectionRange={selectionRange}
         />
         <div ref={virtual.scrollRef} className={styles.bodyScroll}>
           <div
@@ -165,6 +204,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
             style={{ width: totalWidth, height: totalHeight }}
           >
             {cells}
+            {selectionOverlay}
             {editorOverlay}
           </div>
         </div>

@@ -9,7 +9,8 @@ Thư viện Spreadsheet cho React — giao diện giống Google Sheets, hỗ tr
 - `CellStore` ngoài React tree — mỗi cell subscribe riêng qua `useSyncExternalStore`
 - Nhập text (không hỗ trợ công thức)
 - Zero UI dependency — không MUI, không react-virtual
-- Keyboard navigation: Arrow, Tab, Enter, Escape, F2
+- Keyboard navigation: Arrow, Tab, Enter, Escape, F2, Delete, Backspace
+- **Range selection** — giữ chuột kéo để chọn vùng, Delete/Backspace xóa cả range
 
 ## Cấu trúc monorepo
 
@@ -123,8 +124,10 @@ function App() {
 | `setCellValues(cells)` | Set hàng loạt — chỉ cell thay đổi re-render |
 | `loadData(data)` | Bulk load / thay thế data |
 | `getData()` | Export toàn bộ sparse data |
-| `getActiveCell()` | Lấy cell đang được chọn |
-| `setActiveCell({ row, col })` | Focus cell |
+| `getActiveCell()` | Lấy cell focus (điểm cuối selection) |
+| `setActiveCell({ row, col })` | Chọn 1 cell (collapse range) |
+| `getSelection()` | Lấy `{ anchor, focus }` |
+| `setSelection({ anchor, focus })` | Set range selection |
 
 ### Định dạng dữ liệu
 
@@ -146,12 +149,14 @@ const data: ISheetData = {
 
 | Phím | Hành động |
 |------|-----------|
-| Click | Chọn cell |
+| Click | Chọn 1 cell |
+| Giữ chuột + kéo | Chọn range (mở rộng/thu hẹp) |
 | Double-click / Enter / F2 | Bắt đầu edit |
 | Gõ ký tự | Edit (thay thế nội dung) |
-| Arrow keys | Di chuyển selection |
+| Arrow keys | Di chuyển (collapse range về 1 cell) |
 | Tab | Commit + sang cell phải |
 | Enter | Commit + xuống cell dưới |
+| Delete / Backspace | Xóa nội dung cell hoặc cả range |
 | Escape | Hủy edit |
 
 ---
@@ -163,7 +168,8 @@ const data: ISheetData = {
 | `ref.setCellValue(r,c,v)` | Không | Không | Chỉ cell (r,c) nếu visible |
 | `ref.setCellValues([...])` | Không | Không | Chỉ cell thay đổi |
 | User scroll | Không | Grid (virtual range) | Mount/unmount visible |
-| Click chọn cell | Không | Có (active state) | Cell cũ + mới |
+| User kéo range | Không | Có (selection state) | Không (overlay 1 DOM) |
+| Delete range | Không | Không | Chỉ cell có data trong range |
 | User edit cell | Không | Không | Cell được edit sau commit |
 
 ---
@@ -192,8 +198,9 @@ SpreadsheetGrid (useVirtualWindow — chỉ render visible range)
 
 - Công thức / formula bar
 - Merge cells, resize row/col
-- Copy/paste, multi-select
+- Copy/paste range
 - Drag fill handle
+- Shift+Click / Shift+Arrow mở rộng range
 - Controlled `data` prop
 
 ---

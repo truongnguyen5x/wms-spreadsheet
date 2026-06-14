@@ -1,8 +1,6 @@
 import { memo } from "react";
 import { columnLabel } from "../../utils/columnLabel";
-import {
-  COLUMN_HEADER_HEIGHT,
-} from "../../types";
+import { COLUMN_HEADER_HEIGHT, type INormalizedRange } from "../../types";
 import type { IVisibleRange } from "../../utils/computeVisibleRange";
 import styles from "../../styles/spreadsheet.module.scss";
 
@@ -11,7 +9,7 @@ export interface IColumnHeaderRowProps {
   columnWidth: number;
   scrollLeft: number;
   totalWidth: number;
-  activeCol: number | null;
+  selectionRange: INormalizedRange | null;
 }
 
 export const ColumnHeaderRow = memo(function ColumnHeaderRow({
@@ -19,12 +17,15 @@ export const ColumnHeaderRow = memo(function ColumnHeaderRow({
   columnWidth,
   scrollLeft,
   totalWidth,
-  activeCol,
+  selectionRange,
 }: IColumnHeaderRowProps) {
   const headers: React.ReactNode[] = [];
 
   for (let col = visibleRange.startCol; col <= visibleRange.endCol; col++) {
-    const isActive = activeCol === col;
+    const isActive =
+      selectionRange !== null &&
+      col >= selectionRange.startCol &&
+      col <= selectionRange.endCol;
     headers.push(
       <div
         key={col}

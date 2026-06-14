@@ -53,7 +53,7 @@ export default function App() {
           </button>
         </div>
         <span className={styles.stats}>
-          App renders: {renderCount} | 10.000 rows × 26 cols
+          App renders: {renderCount} | Kéo chuột chọn range | Delete xóa
         </span>
       </header>
       <main className={styles.sheetContainer}>
@@ -64,6 +64,12 @@ export default function App() {
           initialData={{
             "2:2": "Hello",
             "4:1": "World",
+            "5:0": "A6",
+            "6:0": "A7",
+            "7:0": "A8",
+            "5:1": "B6",
+            "6:1": "B7",
+            "7:1": "B8",
           }}
           onCellChange={(row, col, value) => {
             console.log("User edited:", row, col, value);

@@ -7,12 +7,14 @@ export interface ISpreadsheetCellProps {
   store: CellStore;
   row: number;
   col: number;
-  isActive: boolean;
+  isFocus: boolean;
+  isSingleSelection: boolean;
   top: number;
   left: number;
   width: number;
   height: number;
-  onClick: (row: number, col: number) => void;
+  onMouseDown: (row: number, col: number) => void;
+  onMouseEnter: (row: number, col: number) => void;
   onDoubleClick: (row: number, col: number) => void;
 }
 
@@ -20,27 +22,35 @@ export const SpreadsheetCell = memo(function SpreadsheetCell({
   store,
   row,
   col,
-  isActive,
+  isFocus,
+  isSingleSelection,
   top,
   left,
   width,
   height,
-  onClick,
+  onMouseDown,
+  onMouseEnter,
   onDoubleClick,
 }: ISpreadsheetCellProps) {
   const value = useCellValue(store, row, col);
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    onMouseDown(row, col);
+  };
+
   return (
     <div
-      className={`${styles.cell}${isActive ? ` ${styles.active}` : ""}`}
+      className={`${styles.cell}${isFocus ? ` ${styles.active}` : ""}`}
       style={{ top, left, width, height }}
-      onClick={() => onClick(row, col)}
+      onMouseDown={handleMouseDown}
+      onMouseEnter={() => onMouseEnter(row, col)}
       onDoubleClick={() => onDoubleClick(row, col)}
       role="gridcell"
-      aria-selected={isActive}
+      aria-selected={isFocus}
     >
       {value}
-      {isActive && <span className={styles.fillHandle} />}
+      {isFocus && isSingleSelection && <span className={styles.fillHandle} />}
     </div>
   );
 });

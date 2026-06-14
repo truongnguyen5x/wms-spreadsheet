@@ -2,6 +2,8 @@ export { Spreadsheet } from "./Spreadsheet";
 export type {
   ICellAddress,
   ICellInput,
+  INormalizedRange,
+  ISelection,
   ISheetData,
   ISpreadsheetProps,
   ISpreadsheetRef,
