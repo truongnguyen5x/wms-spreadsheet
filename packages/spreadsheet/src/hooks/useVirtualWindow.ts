@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { computeVisibleRange, type IVisibleRange } from "../utils/computeVisibleRange";
 import { getFrozenWidth } from "../utils/frozenColumns";
 import { getTotalSize } from "../utils/gridDimensions";
@@ -54,17 +54,32 @@ export function useVirtualWindow(
   const scrollableTotalWidth = Math.max(0, totalWidth - frozenWidth);
   const totalHeight = getTotalSize(rowHeights);
 
-  const visibleRange = computeVisibleRange(
-    state.scrollTop,
-    state.scrollLeft,
-    state.viewportHeight,
-    state.viewportWidth,
-    rowHeights,
-    columnWidths,
-    rowCount,
-    columnCount,
-    overscan,
-    frozenColumnCount,
+  const visibleRange = useMemo(
+    () =>
+      computeVisibleRange(
+        state.scrollTop,
+        state.scrollLeft,
+        state.viewportHeight,
+        state.viewportWidth,
+        rowHeights,
+        columnWidths,
+        rowCount,
+        columnCount,
+        overscan,
+        frozenColumnCount,
+      ),
+    [
+      state.scrollTop,
+      state.scrollLeft,
+      state.viewportHeight,
+      state.viewportWidth,
+      rowHeights,
+      columnWidths,
+      rowCount,
+      columnCount,
+      overscan,
+      frozenColumnCount,
+    ],
   );
 
   const flushScroll = useCallback(() => {

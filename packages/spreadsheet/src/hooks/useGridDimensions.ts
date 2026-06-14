@@ -124,18 +124,34 @@ export function useGridDimensions({
   );
   const totalHeight = useMemo(() => getTotalSize(rowHeights), [rowHeights]);
 
-  return {
-    columnWidths,
-    rowHeights,
-    getColumnLeft,
-    getRowTop,
-    getColumnWidth,
-    getRowHeight,
-    totalWidth,
-    totalHeight,
-    setColumnWidth,
-    setRowHeight,
-    setRowHeightManual,
-    isRowHeightManual,
-  };
+  return useMemo(
+    () => ({
+      columnWidths,
+      rowHeights,
+      getColumnLeft,
+      getRowTop,
+      getColumnWidth,
+      getRowHeight,
+      totalWidth,
+      totalHeight,
+      setColumnWidth,
+      setRowHeight,
+      setRowHeightManual,
+      isRowHeightManual,
+    }),
+    [
+      columnWidths,
+      rowHeights,
+      getColumnLeft,
+      getRowTop,
+      getColumnWidth,
+      getRowHeight,
+      totalWidth,
+      totalHeight,
+      setColumnWidth,
+      setRowHeight,
+      setRowHeightManual,
+      isRowHeightManual,
+    ],
+  );
 }
