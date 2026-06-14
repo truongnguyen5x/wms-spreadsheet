@@ -1,6 +1,27 @@
 import { useRef } from "react";
-import { Spreadsheet, type ISpreadsheetRef } from "@wms/spreadsheet";
+import {
+  Spreadsheet,
+  type ISpreadsheetColumn,
+  type ISpreadsheetRef,
+} from "@wms/spreadsheet";
 import styles from "./App.module.scss";
+
+const COLUMNS: ISpreadsheetColumn[] = [
+  { colName: "sku", colText: "Mã SKU", width: 120 },
+  {
+    colName: "qty",
+    colText: "SL",
+    width: 80,
+    colRender: () => <span style={{ fontWeight: 700 }}>SL</span>,
+  },
+  { colName: "name", width: 200 },
+];
+
+const INITIAL_DATA = [
+  { sku: "A001", qty: "10", name: "Item A" },
+  { sku: "A002", qty: "5", name: "Item B" },
+  { sku: "A003", qty: "3", name: "Item C" },
+];
 
 let renderCount = 0;
 
@@ -8,23 +29,14 @@ export default function App() {
   renderCount += 1;
   const sheetRef = useRef<ISpreadsheetRef>(null);
 
-  const fillRow = () => {
-    sheetRef.current?.setCellValues(
-      Array.from({ length: 26 }, (_, col) => ({
-        row: 0,
-        col,
-        value: `Col ${col}`,
-      })),
-    );
+  const setQtyByColName = () => {
+    sheetRef.current?.setCellValue(0, null, "99", "qty");
   };
 
-  const fill1000Cells = () => {
-    const cells = Array.from({ length: 1000 }, (_, i) => ({
-      row: Math.floor(i / 26) + 1,
-      col: i % 26,
-      value: `R${Math.floor(i / 26) + 1}C${i % 26}`,
-    }));
-    sheetRef.current?.setCellValues(cells);
+  const readData = () => {
+    const data = sheetRef.current?.getData();
+    console.log("Sheet data:", data);
+    alert(JSON.stringify(data, null, 2));
   };
 
   const readActiveCell = () => {
@@ -39,11 +51,11 @@ export default function App() {
       <header className={styles.toolbar}>
         <h1 className={styles.title}>WMS Spreadsheet Demo</h1>
         <div className={styles.actions}>
-          <button type="button" onClick={fillRow}>
-            Fill row 1
+          <button type="button" onClick={setQtyByColName}>
+            Set qty row 1 = 99 (colName)
           </button>
-          <button type="button" onClick={fill1000Cells}>
-            Fill 1000 cells
+          <button type="button" onClick={readData}>
+            getData()
           </button>
           <button type="button" onClick={readActiveCell}>
             Read active cell
@@ -58,17 +70,9 @@ export default function App() {
           ref={sheetRef}
           rowCount={10000}
           columnCount={26}
-          frozenColumnCount={2}
-          initialData={{
-            "2:2": "Hello",
-            "4:1": "World",
-            "5:0": "A6",
-            "6:0": "A7",
-            "7:0": "A8",
-            "5:1": "B6",
-            "6:1": "B7",
-            "7:1": "B8",
-          }}
+          columns={COLUMNS}
+          frozenColumnCount={1}
+          initialData={INITIAL_DATA}
           onChange={(changes) => {
             console.log("Changes:", changes);
           }}

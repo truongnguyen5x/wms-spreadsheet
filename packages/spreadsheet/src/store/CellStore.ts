@@ -1,5 +1,5 @@
 import { cellKey, parseCellKey } from "../utils/cellKey";
-import type { ISheetData } from "../types";
+import type { ISheetData, ICellStoreInput } from "../types";
 
 export class CellStore {
   private data = new Map<string, string>();
@@ -23,7 +23,7 @@ export class CellStore {
     this.listeners.get(key)?.forEach((fn) => fn());
   }
 
-  setValues(cells: Array<{ row: number; col: number; value: string }>): void {
+  setValues(cells: ICellStoreInput[]): void {
     const changedKeys = new Set<string>();
 
     for (const { row, col, value } of cells) {

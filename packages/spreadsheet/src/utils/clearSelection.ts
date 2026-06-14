@@ -1,5 +1,5 @@
 import type { CellStore } from "../store/CellStore";
-import type { ICellInput, INormalizedRange } from "../types";
+import type { ICellInput, ICellStoreInput, INormalizedRange } from "../types";
 import { iterRangeCells } from "./normalizeRange";
 
 export function clearSelectionValues(
@@ -7,7 +7,7 @@ export function clearSelectionValues(
   range: INormalizedRange,
   onChange?: (changes: ICellInput[]) => void,
 ): void {
-  const toClear: ICellInput[] = [];
+  const toClear: ICellStoreInput[] = [];
 
   for (const { row, col } of iterRangeCells(range)) {
     if (store.getValue(row, col) !== "") {

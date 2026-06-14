@@ -1,5 +1,5 @@
 import type { CellStore } from "../store/CellStore";
-import type { ICellInput, IClipboardData, INormalizedRange } from "../types";
+import type { ICellStoreInput, IClipboardData, INormalizedRange } from "../types";
 
 export function copyRange(
   store: CellStore,
@@ -36,8 +36,8 @@ export function pasteAt(
   targetCol: number,
   rowCount: number,
   columnCount: number,
-): ICellInput[] {
-  const changes: ICellInput[] = [];
+): ICellStoreInput[] {
+  const changes: ICellStoreInput[] = [];
 
   for (let r = 0; r < values.length; r++) {
     const destRow = targetRow + r;
@@ -62,7 +62,7 @@ export function pasteAt(
   return changes;
 }
 
-export function applyChanges(store: CellStore, changes: ICellInput[]): void {
+export function applyChanges(store: CellStore, changes: ICellStoreInput[]): void {
   if (changes.length === 0) return;
   if (changes.length === 1) {
     const { row, col, value } = changes[0];

@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 
 import type { CellStore } from "../../store/CellStore";
 
-import type { ISelection, INormalizedRange } from "../../types";
+import type { ISelection, INormalizedRange, ISpreadsheetColumn } from "../../types";
 
 import { useVirtualWindow } from "../../hooks/useVirtualWindow";
 
@@ -57,6 +57,8 @@ export interface ISpreadsheetGridProps {
 
   frozenColumnCount?: number;
 
+  columns?: ISpreadsheetColumn[];
+
   dimensions: IGridDimensions;
 
   overscan: number;
@@ -108,6 +110,8 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
   columnCount,
 
   frozenColumnCount: frozenColumnCountProp,
+
+  columns,
 
   dimensions,
 
@@ -674,6 +678,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
             selectionRange={selectionRange}
             headerPaneRef={frozenColumnHeaderRef}
             hoveredHandle={headerResize.hoveredHandle}
+            columns={columns}
             onColumnMouseDown={onColumnHeaderMouseDown}
             onColumnMouseEnter={guardedFrozenColumnHeaderMouseEnter}
             onResizeHandleMouseEnter={headerResize.onResizeHandleMouseEnter}
@@ -696,6 +701,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
           selectionRange={selectionRange}
           headerPaneRef={columnHeaderRef}
           hoveredHandle={headerResize.hoveredHandle}
+          columns={columns}
           onColumnMouseDown={onColumnHeaderMouseDown}
           onColumnMouseEnter={onColumnHeaderMouseEnter}
           onResizeHandleMouseEnter={headerResize.onResizeHandleMouseEnter}

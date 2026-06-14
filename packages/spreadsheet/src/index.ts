@@ -6,8 +6,12 @@ export type {
   INormalizedRange,
   ISelection,
   ISheetData,
+  IColumnHeaderRenderParams,
+  ISpreadsheetColumn,
   ISpreadsheetProps,
   ISpreadsheetRef,
+  TSheetDataInput,
+  TSheetDataOutput,
 } from "./types";
 export {
   DEFAULT_COLUMN_WIDTH,

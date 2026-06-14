@@ -1,12 +1,13 @@
 import { memo, type Ref } from "react";
-import { columnLabel } from "../../utils/columnLabel";
 import {
   COLUMN_HEADER_HEIGHT,
   RESIZE_HIT_ZONE,
   type INormalizedRange,
   type IResizeHandle,
+  type ISpreadsheetColumn,
 } from "../../types";
 import type { IGridDimensions } from "../../hooks/useGridDimensions";
+import { getColumnHeaderContent } from "../../utils/columnHeaderContent";
 import { getScrollableColumnLeft } from "../../utils/frozenColumns";
 import styles from "../../styles/spreadsheet.module.scss";
 
@@ -25,6 +26,7 @@ export interface IColumnHeaderRowProps {
   paneClassName?: string;
   withFrozenDivider?: boolean;
   hoveredHandle: IResizeHandle | null;
+  columns?: ISpreadsheetColumn[];
   onColumnMouseDown: (col: number) => void;
   onColumnMouseEnter: (col: number) => void;
   onResizeHandleMouseEnter: (handle: IResizeHandle) => void;
@@ -45,6 +47,7 @@ export const ColumnHeaderRow = memo(function ColumnHeaderRow({
   paneClassName,
   withFrozenDivider = false,
   hoveredHandle,
+  columns,
   onColumnMouseDown,
   onColumnMouseEnter,
   onResizeHandleMouseEnter,
@@ -82,7 +85,7 @@ export const ColumnHeaderRow = memo(function ColumnHeaderRow({
           }}
           onMouseEnter={() => onColumnMouseEnter(col)}
         >
-          {columnLabel(col)}
+          {getColumnHeaderContent(col, columns)}
         </div>,
       );
 

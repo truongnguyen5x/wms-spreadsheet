@@ -29,6 +29,7 @@ export interface IUseGridDimensionsOptions {
   columnCount: number;
   defaultRowHeight: number;
   defaultColumnWidth: number;
+  initialColumnWidths?: number[];
 }
 
 export function useGridDimensions({
@@ -36,10 +37,14 @@ export function useGridDimensions({
   columnCount,
   defaultRowHeight,
   defaultColumnWidth,
+  initialColumnWidths,
 }: IUseGridDimensionsOptions): IGridDimensions {
-  const [columnWidths, setColumnWidths] = useState<number[]>(() =>
-    Array.from({ length: columnCount }, () => defaultColumnWidth),
-  );
+  const [columnWidths, setColumnWidths] = useState<number[]>(() => {
+    if (initialColumnWidths?.length) {
+      return resizeArray(initialColumnWidths, columnCount, defaultColumnWidth);
+    }
+    return Array.from({ length: columnCount }, () => defaultColumnWidth);
+  });
   const [rowHeights, setRowHeights] = useState<number[]>(() =>
     Array.from({ length: rowCount }, () => defaultRowHeight),
   );
