@@ -23,6 +23,11 @@ export interface ICellInput {
   value: string;
 }
 
+export interface IClipboardData {
+  range: INormalizedRange;
+  values: string[][];
+}
+
 export interface ISpreadsheetRef {
   setCellValue(row: number, col: number, value: string): void;
   getCellValue(row: number, col: number): string;
@@ -42,7 +47,7 @@ export interface ISpreadsheetProps {
   columnWidth?: number;
   overscan?: number;
   className?: string;
-  onCellChange?: (row: number, col: number, value: string) => void;
+  onChange?: (changes: ICellInput[]) => void;
   initialData?: ISheetData;
 }
 

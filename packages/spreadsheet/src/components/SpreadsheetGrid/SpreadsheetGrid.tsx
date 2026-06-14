@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 
 import type { CellStore } from "../../store/CellStore";
 
-import type { ISelection } from "../../types";
+import type { ISelection, INormalizedRange } from "../../types";
 
 import { useVirtualWindow } from "../../hooks/useVirtualWindow";
 
@@ -11,6 +11,8 @@ import { useDragAutoScroll } from "../../hooks/useDragAutoScroll";
 import type { TSelectionDragMode } from "../../hooks/useRangeSelection";
 
 import {
+
+  areRangesEqual,
 
   isHeaderStyleSelection,
 
@@ -29,6 +31,8 @@ import { SpreadsheetCell } from "../SpreadsheetCell";
 import { CellEditor } from "../CellEditor";
 
 import { SelectionOverlay } from "../SelectionOverlay";
+
+import { ClipboardOverlay } from "../ClipboardOverlay";
 
 import styles from "../../styles/spreadsheet.module.scss";
 
@@ -49,6 +53,8 @@ export interface ISpreadsheetGridProps {
   overscan: number;
 
   selection: ISelection | null;
+
+  clipboardRange: INormalizedRange | null;
 
   editingCell: { row: number; col: number } | null;
 
@@ -103,6 +109,8 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
   overscan,
 
   selection,
+
+  clipboardRange,
 
   editingCell,
 
@@ -367,13 +375,36 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
 
 
 
+  const clipboardCoversSelection =
+    clipboardRange !== null &&
+    selection !== null &&
+    areRangesEqual(clipboardRange, normalizeSelection(selection));
+
   const selectionOverlay =
 
-    selection !== null ? (
+    selection !== null && !clipboardCoversSelection ? (
 
       <SelectionOverlay
 
         selection={selection}
+
+        rowHeight={rowHeight}
+
+        columnWidth={columnWidth}
+
+      />
+
+    ) : null;
+
+
+
+  const clipboardOverlay =
+
+    clipboardRange !== null ? (
+
+      <ClipboardOverlay
+
+        range={clipboardRange}
 
         rowHeight={rowHeight}
 
@@ -450,6 +481,8 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
             {cells}
 
             {selectionOverlay}
+
+            {clipboardOverlay}
 
             {editorOverlay}
 

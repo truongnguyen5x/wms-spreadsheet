@@ -18,6 +18,18 @@ export function normalizeSelection(
   return normalizeRange(selection.anchor, selection.focus);
 }
 
+export function areRangesEqual(
+  a: INormalizedRange,
+  b: INormalizedRange,
+): boolean {
+  return (
+    a.startRow === b.startRow &&
+    a.endRow === b.endRow &&
+    a.startCol === b.startCol &&
+    a.endCol === b.endCol
+  );
+}
+
 export function isInRange(
   row: number,
   col: number,

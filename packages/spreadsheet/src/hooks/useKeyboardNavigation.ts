@@ -1,6 +1,6 @@
 import { useCallback, useEffect, type RefObject } from "react";
 import type { CellStore } from "../store/CellStore";
-import type { ICellAddress, ISelection } from "../types";
+import type { ICellAddress, ICellInput, ISelection } from "../types";
 import { clearSelectionValues } from "../utils/clearSelection";
 import { createSelection, normalizeSelection } from "../utils/normalizeRange";
 
@@ -14,7 +14,9 @@ export interface IUseKeyboardNavigationOptions {
   stopEditing: () => void;
   store: CellStore;
   containerRef: RefObject<HTMLElement | null>;
-  onCellChange?: (row: number, col: number, value: string) => void;
+  onChange?: (changes: ICellInput[]) => void;
+  onCopy?: () => void;
+  onPaste?: () => void;
 }
 
 function isPrintableKey(key: string): boolean {
@@ -30,7 +32,9 @@ export function useKeyboardNavigation({
   startEditing,
   store,
   containerRef,
-  onCellChange,
+  onChange,
+  onCopy,
+  onPaste,
 }: IUseKeyboardNavigationOptions): void {
   const moveFocus = useCallback(
     (deltaRow: number, deltaCol: number) => {
@@ -86,10 +90,20 @@ export function useKeyboardNavigation({
           clearSelectionValues(
             store,
             normalizeSelection(selection),
-            onCellChange,
+            onChange,
           );
           break;
         default:
+          if ((e.ctrlKey || e.metaKey) && e.key === "c") {
+            e.preventDefault();
+            onCopy?.();
+            break;
+          }
+          if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+            e.preventDefault();
+            onPaste?.();
+            break;
+          }
           if (isPrintableKey(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
             e.preventDefault();
             startEditing(selection.focus, e.key);
@@ -107,6 +121,8 @@ export function useKeyboardNavigation({
     startEditing,
     containerRef,
     store,
-    onCellChange,
+    onChange,
+    onCopy,
+    onPaste,
   ]);
 }

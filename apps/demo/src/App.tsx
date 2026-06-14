@@ -71,8 +71,8 @@ export default function App() {
             "6:1": "B7",
             "7:1": "B8",
           }}
-          onCellChange={(row, col, value) => {
-            console.log("User edited:", row, col, value);
+          onChange={(changes) => {
+            console.log("Changes:", changes);
           }}
         />
       </main>

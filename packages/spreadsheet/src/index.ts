@@ -2,6 +2,7 @@ export { Spreadsheet } from "./Spreadsheet";
 export type {
   ICellAddress,
   ICellInput,
+  IClipboardData,
   INormalizedRange,
   ISelection,
   ISheetData,

@@ -9,6 +9,7 @@ import {
 import { CellStore } from "./store/CellStore";
 import { SpreadsheetGrid } from "./components/SpreadsheetGrid";
 import { useKeyboardNavigation } from "./hooks/useKeyboardNavigation";
+import { useClipboard } from "./hooks/useClipboard";
 import { useRangeSelection } from "./hooks/useRangeSelection";
 import {
   DEFAULT_COLUMN_WIDTH,
@@ -31,7 +32,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       columnWidth = DEFAULT_COLUMN_WIDTH,
       overscan = DEFAULT_OVERSCAN,
       className,
-      onCellChange,
+      onChange,
       initialData,
     },
     ref,
@@ -65,6 +66,13 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
 
     const [editingCell, setEditingCell] = useState<ICellAddress | null>(null);
     const gridContainerRef = useRef<HTMLDivElement>(null);
+
+    const { clipboard, handleCopy, handlePaste, clearClipboard } = useClipboard({
+      store,
+      rowCount,
+      columnCount,
+      onChange,
+    });
 
     const setActiveCell = useCallback(
       (cell: ICellAddress) => {
@@ -110,13 +118,14 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
 
     const startEditing = useCallback(
       (cell: ICellAddress, initialValue?: string) => {
+        clearClipboard();
         if (initialValue !== undefined) {
           store.setValue(cell.row, cell.col, initialValue);
         }
         setSelection(createSelection(cell));
         setEditingCell(cell);
       },
-      [store, setSelection],
+      [clearClipboard, store, setSelection],
     );
 
     const handleCellMouseDown = useCallback(
@@ -163,7 +172,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       ) => {
         store.setValue(row, col, value);
         setEditingCell(null);
-        onCellChange?.(row, col, value);
+        onChange?.([{ row, col, value }]);
 
         if (direction === "down") {
           const next = {
@@ -179,12 +188,20 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           setSelection(createSelection(next));
         }
       },
-      [store, onCellChange, rowCount, columnCount, setSelection],
+      [store, onChange, rowCount, columnCount, setSelection],
     );
 
     const handleCancelEdit = useCallback(() => {
       setEditingCell(null);
     }, []);
+
+    const onCopy = useCallback(() => {
+      if (selection) handleCopy(selection);
+    }, [selection, handleCopy]);
+
+    const onPaste = useCallback(() => {
+      if (selection) void handlePaste(selection.focus);
+    }, [selection, handlePaste]);
 
     useKeyboardNavigation({
       rowCount,
@@ -196,7 +213,9 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       stopEditing: handleCancelEdit,
       store,
       containerRef: gridContainerRef,
-      onCellChange,
+      onChange,
+      onCopy,
+      onPaste,
     });
 
     return (
@@ -214,6 +233,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           columnWidth={columnWidth}
           overscan={overscan}
           selection={selection}
+          clipboardRange={clipboard?.range ?? null}
           editingCell={editingCell}
           isDragging={isDragging}
           dragMode={dragMode}

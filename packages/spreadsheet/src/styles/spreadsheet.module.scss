@@ -146,6 +146,15 @@
   }
 }
 
+.clipboardOverlay {
+  position: absolute;
+  box-sizing: border-box;
+  background: transparent;
+  border: 2px dashed #1a73e8;
+  pointer-events: none;
+  z-index: 3;
+}
+
 .selectionHandle {
   position: absolute;
   right: -1px;
