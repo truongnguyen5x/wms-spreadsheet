@@ -1,0 +1,150 @@
+.spreadsheet {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  color: #202124;
+  user-select: none;
+  border: 1px solid #dadce0;
+  box-sizing: border-box;
+}
+
+.topRow {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.bottomRow {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.corner {
+  flex-shrink: 0;
+  width: 46px;
+  height: 28px;
+  background: #f8f9fa;
+  border-right: 1px solid #dadce0;
+  border-bottom: 1px solid #dadce0;
+  box-sizing: border-box;
+}
+
+.columnHeaderPane {
+  flex: 1;
+  height: 28px;
+  overflow: hidden;
+  background: #f8f9fa;
+  border-bottom: 1px solid #dadce0;
+  position: relative;
+}
+
+.rowHeaderPane {
+  flex-shrink: 0;
+  width: 46px;
+  overflow: hidden;
+  background: #f8f9fa;
+  border-right: 1px solid #dadce0;
+  position: relative;
+}
+
+.bodyScroll {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  min-width: 0;
+}
+
+.canvas {
+  position: relative;
+}
+
+.headerCell {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-right: 1px solid #dadce0;
+  background: #f8f9fa;
+  color: #5f6368;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.active {
+    background: #e8f0fe;
+    color: #1a73e8;
+  }
+}
+
+.rowHeaderCell {
+  position: absolute;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border-bottom: 1px solid #dadce0;
+  background: #f8f9fa;
+  color: #5f6368;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.active {
+    background: #e8f0fe;
+    color: #1a73e8;
+  }
+}
+
+.cell {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  box-sizing: border-box;
+  border-right: 1px solid #dadce0;
+  border-bottom: 1px solid #dadce0;
+  background: #fff;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: cell;
+
+  &.active {
+    outline: 2px solid #1a73e8;
+    outline-offset: -2px;
+    z-index: 1;
+  }
+}
+
+.fillHandle {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 6px;
+  height: 6px;
+  background: #1a73e8;
+  cursor: crosshair;
+  z-index: 2;
+}
+
+.cellEditor {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid #1a73e8;
+  padding: 0 3px;
+  margin: 0;
+  font-family: inherit;
+  font-size: 13px;
+  color: #202124;
+  background: #fff;
+  outline: none;
+  z-index: 10;
+}
+
+.headerCanvas {
+  position: relative;
+}

@@ -1,0 +1,16 @@
+{
+  "name": "wms-sheets",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter demo dev",
+    "build": "pnpm --filter @wms/spreadsheet build",
+    "build:all": "pnpm -r build"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}
