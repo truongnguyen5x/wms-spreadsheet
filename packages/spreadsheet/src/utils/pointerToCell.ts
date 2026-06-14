@@ -1,4 +1,5 @@
 import type { ICellAddress } from "../types";
+import { findIndexAtOffset, getTotalSize } from "./gridDimensions";
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -8,14 +9,14 @@ export function pointerToCell(
   clientX: number,
   clientY: number,
   scrollEl: HTMLElement,
-  rowHeight: number,
-  columnWidth: number,
+  rowHeights: readonly number[],
+  columnWidths: readonly number[],
   rowCount: number,
   columnCount: number,
 ): ICellAddress {
   const rect = scrollEl.getBoundingClientRect();
-  const totalWidth = columnCount * columnWidth;
-  const totalHeight = rowCount * rowHeight;
+  const totalWidth = getTotalSize(columnWidths);
+  const totalHeight = getTotalSize(rowHeights);
 
   const contentX = clamp(
     scrollEl.scrollLeft + (clientX - rect.left),
@@ -29,7 +30,7 @@ export function pointerToCell(
   );
 
   return {
-    row: clamp(Math.floor(contentY / rowHeight), 0, rowCount - 1),
-    col: clamp(Math.floor(contentX / columnWidth), 0, columnCount - 1),
+    row: clamp(findIndexAtOffset(rowHeights, contentY), 0, rowCount - 1),
+    col: clamp(findIndexAtOffset(columnWidths, contentX), 0, columnCount - 1),
   };
 }

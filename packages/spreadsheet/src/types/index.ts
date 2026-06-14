@@ -48,6 +48,8 @@ export interface ISpreadsheetProps {
   overscan?: number;
   className?: string;
   onChange?: (changes: ICellInput[]) => void;
+  onColumnResize?: (col: number, width: number) => void;
+  onRowResize?: (row: number, height: number) => void;
   initialData?: ISheetData;
 }
 
@@ -56,3 +58,13 @@ export const DEFAULT_COLUMN_WIDTH = 100;
 export const ROW_HEADER_WIDTH = 46;
 export const COLUMN_HEADER_HEIGHT = 28;
 export const DEFAULT_OVERSCAN = 3;
+export const MIN_COLUMN_WIDTH = 20;
+export const MIN_ROW_HEIGHT = 20;
+export const RESIZE_HIT_ZONE = 5;
+
+export type TResizeAxis = "column" | "row";
+
+export interface IResizeHandle {
+  axis: TResizeAxis;
+  index: number;
+}

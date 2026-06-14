@@ -1,32 +1,42 @@
 import { memo } from "react";
-import type { INormalizedRange } from "../../types";
+import type { INormalizedRange, ISelection } from "../../types";
 import { isSingleCellSelection, normalizeSelection } from "../../utils/normalizeRange";
-import type { ISelection } from "../../types";
+import { computeRangeBounds } from "../../utils/gridDimensions";
+import type { IGridDimensions } from "../../hooks/useGridDimensions";
 import styles from "../../styles/spreadsheet.module.scss";
 
 export interface ISelectionOverlayProps {
   selection: ISelection;
-  rowHeight: number;
-  columnWidth: number;
+  dimensions: IGridDimensions;
 }
 
 export const SelectionOverlay = memo(function SelectionOverlay({
   selection,
-  rowHeight,
-  columnWidth,
+  dimensions,
 }: ISelectionOverlayProps) {
   const range: INormalizedRange = normalizeSelection(selection);
   const isSingle = isSingleCellSelection(selection);
 
-  const top = range.startRow * rowHeight;
-  const left = range.startCol * columnWidth;
-  const width = (range.endCol - range.startCol + 1) * columnWidth;
-  const height = (range.endRow - range.startRow + 1) * rowHeight;
+  const rowBounds = computeRangeBounds(
+    dimensions.rowHeights,
+    range.startRow,
+    range.endRow,
+  );
+  const colBounds = computeRangeBounds(
+    dimensions.columnWidths,
+    range.startCol,
+    range.endCol,
+  );
 
   return (
     <div
       className={`${styles.selectionOverlay}${isSingle ? ` ${styles.selectionOverlaySingle}` : ""}`}
-      style={{ top, left, width, height }}
+      style={{
+        top: rowBounds.offset,
+        left: colBounds.offset,
+        width: colBounds.size,
+        height: rowBounds.size,
+      }}
       aria-hidden
     >
       {isSingle ? (

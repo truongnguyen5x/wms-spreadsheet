@@ -11,6 +11,8 @@ import { SpreadsheetGrid } from "./components/SpreadsheetGrid";
 import { useKeyboardNavigation } from "./hooks/useKeyboardNavigation";
 import { useClipboard } from "./hooks/useClipboard";
 import { useRangeSelection } from "./hooks/useRangeSelection";
+import { useGridDimensions } from "./hooks/useGridDimensions";
+import { useHeaderResize } from "./hooks/useHeaderResize";
 import {
   DEFAULT_COLUMN_WIDTH,
   DEFAULT_OVERSCAN,
@@ -33,6 +35,8 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       overscan = DEFAULT_OVERSCAN,
       className,
       onChange,
+      onColumnResize,
+      onRowResize,
       initialData,
     },
     ref,
@@ -63,6 +67,19 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       isDragging,
       dragMode,
     } = useRangeSelection({ rowCount, columnCount });
+
+    const dimensions = useGridDimensions({
+      rowCount,
+      columnCount,
+      defaultRowHeight: rowHeight,
+      defaultColumnWidth: columnWidth,
+    });
+
+    const headerResize = useHeaderResize({
+      dimensions,
+      onColumnResize,
+      onRowResize,
+    });
 
     const [editingCell, setEditingCell] = useState<ICellAddress | null>(null);
     const gridContainerRef = useRef<HTMLDivElement>(null);
@@ -229,14 +246,14 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           store={store}
           rowCount={rowCount}
           columnCount={columnCount}
-          rowHeight={rowHeight}
-          columnWidth={columnWidth}
+          dimensions={dimensions}
           overscan={overscan}
           selection={selection}
           clipboardRange={clipboard?.range ?? null}
           editingCell={editingCell}
           isDragging={isDragging}
           dragMode={dragMode}
+          headerResize={headerResize}
           onCellMouseDown={handleCellMouseDown}
           onCellMouseEnter={handleCellMouseEnter}
           onColumnHeaderMouseDown={handleColumnHeaderMouseDown}

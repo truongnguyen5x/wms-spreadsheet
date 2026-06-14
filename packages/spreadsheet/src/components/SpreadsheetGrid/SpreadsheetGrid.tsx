@@ -10,6 +10,10 @@ import { useDragAutoScroll } from "../../hooks/useDragAutoScroll";
 
 import type { TSelectionDragMode } from "../../hooks/useRangeSelection";
 
+import type { IGridDimensions } from "../../hooks/useGridDimensions";
+
+import type { IUseHeaderResizeResult } from "../../hooks/useHeaderResize";
+
 import {
 
   areRangesEqual,
@@ -46,9 +50,7 @@ export interface ISpreadsheetGridProps {
 
   columnCount: number;
 
-  rowHeight: number;
-
-  columnWidth: number;
+  dimensions: IGridDimensions;
 
   overscan: number;
 
@@ -61,6 +63,8 @@ export interface ISpreadsheetGridProps {
   isDragging: boolean;
 
   dragMode: TSelectionDragMode;
+
+  headerResize: IUseHeaderResizeResult;
 
   onCellMouseDown: (row: number, col: number) => void;
 
@@ -102,9 +106,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
 
   columnCount,
 
-  rowHeight,
-
-  columnWidth,
+  dimensions,
 
   overscan,
 
@@ -117,6 +119,8 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
   isDragging,
 
   dragMode,
+
+  headerResize,
 
   onCellMouseDown,
 
@@ -150,9 +154,9 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
 
     columnCount,
 
-    rowHeight,
+    rowHeights: dimensions.rowHeights,
 
-    columnWidth,
+    columnWidths: dimensions.columnWidths,
 
     overscan,
 
@@ -178,9 +182,9 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
 
     rowHeaderRef,
 
-    rowHeight,
+    rowHeights: dimensions.rowHeights,
 
-    columnWidth,
+    columnWidths: dimensions.columnWidths,
 
     rowCount,
 
@@ -207,10 +211,15 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     if (!focusCell || isDragging) return;
 
     if (
+
       selection &&
+
       isHeaderStyleSelection(selection, rowCount, columnCount)
+
     ) {
+
       return;
+
     }
 
     const el = virtual.scrollRef.current;
@@ -219,13 +228,13 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
 
 
 
-    const cellTop = focusCell.row * rowHeight;
+    const cellTop = dimensions.getRowTop(focusCell.row);
 
-    const cellLeft = focusCell.col * columnWidth;
+    const cellLeft = dimensions.getColumnLeft(focusCell.col);
 
-    const cellBottom = cellTop + rowHeight;
+    const cellBottom = cellTop + dimensions.getRowHeight(focusCell.row);
 
-    const cellRight = cellLeft + columnWidth;
+    const cellRight = cellLeft + dimensions.getColumnWidth(focusCell.col);
 
 
 
@@ -261,7 +270,23 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
 
     }
 
-  }, [focusCell, isDragging, selection, rowCount, columnCount, rowHeight, columnWidth, virtual.scrollRef]);
+  }, [
+
+    focusCell,
+
+    isDragging,
+
+    selection,
+
+    rowCount,
+
+    columnCount,
+
+    dimensions,
+
+    virtual.scrollRef,
+
+  ]);
 
 
 
@@ -285,13 +310,13 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
 
             col={col}
 
-            top={row * rowHeight}
+            top={dimensions.getRowTop(row)}
 
-            left={col * columnWidth}
+            left={dimensions.getColumnLeft(col)}
 
-            width={columnWidth}
+            width={dimensions.getColumnWidth(col)}
 
-            height={rowHeight}
+            height={dimensions.getRowHeight(row)}
 
             onMouseDown={onCellMouseDown}
 
@@ -315,9 +340,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
 
     store,
 
-    rowHeight,
-
-    columnWidth,
+    dimensions,
 
     onCellMouseDown,
 
@@ -357,13 +380,13 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
 
         value={store.getValue(editingCell.row, editingCell.col)}
 
-        top={editingCell.row * rowHeight}
+        top={dimensions.getRowTop(editingCell.row)}
 
-        left={editingCell.col * columnWidth}
+        left={dimensions.getColumnLeft(editingCell.col)}
 
-        width={columnWidth}
+        width={dimensions.getColumnWidth(editingCell.col)}
 
-        height={rowHeight}
+        height={dimensions.getRowHeight(editingCell.row)}
 
         onCommit={handleCommit}
 
@@ -376,23 +399,18 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
 
 
   const clipboardCoversSelection =
+
     clipboardRange !== null &&
+
     selection !== null &&
+
     areRangesEqual(clipboardRange, normalizeSelection(selection));
 
   const selectionOverlay =
 
     selection !== null && !clipboardCoversSelection ? (
 
-      <SelectionOverlay
-
-        selection={selection}
-
-        rowHeight={rowHeight}
-
-        columnWidth={columnWidth}
-
-      />
+      <SelectionOverlay selection={selection} dimensions={dimensions} />
 
     ) : null;
 
@@ -402,17 +420,37 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
 
     clipboardRange !== null ? (
 
-      <ClipboardOverlay
-
-        range={clipboardRange}
-
-        rowHeight={rowHeight}
-
-        columnWidth={columnWidth}
-
-      />
+      <ClipboardOverlay range={clipboardRange} dimensions={dimensions} />
 
     ) : null;
+
+
+
+  const handleColumnResizeStart = useCallback(
+
+    (col: number, clientX: number) => {
+
+      headerResize.onResizeStart("column", col, clientX);
+
+    },
+
+    [headerResize],
+
+  );
+
+
+
+  const handleRowResizeStart = useCallback(
+
+    (row: number, clientY: number) => {
+
+      headerResize.onResizeStart("row", row, clientY);
+
+    },
+
+    [headerResize],
+
+  );
 
 
 
@@ -428,7 +466,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
 
           visibleRange={visibleRange}
 
-          columnWidth={columnWidth}
+          dimensions={dimensions}
 
           scrollLeft={scrollLeft}
 
@@ -438,9 +476,17 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
 
           headerPaneRef={columnHeaderRef}
 
+          hoveredHandle={headerResize.hoveredHandle}
+
           onColumnMouseDown={onColumnHeaderMouseDown}
 
           onColumnMouseEnter={onColumnHeaderMouseEnter}
+
+          onResizeHandleMouseEnter={headerResize.onResizeHandleMouseEnter}
+
+          onResizeHandleMouseLeave={headerResize.onResizeHandleMouseLeave}
+
+          onResizeStart={handleColumnResizeStart}
 
         />
 
@@ -452,7 +498,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
 
           visibleRange={visibleRange}
 
-          rowHeight={rowHeight}
+          dimensions={dimensions}
 
           scrollTop={scrollTop}
 
@@ -462,9 +508,17 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
 
           headerPaneRef={rowHeaderRef}
 
+          hoveredHandle={headerResize.hoveredHandle}
+
           onRowMouseDown={onRowHeaderMouseDown}
 
           onRowMouseEnter={onRowHeaderMouseEnter}
+
+          onResizeHandleMouseEnter={headerResize.onResizeHandleMouseEnter}
+
+          onResizeHandleMouseLeave={headerResize.onResizeHandleMouseLeave}
+
+          onResizeStart={handleRowResizeStart}
 
         />
 
@@ -497,5 +551,4 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
   );
 
 });
-
 

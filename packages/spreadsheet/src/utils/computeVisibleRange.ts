@@ -1,3 +1,5 @@
+import { findIndexAtOffset } from "./gridDimensions";
+
 export interface IVisibleRange {
   startRow: number;
   endRow: number;
@@ -10,21 +12,27 @@ export function computeVisibleRange(
   scrollLeft: number,
   viewportHeight: number,
   viewportWidth: number,
-  rowHeight: number,
-  columnWidth: number,
+  rowHeights: readonly number[],
+  columnWidths: readonly number[],
   rowCount: number,
   columnCount: number,
   overscan = 3,
 ): IVisibleRange {
-  const startRow = Math.max(0, Math.floor(scrollTop / rowHeight) - overscan);
+  const startRow = Math.max(
+    0,
+    findIndexAtOffset(rowHeights, scrollTop) - overscan,
+  );
   const endRow = Math.min(
     rowCount - 1,
-    Math.ceil((scrollTop + viewportHeight) / rowHeight) + overscan,
+    findIndexAtOffset(rowHeights, scrollTop + viewportHeight) + overscan,
   );
-  const startCol = Math.max(0, Math.floor(scrollLeft / columnWidth) - overscan);
+  const startCol = Math.max(
+    0,
+    findIndexAtOffset(columnWidths, scrollLeft) - overscan,
+  );
   const endCol = Math.min(
     columnCount - 1,
-    Math.ceil((scrollLeft + viewportWidth) / columnWidth) + overscan,
+    findIndexAtOffset(columnWidths, scrollLeft + viewportWidth) + overscan,
   );
 
   return { startRow, endRow, startCol, endCol };

@@ -12,8 +12,8 @@ export interface IUseDragAutoScrollOptions {
   scrollRef: RefObject<HTMLDivElement | null>;
   columnHeaderRef?: RefObject<HTMLDivElement | null>;
   rowHeaderRef?: RefObject<HTMLDivElement | null>;
-  rowHeight: number;
-  columnWidth: number;
+  rowHeights: readonly number[];
+  columnWidths: readonly number[];
   rowCount: number;
   columnCount: number;
   onCellFocus: (row: number, col: number) => void;
@@ -87,8 +87,8 @@ export function useDragAutoScroll({
   scrollRef,
   columnHeaderRef,
   rowHeaderRef,
-  rowHeight,
-  columnWidth,
+  rowHeights,
+  columnWidths,
   rowCount,
   columnCount,
   onCellFocus,
@@ -162,7 +162,7 @@ export function useDragAutoScroll({
         clientX,
         columnHeaderRef.current,
         el.scrollLeft,
-        columnWidth,
+        columnWidths,
         columnCount,
       );
       onColumnFocusRef.current?.(col);
@@ -171,7 +171,7 @@ export function useDragAutoScroll({
         clientY,
         rowHeaderRef.current,
         el.scrollTop,
-        rowHeight,
+        rowHeights,
         rowCount,
       );
       onRowFocusRef.current?.(row);
@@ -180,8 +180,8 @@ export function useDragAutoScroll({
         clientX,
         clientY,
         el,
-        rowHeight,
-        columnWidth,
+        rowHeights,
+        columnWidths,
         rowCount,
         columnCount,
       );
@@ -197,8 +197,8 @@ export function useDragAutoScroll({
     scrollRef,
     columnHeaderRef,
     rowHeaderRef,
-    rowHeight,
-    columnWidth,
+    rowHeights,
+    columnWidths,
     rowCount,
     columnCount,
   ]);

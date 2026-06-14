@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { computeVisibleRange, type IVisibleRange } from "../utils/computeVisibleRange";
+import { getTotalSize } from "../utils/gridDimensions";
 
 export interface IUseVirtualWindowOptions {
   rowCount: number;
   columnCount: number;
-  rowHeight: number;
-  columnWidth: number;
+  rowHeights: readonly number[];
+  columnWidths: readonly number[];
   overscan: number;
 }
 
@@ -23,7 +24,8 @@ export interface IVirtualWindowState {
 export function useVirtualWindow(
   options: IUseVirtualWindowOptions,
 ): IVirtualWindowState {
-  const { rowCount, columnCount, rowHeight, columnWidth, overscan } = options;
+  const { rowCount, columnCount, rowHeights, columnWidths, overscan } =
+    options;
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
@@ -36,16 +38,16 @@ export function useVirtualWindow(
     viewportHeight: 0,
   }));
 
-  const totalWidth = columnCount * columnWidth;
-  const totalHeight = rowCount * rowHeight;
+  const totalWidth = getTotalSize(columnWidths);
+  const totalHeight = getTotalSize(rowHeights);
 
   const visibleRange = computeVisibleRange(
     state.scrollTop,
     state.scrollLeft,
     state.viewportHeight,
     state.viewportWidth,
-    rowHeight,
-    columnWidth,
+    rowHeights,
+    columnWidths,
     rowCount,
     columnCount,
     overscan,
