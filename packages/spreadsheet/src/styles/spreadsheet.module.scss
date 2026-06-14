@@ -47,6 +47,10 @@
   overflow: hidden;
   position: relative;
   background: #fff;
+
+  &.frozenBodyPaneEditing {
+    overflow: visible;
+  }
 }
 
 .scrollableWithFrozenDivider {
@@ -124,15 +128,16 @@
 .cell {
   position: absolute;
   display: flex;
-  align-items: center;
-  padding: 0 4px;
+  align-items: flex-start;
+  padding: 4px 4px 0;
   box-sizing: border-box;
   border-right: 1px solid #dadce0;
   border-bottom: 1px solid #dadce0;
   background: #fff;
   overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 20px;
   cursor: cell;
 
   &.active {
@@ -206,13 +211,18 @@
   position: absolute;
   box-sizing: border-box;
   border: 2px solid #1a73e8;
-  padding: 0 3px;
+  padding: 3px;
   margin: 0;
   font-family: inherit;
   font-size: 13px;
+  line-height: 20px;
   color: #202124;
   background: #fff;
   outline: none;
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
   z-index: 10;
 }
 

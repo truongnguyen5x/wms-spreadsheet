@@ -20,6 +20,8 @@ export interface IGridDimensions {
   totalHeight: number;
   setColumnWidth: (col: number, width: number) => void;
   setRowHeight: (row: number, height: number) => void;
+  setRowHeightManual: (row: number, height: number) => void;
+  isRowHeightManual: (row: number) => boolean;
 }
 
 export interface IUseGridDimensionsOptions {
@@ -40,6 +42,9 @@ export function useGridDimensions({
   );
   const [rowHeights, setRowHeights] = useState<number[]>(() =>
     Array.from({ length: rowCount }, () => defaultRowHeight),
+  );
+  const [manualRowHeights, setManualRowHeights] = useState<Set<number>>(
+    () => new Set(),
   );
 
   useEffect(() => {
@@ -92,6 +97,27 @@ export function useGridDimensions({
     });
   }, []);
 
+  const setRowHeightManual = useCallback((row: number, height: number) => {
+    const nextHeight = Math.max(MIN_ROW_HEIGHT, height);
+    setRowHeights((prev) => {
+      if (prev[row] === nextHeight) return prev;
+      const next = [...prev];
+      next[row] = nextHeight;
+      return next;
+    });
+    setManualRowHeights((prev) => {
+      if (prev.has(row)) return prev;
+      const next = new Set(prev);
+      next.add(row);
+      return next;
+    });
+  }, []);
+
+  const isRowHeightManual = useCallback(
+    (row: number) => manualRowHeights.has(row),
+    [manualRowHeights],
+  );
+
   const totalWidth = useMemo(
     () => getTotalSize(columnWidths),
     [columnWidths],
@@ -109,5 +135,7 @@ export function useGridDimensions({
     totalHeight,
     setColumnWidth,
     setRowHeight,
+    setRowHeightManual,
+    isRowHeightManual,
   };
 }

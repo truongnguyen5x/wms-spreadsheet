@@ -318,36 +318,31 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     onCellDoubleClick,
   ]);
 
-  const handleCommit = useCallback(
-    (value: string, direction: "stay" | "down" | "right") => {
-      if (!editingCell) return;
-      onCommitEdit(editingCell.row, editingCell.col, value, direction);
-    },
-    [editingCell, onCommitEdit],
-  );
-
   const renderEditor = (pane: "frozen" | "scrollable") => {
     if (editingCell === null) return null;
 
-    const inFrozen = isFrozenColumn(editingCell.col, frozenColumnCount);
+    const { row, col } = editingCell;
+    const inFrozen = isFrozenColumn(col, frozenColumnCount);
     if (pane === "frozen" && !inFrozen) return null;
     if (pane === "scrollable" && hasFrozenColumns && inFrozen) return null;
 
     const left =
       inFrozen || !hasFrozenColumns
-        ? dimensions.getColumnLeft(editingCell.col)
-        : getScrollableColumnLeft(editingCell.col, dimensions, frozenWidth);
+        ? dimensions.getColumnLeft(col)
+        : getScrollableColumnLeft(col, dimensions, frozenWidth);
 
     return (
       <CellEditor
-        row={editingCell.row}
-        col={editingCell.col}
-        value={store.getValue(editingCell.row, editingCell.col)}
-        top={dimensions.getRowTop(editingCell.row)}
+        row={row}
+        col={col}
+        value={store.getValue(row, col)}
+        top={dimensions.getRowTop(row)}
         left={left}
-        width={dimensions.getColumnWidth(editingCell.col)}
-        height={dimensions.getRowHeight(editingCell.row)}
-        onCommit={handleCommit}
+        width={dimensions.getColumnWidth(col)}
+        height={dimensions.getRowHeight(row)}
+        onCommit={(commitValue, direction) =>
+          onCommitEdit(row, col, commitValue, direction)
+        }
         onCancel={onCancelEdit}
       />
     );
@@ -657,7 +652,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
         {hasFrozenColumns && (
           <div
             ref={frozenBodyRef}
-            className={styles.frozenBodyPane}
+            className={`${styles.frozenBodyPane}${editingCell !== null ? ` ${styles.frozenBodyPaneEditing}` : ""}`}
             style={{ width: frozenWidth }}
           >
             <div

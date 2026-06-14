@@ -14,6 +14,7 @@ import { useRangeSelection } from "./hooks/useRangeSelection";
 import { useGridDimensions } from "./hooks/useGridDimensions";
 import { useHeaderResize } from "./hooks/useHeaderResize";
 import {
+  CELL_LINE_HEIGHT,
   DEFAULT_COLUMN_WIDTH,
   DEFAULT_OVERSCAN,
   DEFAULT_ROW_HEIGHT,
@@ -149,7 +150,6 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
     const handleCellMouseDown = useCallback(
       (row: number, col: number) => {
         onRangeMouseDown(row, col);
-        setEditingCell(null);
         gridContainerRef.current?.focus();
       },
       [onRangeMouseDown],
@@ -158,7 +158,6 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
     const handleColumnHeaderMouseDown = useCallback(
       (col: number) => {
         onColumnHeaderMouseDown(col);
-        setEditingCell(null);
         gridContainerRef.current?.focus();
       },
       [onColumnHeaderMouseDown],
@@ -167,7 +166,6 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
     const handleRowHeaderMouseDown = useCallback(
       (row: number) => {
         onRowHeaderMouseDown(row);
-        setEditingCell(null);
         gridContainerRef.current?.focus();
       },
       [onRowHeaderMouseDown],
@@ -192,6 +190,17 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         setEditingCell(null);
         onChange?.([{ row, col, value }]);
 
+        if (value.includes("\n") && !dimensions.isRowHeightManual(row)) {
+          const CELL_PADDING = 8;
+          const lineCount = value.split("\n").length;
+          const neededHeight = Math.max(
+            rowHeight,
+            lineCount * CELL_LINE_HEIGHT + CELL_PADDING,
+          );
+          dimensions.setRowHeight(row, neededHeight);
+          onRowResize?.(row, neededHeight);
+        }
+
         if (direction === "down") {
           const next = {
             row: Math.min(rowCount - 1, row + 1),
@@ -206,7 +215,16 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           setSelection(createSelection(next));
         }
       },
-      [store, onChange, rowCount, columnCount, setSelection],
+      [
+        store,
+        onChange,
+        rowCount,
+        columnCount,
+        setSelection,
+        rowHeight,
+        dimensions,
+        onRowResize,
+      ],
     );
 
     const handleCancelEdit = useCallback(() => {

@@ -101,7 +101,7 @@ export function useHeaderResize({
       if (state.axis === "column") {
         dimensionsRef.current.setColumnWidth(state.index, nextSize);
       } else {
-        dimensionsRef.current.setRowHeight(state.index, nextSize);
+        dimensionsRef.current.setRowHeightManual(state.index, nextSize);
       }
     };
 

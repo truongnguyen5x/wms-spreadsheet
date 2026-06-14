@@ -57,6 +57,8 @@ export interface ISpreadsheetProps {
 
 export const DEFAULT_ROW_HEIGHT = 28;
 export const DEFAULT_COLUMN_WIDTH = 100;
+export const CELL_LINE_HEIGHT = 20;
+export const CELL_EDITOR_VERTICAL_CHROME = 10;
 export const ROW_HEADER_WIDTH = 46;
 export const COLUMN_HEADER_HEIGHT = 28;
 export const DEFAULT_OVERSCAN = 3;
