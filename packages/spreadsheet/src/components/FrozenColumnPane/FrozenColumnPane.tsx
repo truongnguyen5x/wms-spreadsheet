@@ -3,7 +3,6 @@ import type { CellStore } from "../../store/CellStore";
 import type { MetaStore } from "../../store/MetaStore";
 import type {
   ICustomCellDefinition,
-  ISelection,
   ISpreadsheetColumn,
 } from "../../types";
 import type { IGridDimensions } from "../../hooks/useGridDimensions";
@@ -24,7 +23,6 @@ export interface IFrozenColumnPaneProps {
   isEditing: boolean;
   columns?: ISpreadsheetColumn[];
   customCellRegistry?: Record<string, ICustomCellDefinition>;
-  selection: ISelection | null;
   onCellMouseDown: (row: number, col: number) => void;
   onCellMouseEnter: (row: number, col: number) => void;
   onCellDoubleClick: (row: number, col: number) => void;
@@ -48,7 +46,6 @@ export const FrozenColumnPane = memo(function FrozenColumnPane({
   isEditing,
   columns,
   customCellRegistry,
-  selection,
   onCellMouseDown,
   onCellMouseEnter,
   onCellDoubleClick,
@@ -80,7 +77,6 @@ export const FrozenColumnPane = memo(function FrozenColumnPane({
           dimensions={dimensions}
           columns={columns}
           customCellRegistry={customCellRegistry}
-          selection={selection}
           onCellMouseDown={onCellMouseDown}
           onCellMouseEnter={onCellMouseEnter}
           onCellDoubleClick={onCellDoubleClick}

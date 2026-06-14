@@ -551,7 +551,6 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
             isEditing={editingCell !== null}
             columns={columns}
             customCellRegistry={customCellRegistry}
-            selection={selection}
             onCellMouseDown={onCellMouseDown}
             onCellMouseEnter={guardedFrozenCellMouseEnter}
             onCellDoubleClick={onCellDoubleClick}

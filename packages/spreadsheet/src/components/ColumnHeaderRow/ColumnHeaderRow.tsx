@@ -12,6 +12,87 @@ import { getScrollableColumnLeft } from "../../utils/frozenColumns";
 import styles from "../../styles/spreadsheet.module.scss";
 
 export type TColumnHeaderMode = "frozen" | "scrollable";
+
+interface IColumnHeaderCellProps {
+  col: number;
+  columnLeft: number;
+  columnWidth: number;
+  isActive: boolean;
+  columns?: ISpreadsheetColumn[];
+  onColumnMouseDown: (col: number) => void;
+  onColumnMouseEnter: (col: number) => void;
+}
+
+const ColumnHeaderCell = memo(function ColumnHeaderCell({
+  col,
+  columnLeft,
+  columnWidth,
+  isActive,
+  columns,
+  onColumnMouseDown,
+  onColumnMouseEnter,
+}: IColumnHeaderCellProps) {
+  return (
+    <div
+      className={`${styles.headerCell}${isActive ? ` ${styles.active}` : ""}`}
+      style={{
+        top: 0,
+        left: columnLeft,
+        width: columnWidth,
+        height: COLUMN_HEADER_HEIGHT,
+      }}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        onColumnMouseDown(col);
+      }}
+      onMouseEnter={() => onColumnMouseEnter(col)}
+    >
+      {getColumnHeaderContent(col, columns)}
+    </div>
+  );
+});
+
+interface IColumnResizeHandleProps {
+  col: number;
+  columnLeft: number;
+  columnWidth: number;
+  isHandleHovered: boolean;
+  onResizeHandleMouseEnter: (handle: IResizeHandle) => void;
+  onResizeHandleMouseLeave: () => void;
+  onResizeStart: (col: number, clientX: number) => void;
+}
+
+const ColumnResizeHandle = memo(function ColumnResizeHandle({
+  col,
+  columnLeft,
+  columnWidth,
+  isHandleHovered,
+  onResizeHandleMouseEnter,
+  onResizeHandleMouseLeave,
+  onResizeStart,
+}: IColumnResizeHandleProps) {
+  return (
+    <div
+      className={`${styles.columnResizeHandle}${isHandleHovered ? ` ${styles.resizeHandleHovered}` : ""}`}
+      style={{
+        left: columnLeft + columnWidth - RESIZE_HIT_ZONE / 2,
+        width: RESIZE_HIT_ZONE,
+      }}
+      onMouseDown={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onResizeStart(col, e.clientX);
+      }}
+      onMouseEnter={() =>
+        onResizeHandleMouseEnter({ axis: "column", index: col })
+      }
+      onMouseLeave={onResizeHandleMouseLeave}
+    >
+      <span className={styles.resizeHandleIcon} aria-hidden />
+    </div>
+  );
+});
+
 export interface IColumnHeaderRowProps {
   colStart: number;
   colEnd: number;
@@ -67,46 +148,30 @@ export const ColumnHeaderRow = memo(function ColumnHeaderRow({
         col >= selectionRange.startCol &&
         col <= selectionRange.endCol;
       headers.push(
-        <div
+        <ColumnHeaderCell
           key={col}
-          className={`${styles.headerCell}${isActive ? ` ${styles.active}` : ""}`}
-          style={{
-            top: 0,
-            left: columnLeft,
-            width: columnWidth,
-            height: COLUMN_HEADER_HEIGHT,
-          }}
-          onMouseDown={(e) => {
-            e.preventDefault();
-            onColumnMouseDown(col);
-          }}
-          onMouseEnter={() => onColumnMouseEnter(col)}
-        >
-          {getColumnHeaderContent(col, columns)}
-        </div>,
+          col={col}
+          columnLeft={columnLeft}
+          columnWidth={columnWidth}
+          isActive={isActive}
+          columns={columns}
+          onColumnMouseDown={onColumnMouseDown}
+          onColumnMouseEnter={onColumnMouseEnter}
+        />,
       );
       const isHandleHovered =
         hoveredHandle?.axis === "column" && hoveredHandle.index === col;
       handles.push(
-        <div
+        <ColumnResizeHandle
           key={`resize-${col}`}
-          className={`${styles.columnResizeHandle}${isHandleHovered ? ` ${styles.resizeHandleHovered}` : ""}`}
-          style={{
-            left: columnLeft + columnWidth - RESIZE_HIT_ZONE / 2,
-            width: RESIZE_HIT_ZONE,
-          }}
-          onMouseDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onResizeStart(col, e.clientX);
-          }}
-          onMouseEnter={() =>
-            onResizeHandleMouseEnter({ axis: "column", index: col })
-          }
-          onMouseLeave={onResizeHandleMouseLeave}
-        >
-          <span className={styles.resizeHandleIcon} aria-hidden />
-        </div>,
+          col={col}
+          columnLeft={columnLeft}
+          columnWidth={columnWidth}
+          isHandleHovered={isHandleHovered}
+          onResizeHandleMouseEnter={onResizeHandleMouseEnter}
+          onResizeHandleMouseLeave={onResizeHandleMouseLeave}
+          onResizeStart={onResizeStart}
+        />,
       );
     }
   }

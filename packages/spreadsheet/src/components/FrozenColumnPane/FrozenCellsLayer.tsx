@@ -3,7 +3,6 @@ import type { CellStore } from "../../store/CellStore";
 import type { MetaStore } from "../../store/MetaStore";
 import type {
   ICustomCellDefinition,
-  ISelection,
   ISpreadsheetColumn,
 } from "../../types";
 import type { IGridDimensions } from "../../hooks/useGridDimensions";
@@ -18,7 +17,6 @@ export interface IFrozenCellsLayerProps {
   dimensions: IGridDimensions;
   columns?: ISpreadsheetColumn[];
   customCellRegistry?: Record<string, ICustomCellDefinition>;
-  selection: ISelection | null;
   onCellMouseDown: (row: number, col: number) => void;
   onCellMouseEnter: (row: number, col: number) => void;
   onCellDoubleClick: (row: number, col: number) => void;
@@ -34,7 +32,6 @@ export const FrozenCellsLayer = memo(function FrozenCellsLayer({
   dimensions,
   columns,
   customCellRegistry,
-  selection,
   onCellMouseDown,
   onCellMouseEnter,
   onCellDoubleClick,
@@ -56,7 +53,6 @@ export const FrozenCellsLayer = memo(function FrozenCellsLayer({
         colEnd: frozenColumnCount - 1,
         columns,
         customCellRegistry,
-        selection,
         getColumnLeft,
         onCellMouseDown,
         onCellMouseEnter,
@@ -73,7 +69,6 @@ export const FrozenCellsLayer = memo(function FrozenCellsLayer({
       frozenColumnCount,
       columns,
       customCellRegistry,
-      selection,
       getColumnLeft,
       onCellMouseDown,
       onCellMouseEnter,

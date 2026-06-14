@@ -18,7 +18,7 @@ export interface IRenderCellsOptions {
   colEnd: number;
   columns?: ISpreadsheetColumn[];
   customCellRegistry?: Record<string, ICustomCellDefinition>;
-  selection: ISelection | null;
+  selection?: ISelection | null;
   getColumnLeft: (col: number) => number;
   onCellMouseDown: (row: number, col: number) => void;
   onCellMouseEnter: (row: number, col: number) => void;
@@ -48,7 +48,10 @@ export function renderCells({
   const focus = selection?.focus;
   for (let row = rowStart; row <= rowEnd; row++) {
     for (let col = colStart; col <= colEnd; col++) {
-      const isActive = focus?.row === row && focus?.col === col;
+      const isActive =
+        focus !== undefined &&
+        focus?.row === row &&
+        focus?.col === col;
       result.push(
         <SpreadsheetCell
           key={`${row}:${col}`}
