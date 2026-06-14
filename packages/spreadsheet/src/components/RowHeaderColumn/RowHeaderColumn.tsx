@@ -40,7 +40,6 @@ export const RowHeaderColumn = memo(function RowHeaderColumn({
 }: IRowHeaderColumnProps) {
   const headers: React.ReactNode[] = [];
   const handles: React.ReactNode[] = [];
-
   for (let row = visibleRange.startRow; row <= visibleRange.endRow; row++) {
     const rowTop = dimensions.getRowTop(row);
     const rowHeight = dimensions.getRowHeight(row);
@@ -48,7 +47,6 @@ export const RowHeaderColumn = memo(function RowHeaderColumn({
       selectionRange !== null &&
       row >= selectionRange.startRow &&
       row <= selectionRange.endRow;
-
     headers.push(
       <div
         key={row}
@@ -67,10 +65,8 @@ export const RowHeaderColumn = memo(function RowHeaderColumn({
         {row + 1}
       </div>,
     );
-
     const isHandleHovered =
       hoveredHandle?.axis === "row" && hoveredHandle.index === row;
-
     handles.push(
       <div
         key={`resize-${row}`}
@@ -110,3 +106,4 @@ export const RowHeaderColumn = memo(function RowHeaderColumn({
     </div>
   );
 });
+

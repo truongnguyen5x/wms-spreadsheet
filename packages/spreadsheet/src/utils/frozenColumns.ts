@@ -40,7 +40,6 @@ export function splitRangeByFrozenColumns(
   }
 
   const frozenEndCol = frozenColumnCount - 1;
-
   const frozen: INormalizedRange | null =
     range.startCol <= frozenEndCol
       ? {
@@ -50,7 +49,6 @@ export function splitRangeByFrozenColumns(
           endCol: Math.min(range.endCol, frozenEndCol),
         }
       : null;
-
   const scrollable: INormalizedRange | null =
     range.endCol >= frozenColumnCount
       ? {
@@ -60,7 +58,6 @@ export function splitRangeByFrozenColumns(
           endCol: range.endCol,
         }
       : null;
-
   return { frozen, scrollable };
 }
 
@@ -96,3 +93,4 @@ export function isRangeEndInPane(
     ? endCol < frozenColumnCount
     : endCol >= frozenColumnCount;
 }
+

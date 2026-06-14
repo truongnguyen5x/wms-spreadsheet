@@ -11,3 +11,4 @@ export function getColumnHeaderContent(
   if (column.colRender) return column.colRender({ col, column });
   return column.colText ?? column.colName;
 }
+

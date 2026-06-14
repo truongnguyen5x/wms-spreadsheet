@@ -13,11 +13,7 @@ export interface IUseHeaderResizeResult {
   isResizing: boolean;
   onResizeHandleMouseEnter: (handle: IResizeHandle) => void;
   onResizeHandleMouseLeave: () => void;
-  onResizeStart: (
-    axis: TResizeAxis,
-    index: number,
-    clientPos: number,
-  ) => void;
+  onResizeStart: (axis: TResizeAxis, index: number, clientPos: number) => void;
 }
 
 export function useHeaderResize({
@@ -29,47 +25,38 @@ export function useHeaderResize({
     null,
   );
   const [isResizing, setIsResizing] = useState(false);
-
   const resizeStateRef = useRef<{
     axis: TResizeAxis;
     index: number;
     startPos: number;
     startSize: number;
   } | null>(null);
-
   const dimensionsRef = useRef(dimensions);
   const onColumnResizeRef = useRef(onColumnResize);
   const onRowResizeRef = useRef(onRowResize);
-
   useEffect(() => {
     dimensionsRef.current = dimensions;
   }, [dimensions]);
-
   useEffect(() => {
     onColumnResizeRef.current = onColumnResize;
   }, [onColumnResize]);
-
   useEffect(() => {
     onRowResizeRef.current = onRowResize;
   }, [onRowResize]);
-
   const onResizeHandleMouseEnter = useCallback((handle: IResizeHandle) => {
     setHoveredHandle(handle);
   }, []);
-
   const onResizeHandleMouseLeave = useCallback(() => {
     if (!resizeStateRef.current) {
       setHoveredHandle(null);
     }
   }, []);
-
   const onResizeStart = useCallback(
     (axis: TResizeAxis, index: number, clientPos: number) => {
       const startSize =
         axis === "column"
           ? dimensionsRef.current.getColumnWidth(index)
           : dimensionsRef.current.getRowHeight(index);
-
       resizeStateRef.current = {
         axis,
         index,
@@ -81,23 +68,18 @@ export function useHeaderResize({
     },
     [],
   );
-
   useEffect(() => {
     if (!isResizing) return;
-
     const handleMouseMove = (e: MouseEvent) => {
       const state = resizeStateRef.current;
       if (!state) return;
-
       document.body.style.cursor =
         state.axis === "column" ? "col-resize" : "row-resize";
-
       const delta =
         state.axis === "column"
           ? e.clientX - state.startPos
           : e.clientY - state.startPos;
       const nextSize = state.startSize + delta;
-
       if (state.axis === "column") {
         dimensionsRef.current.setColumnWidth(state.index, nextSize);
       } else {
@@ -107,7 +89,6 @@ export function useHeaderResize({
 
     const handleMouseUp = () => {
       document.body.style.cursor = "";
-
       const state = resizeStateRef.current;
       if (state) {
         if (state.axis === "column") {
@@ -122,21 +103,17 @@ export function useHeaderResize({
           );
         }
       }
-
       resizeStateRef.current = null;
       setIsResizing(false);
       setHoveredHandle(null);
     };
-
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
-
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isResizing]);
-
   return {
     hoveredHandle,
     isResizing,
@@ -145,3 +122,4 @@ export function useHeaderResize({
     onResizeStart,
   };
 }
+

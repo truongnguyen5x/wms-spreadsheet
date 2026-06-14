@@ -1,4 +1,7 @@
-export function getOffsetAtIndex(sizes: readonly number[], index: number): number {
+export function getOffsetAtIndex(
+  sizes: readonly number[],
+  index: number,
+): number {
   let offset = 0;
   for (let i = 0; i < index; i++) {
     offset += sizes[i] ?? 0;
@@ -27,7 +30,6 @@ export function findIndexAtOffset(
   offset: number,
 ): number {
   if (sizes.length === 0) return 0;
-
   let accumulated = 0;
   for (let i = 0; i < sizes.length; i++) {
     const size = sizes[i];
@@ -62,3 +64,4 @@ export function resizeArray(
   }
   return next;
 }
+

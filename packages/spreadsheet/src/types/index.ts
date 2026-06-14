@@ -1,5 +1,49 @@
 import type { ReactNode } from "react";
 
+export type TCellType = "text" | "select" | "boolean" | "custom";
+export type ICommitDirection = "stay" | "down" | "right";
+export interface ISelectOption {
+  id: string;
+  label: string;
+  color?: string;
+}
+
+export interface ICellMeta {
+  type?: TCellType;
+  options?: ISelectOption[];
+  customKey?: string;
+  customProps?: Record<string, unknown>;
+}
+
+export interface ICellRenderParams {
+  row: number;
+  col: number;
+  value: string;
+  meta: ICellMeta;
+  isActive: boolean;
+}
+
+export interface ICellEditorParams extends ICellRenderParams {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+  onCommit: (value: string, direction?: ICommitDirection) => void;
+  onCancel: () => void;
+}
+
+export interface ICustomCellDefinition {
+  render: (params: ICellRenderParams) => ReactNode;
+  editor?: (params: ICellEditorParams) => ReactNode;
+}
+
+export interface ICellMetaInput {
+  row: number;
+  col?: number | null;
+  colName?: string;
+  meta: Partial<ICellMeta>;
+}
+
 export interface ICellAddress {
   row: number;
   col: number;
@@ -18,7 +62,6 @@ export interface INormalizedRange {
 }
 
 export type ISheetData = Record<string, string>;
-
 export interface IColumnHeaderRenderParams {
   col: number;
   column: ISpreadsheetColumn;
@@ -32,15 +75,23 @@ export interface ISpreadsheetColumn {
   colText?: string;
   /** Custom render header cell; ưu tiên hơn colText. */
   colRender?: (params: IColumnHeaderRenderParams) => ReactNode;
+  /** Cell type mặc định cho cả cột. */
+  cellType?: TCellType;
+  /** Options cho cell type select ở cấp cột. */
+  options?: ISelectOption[];
+  /** Key tra cứu customCellRegistry. */
+  customKey?: string;
+  /** Override render cell body; ưu tiên hơn registry. */
+  cellRender?: (params: ICellRenderParams) => ReactNode;
+  /** Override editor cell; ưu tiên hơn registry. */
+  cellEditor?: (params: ICellEditorParams) => ReactNode;
 }
 
 export type TSheetDataInput =
   | ISheetData
   | string[][]
   | Record<string, string>[];
-
 export type TSheetDataOutput = ISheetData | Record<string, string>[];
-
 export interface ICellInput {
   row: number;
   col?: number | null;
@@ -67,11 +118,7 @@ export interface ISpreadsheetRef {
     value: string,
     colName?: string,
   ): void;
-  getCellValue(
-    row: number,
-    col: number | null,
-    colName?: string,
-  ): string;
+  getCellValue(row: number, col: number | null, colName?: string): string;
   setCellValues(cells: ICellInput[]): void;
   loadData(data: TSheetDataInput): void;
   getData(): TSheetDataOutput;
@@ -79,6 +126,14 @@ export interface ISpreadsheetRef {
   setActiveCell(cell: ICellAddress): void;
   getSelection(): ISelection | null;
   setSelection(selection: ISelection): void;
+  setCellMeta(
+    row: number,
+    col: number | null,
+    meta: Partial<ICellMeta>,
+    colName?: string,
+  ): void;
+  getCellMeta(row: number, col: number | null, colName?: string): ICellMeta;
+  setCellsMeta(cells: ICellMetaInput[]): void;
 }
 
 export interface ISpreadsheetProps {
@@ -95,6 +150,8 @@ export interface ISpreadsheetProps {
   initialData?: TSheetDataInput;
   /** Số cột cố định từ trái (0 = không cố định). Ví dụ 2 → cột A, B. */
   frozenColumnCount?: number;
+  /** Registry custom cell render/editor theo customKey. */
+  customCellRegistry?: Record<string, ICustomCellDefinition>;
 }
 
 export const DEFAULT_ROW_HEIGHT = 28;
@@ -107,10 +164,9 @@ export const DEFAULT_OVERSCAN = 3;
 export const MIN_COLUMN_WIDTH = 20;
 export const MIN_ROW_HEIGHT = 20;
 export const RESIZE_HIT_ZONE = 5;
-
 export type TResizeAxis = "column" | "row";
-
 export interface IResizeHandle {
   axis: TResizeAxis;
   index: number;
 }
+

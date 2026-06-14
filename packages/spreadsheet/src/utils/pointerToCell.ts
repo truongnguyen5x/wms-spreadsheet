@@ -17,16 +17,16 @@ export function pointerToCell(
   frozenBodyEl?: HTMLElement | null,
 ): ICellAddress {
   const totalHeight = getTotalSize(rowHeights);
-  const scrollableTotalWidth = Math.max(0, getTotalSize(columnWidths) - frozenWidth);
+  const scrollableTotalWidth = Math.max(
+    0,
+    getTotalSize(columnWidths) - frozenWidth,
+  );
   const scrollLeft = scrollEl.scrollLeft;
-
   let contentX: number;
-
   if (frozenBodyEl && frozenWidth > 0) {
     const frozenRect = frozenBodyEl.getBoundingClientRect();
     const inFrozenZone =
       clientX >= frozenRect.left && clientX < frozenRect.right;
-
     if (inFrozenZone && scrollLeft > 0) {
       contentX = frozenWidth + scrollLeft;
     } else if (inFrozenZone) {
@@ -59,9 +59,9 @@ export function pointerToCell(
     0,
     Math.max(0, totalHeight - 1),
   );
-
   return {
     row: clamp(findIndexAtOffset(rowHeights, contentY), 0, rowCount - 1),
     col: clamp(findIndexAtOffset(columnWidths, contentX), 0, columnCount - 1),
   };
 }
+

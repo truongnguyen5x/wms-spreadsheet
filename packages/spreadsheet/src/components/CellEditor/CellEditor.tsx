@@ -2,11 +2,11 @@ import { useCallback, useEffect, useRef } from "react";
 import {
   CELL_EDITOR_VERTICAL_CHROME,
   CELL_LINE_HEIGHT,
+  type ICommitDirection,
 } from "../../types";
 import styles from "../../styles/spreadsheet.module.scss";
 
-export type ICommitDirection = "stay" | "down" | "right";
-
+export type { ICommitDirection };
 export interface ICellEditorProps {
   row: number;
   col: number;
@@ -37,7 +37,6 @@ export function CellEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const draftRef = useRef(value);
   const committedRef = useRef(false);
-
   const commitValue = useCallback(
     (nextValue: string, direction: ICommitDirection) => {
       if (committedRef.current) return;
@@ -46,13 +45,11 @@ export function CellEditor({
     },
     [onCommit],
   );
-
   const syncHeight = useCallback(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
     textarea.style.height = `${measureEditorHeight(textarea.value, height)}px`;
   }, [height]);
-
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
@@ -62,7 +59,6 @@ export function CellEditor({
     textarea.select();
     syncHeight();
   }, [syncHeight, value]);
-
   const handleInput = () => {
     draftRef.current = textareaRef.current?.value ?? "";
     syncHeight();
@@ -119,3 +115,4 @@ export function CellEditor({
     />
   );
 }
+

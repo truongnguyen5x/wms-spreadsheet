@@ -8,7 +8,6 @@ export function clearSelectionValues(
   onChange?: (changes: ICellInput[]) => void,
 ): void {
   const toClear: ICellStoreInput[] = [];
-
   for (const { row, col } of iterRangeCells(range)) {
     if (store.getValue(row, col) !== "") {
       toClear.push({ row, col, value: "" });
@@ -16,7 +15,7 @@ export function clearSelectionValues(
   }
 
   if (toClear.length === 0) return;
-
   store.setValues(toClear);
   onChange?.(toClear);
 }
+

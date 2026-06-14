@@ -27,9 +27,7 @@ export function computeVisibleRange(
     rowCount - 1,
     findIndexAtOffset(rowHeights, scrollTop + viewportHeight) + overscan,
   );
-
   const scrollableColumnCount = columnCount - frozenColumnCount;
-
   if (scrollableColumnCount <= 0) {
     return {
       startRow,
@@ -40,7 +38,6 @@ export function computeVisibleRange(
   }
 
   const scrollableWidths = columnWidths.slice(frozenColumnCount);
-
   const scrollableStartCol = Math.max(
     0,
     findIndexAtOffset(scrollableWidths, scrollLeft) - overscan,
@@ -49,7 +46,6 @@ export function computeVisibleRange(
     scrollableColumnCount - 1,
     findIndexAtOffset(scrollableWidths, scrollLeft + viewportWidth) + overscan,
   );
-
   return {
     startRow,
     endRow,
@@ -57,3 +53,4 @@ export function computeVisibleRange(
     endCol: frozenColumnCount + scrollableEndCol,
   };
 }
+

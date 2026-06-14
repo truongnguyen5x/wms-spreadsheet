@@ -1,6 +1,9 @@
 import type { CellStore } from "../store/CellStore";
-import type { ICellStoreInput, IClipboardData, INormalizedRange } from "../types";
-
+import type {
+  ICellStoreInput,
+  IClipboardData,
+  INormalizedRange,
+} from "../types";
 export function copyRange(
   store: CellStore,
   range: INormalizedRange,
@@ -8,7 +11,6 @@ export function copyRange(
   const rowCount = range.endRow - range.startRow + 1;
   const colCount = range.endCol - range.startCol + 1;
   const values: string[][] = [];
-
   for (let r = 0; r < rowCount; r++) {
     const row: string[] = [];
     for (let c = 0; c < colCount; c++) {
@@ -38,16 +40,13 @@ export function pasteAt(
   columnCount: number,
 ): ICellStoreInput[] {
   const changes: ICellStoreInput[] = [];
-
   for (let r = 0; r < values.length; r++) {
     const destRow = targetRow + r;
     if (destRow >= rowCount) break;
-
     const rowValues = values[r] ?? [];
     for (let c = 0; c < rowValues.length; c++) {
       const destCol = targetCol + c;
       if (destCol >= columnCount) break;
-
       const value = rowValues[c] ?? "";
       if (store.getValue(destRow, destCol) !== value) {
         changes.push({ row: destRow, col: destCol, value });
@@ -62,7 +61,10 @@ export function pasteAt(
   return changes;
 }
 
-export function applyChanges(store: CellStore, changes: ICellStoreInput[]): void {
+export function applyChanges(
+  store: CellStore,
+  changes: ICellStoreInput[],
+): void {
   if (changes.length === 0) return;
   if (changes.length === 1) {
     const { row, col, value } = changes[0];
@@ -71,3 +73,4 @@ export function applyChanges(store: CellStore, changes: ICellStoreInput[]): void
   }
   store.setValues(changes);
 }
+

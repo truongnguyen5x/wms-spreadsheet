@@ -6,3 +6,4 @@ export function parseCellKey(key: string): { row: number; col: number } {
   const [row, col] = key.split(":").map(Number);
   return { row, col };
 }
+

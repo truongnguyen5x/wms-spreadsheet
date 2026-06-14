@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { computeVisibleRange, type IVisibleRange } from "../utils/computeVisibleRange";
+import {
+  computeVisibleRange,
+  type IVisibleRange,
+} from "../utils/computeVisibleRange";
 import { getFrozenWidth } from "../utils/frozenColumns";
 import { getTotalSize } from "../utils/gridDimensions";
 
@@ -37,23 +40,19 @@ export function useVirtualWindow(
     overscan,
     frozenColumnCount = 0,
   } = options;
-
   const scrollRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
   const scrollPendingRef = useRef({ scrollTop: 0, scrollLeft: 0 });
-
   const [state, setState] = useState(() => ({
     scrollTop: 0,
     scrollLeft: 0,
     viewportWidth: 0,
     viewportHeight: 0,
   }));
-
   const totalWidth = getTotalSize(columnWidths);
   const frozenWidth = getFrozenWidth(columnWidths, frozenColumnCount);
   const scrollableTotalWidth = Math.max(0, totalWidth - frozenWidth);
   const totalHeight = getTotalSize(rowHeights);
-
   const visibleRange = useMemo(
     () =>
       computeVisibleRange(
@@ -81,7 +80,6 @@ export function useVirtualWindow(
       frozenColumnCount,
     ],
   );
-
   const flushScroll = useCallback(() => {
     rafRef.current = null;
     const { scrollTop, scrollLeft } = scrollPendingRef.current;
@@ -92,11 +90,9 @@ export function useVirtualWindow(
       return { ...prev, scrollTop, scrollLeft };
     });
   }, []);
-
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
-
     scrollPendingRef.current = {
       scrollTop: el.scrollTop,
       scrollLeft: el.scrollLeft,
@@ -106,11 +102,9 @@ export function useVirtualWindow(
       rafRef.current = requestAnimationFrame(flushScroll);
     }
   }, [flushScroll]);
-
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-
     const updateViewport = () => {
       setState((prev) => ({
         ...prev,
@@ -120,14 +114,10 @@ export function useVirtualWindow(
         scrollLeft: el.scrollLeft,
       }));
     };
-
     updateViewport();
-
     const observer = new ResizeObserver(updateViewport);
     observer.observe(el);
-
     el.addEventListener("scroll", handleScroll, { passive: true });
-
     return () => {
       observer.disconnect();
       el.removeEventListener("scroll", handleScroll);
@@ -136,7 +126,6 @@ export function useVirtualWindow(
       }
     };
   }, [handleScroll]);
-
   return {
     scrollRef,
     scrollTop: state.scrollTop,
@@ -151,3 +140,4 @@ export function useVirtualWindow(
     frozenWidth,
   };
 }
+

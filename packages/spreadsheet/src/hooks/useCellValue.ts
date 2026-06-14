@@ -12,3 +12,4 @@ export function useCellValue(
     () => store.getValue(row, col),
   );
 }
+

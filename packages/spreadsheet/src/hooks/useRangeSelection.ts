@@ -5,9 +5,7 @@ import {
   createRowSelection,
   createSelection,
 } from "../utils/normalizeRange";
-
 export type TSelectionDragMode = "cell" | "column" | "row";
-
 export interface IUseRangeSelectionOptions {
   initialCell?: ICellAddress;
   rowCount: number;
@@ -39,11 +37,9 @@ export function useRangeSelection({
   const dragModeRef = useRef<TSelectionDragMode>("cell");
   const [isDragging, setIsDragging] = useState(false);
   const [dragMode, setDragMode] = useState<TSelectionDragMode>("cell");
-
   const setSelection = useCallback((next: ISelection) => {
     setSelectionState(next);
   }, []);
-
   const handleCellMouseDown = useCallback((row: number, col: number) => {
     dragModeRef.current = "cell";
     setDragMode("cell");
@@ -51,7 +47,6 @@ export function useRangeSelection({
     setIsDragging(true);
     setSelectionState(createSelection({ row, col }));
   }, []);
-
   const handleCellMouseEnter = useCallback((row: number, col: number) => {
     if (!isDraggingRef.current || dragModeRef.current !== "cell") return;
     setSelectionState((prev) => {
@@ -59,7 +54,6 @@ export function useRangeSelection({
       return { anchor: prev.anchor, focus: { row, col } };
     });
   }, []);
-
   const handleColumnHeaderMouseDown = useCallback(
     (col: number) => {
       dragModeRef.current = "column";
@@ -70,7 +64,6 @@ export function useRangeSelection({
     },
     [rowCount],
   );
-
   const handleColumnHeaderMouseEnter = useCallback(
     (col: number) => {
       if (!isDraggingRef.current || dragModeRef.current !== "column") return;
@@ -84,7 +77,6 @@ export function useRangeSelection({
     },
     [rowCount],
   );
-
   const handleRowHeaderMouseDown = useCallback(
     (row: number) => {
       dragModeRef.current = "row";
@@ -95,7 +87,6 @@ export function useRangeSelection({
     },
     [columnCount],
   );
-
   const handleRowHeaderMouseEnter = useCallback(
     (row: number) => {
       if (!isDraggingRef.current || dragModeRef.current !== "row") return;
@@ -109,7 +100,6 @@ export function useRangeSelection({
     },
     [columnCount],
   );
-
   useEffect(() => {
     const handleMouseUp = () => {
       if (isDraggingRef.current) {
@@ -117,11 +107,9 @@ export function useRangeSelection({
         setIsDragging(false);
       }
     };
-
     document.addEventListener("mouseup", handleMouseUp);
     return () => document.removeEventListener("mouseup", handleMouseUp);
   }, []);
-
   return {
     selection,
     setSelection,
@@ -135,3 +123,4 @@ export function useRangeSelection({
     dragMode,
   };
 }
+

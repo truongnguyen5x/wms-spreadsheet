@@ -12,9 +12,7 @@ export function normalizeRange(
   };
 }
 
-export function normalizeSelection(
-  selection: ISelection,
-): INormalizedRange {
+export function normalizeSelection(selection: ISelection): INormalizedRange {
   return normalizeRange(selection.anchor, selection.focus);
 }
 
@@ -64,11 +62,17 @@ export function createSelection(cell: ICellAddress): ISelection {
   return { anchor: cell, focus: cell };
 }
 
-export function createColumnSelection(col: number, rowCount: number): ISelection {
+export function createColumnSelection(
+  col: number,
+  rowCount: number,
+): ISelection {
   return { anchor: { row: 0, col }, focus: { row: rowCount - 1, col } };
 }
 
-export function createRowSelection(row: number, columnCount: number): ISelection {
+export function createRowSelection(
+  row: number,
+  columnCount: number,
+): ISelection {
   return { anchor: { row, col: 0 }, focus: { row, col: columnCount - 1 } };
 }
 
@@ -78,9 +82,8 @@ export function isHeaderStyleSelection(
   columnCount: number,
 ): boolean {
   const range = normalizeSelection(selection);
-  const spansAllRows =
-    range.startRow === 0 && range.endRow === rowCount - 1;
-  const spansAllCols =
-    range.startCol === 0 && range.endCol === columnCount - 1;
+  const spansAllRows = range.startRow === 0 && range.endRow === rowCount - 1;
+  const spansAllCols = range.startCol === 0 && range.endCol === columnCount - 1;
   return spansAllRows || spansAllCols;
 }
+

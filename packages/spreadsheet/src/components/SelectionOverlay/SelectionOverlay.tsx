@@ -33,7 +33,6 @@ export const SelectionOverlay = memo(function SelectionOverlay({
     range.startCol,
     range.endCol,
   );
-
   const className = [
     styles.selectionOverlay,
     showFillHandle ? styles.selectionOverlaySingle : "",
@@ -42,7 +41,6 @@ export const SelectionOverlay = memo(function SelectionOverlay({
   ]
     .filter(Boolean)
     .join(" ");
-
   return (
     <div
       className={className}
@@ -63,3 +61,4 @@ export const SelectionOverlay = memo(function SelectionOverlay({
     </div>
   );
 });
+

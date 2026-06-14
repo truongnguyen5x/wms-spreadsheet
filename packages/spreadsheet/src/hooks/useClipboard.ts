@@ -35,17 +35,14 @@ export function useClipboard({
   onChange,
 }: IUseClipboardOptions): IUseClipboardResult {
   const [clipboard, setClipboard] = useState<IClipboardData | null>(null);
-
   const clearClipboard = useCallback(() => {
     setClipboard(null);
   }, []);
-
   const handleCopy = useCallback(
     (selection: ISelection) => {
       const range = normalizeSelection(selection);
       const data = copyRange(store, range);
       setClipboard(data);
-
       const tsv = clipboardToTsv(data);
       void navigator.clipboard?.writeText(tsv).catch(() => {
         // Permission denied or clipboard unavailable — internal clipboard still works
@@ -53,11 +50,9 @@ export function useClipboard({
     },
     [store],
   );
-
   const handlePaste = useCallback(
     async (focusCell: ICellAddress) => {
       let values: string[][] | null = clipboard?.values ?? null;
-
       if (!values) {
         try {
           const text = await navigator.clipboard?.readText();
@@ -78,16 +73,14 @@ export function useClipboard({
           rowCount,
           columnCount,
         );
-
         if (changes.length > 0) {
           onChange?.(changes);
         }
       }
-
       setClipboard(null);
     },
     [clipboard, store, rowCount, columnCount, onChange],
   );
-
   return { clipboard, handleCopy, handlePaste, clearClipboard };
 }
+

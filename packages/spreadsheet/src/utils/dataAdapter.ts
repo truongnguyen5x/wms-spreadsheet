@@ -3,17 +3,11 @@ import type { ISheetData, ISpreadsheetColumn } from "../types";
 import { cellKey } from "./cellKey";
 
 const CELL_KEY_PATTERN = /^\d+:\d+$/;
-
 export function is2DArray(data: unknown): data is string[][] {
-  return (
-    Array.isArray(data) &&
-    (data.length === 0 || Array.isArray(data[0]))
-  );
+  return Array.isArray(data) && (data.length === 0 || Array.isArray(data[0]));
 }
 
-export function isObjectArray(
-  data: unknown,
-): data is Record<string, string>[] {
+export function isObjectArray(data: unknown): data is Record<string, string>[] {
   return (
     Array.isArray(data) &&
     data.length > 0 &&
@@ -58,7 +52,6 @@ export function resolveColIndex(
 
 function matrixToSheetData(data: string[][]): ISheetData {
   const result: ISheetData = {};
-
   for (let row = 0; row < data.length; row++) {
     for (let col = 0; col < data[row].length; col++) {
       const value = data[row][col];
@@ -76,7 +69,6 @@ function objectArrayToSheetData(
   columns: ISpreadsheetColumn[],
 ): ISheetData {
   const result: ISheetData = {};
-
   for (let row = 0; row < data.length; row++) {
     const rowData = data[row];
     for (let col = 0; col < columns.length; col++) {
@@ -104,11 +96,12 @@ export function normalizeToSheetData(
 
   if (isObjectArray(data)) {
     if (!columns?.length) {
-      throw new Error("columns prop is required when initialData is an object array");
+      throw new Error(
+        "columns prop is required when initialData is an object array",
+      );
     }
     return objectArrayToSheetData(data, columns);
   }
-
   throw new Error("Unsupported data format");
 }
 
@@ -122,11 +115,9 @@ export function exportSheetData(
   }
 
   const result: Record<string, string>[] = [];
-
   for (let row = 0; row < rowCount; row++) {
     const rowObject: Record<string, string> = {};
     let hasData = false;
-
     for (let col = 0; col < columns.length; col++) {
       const value = store.getValue(row, col);
       if (value !== "") {
@@ -162,3 +153,4 @@ export function buildInitialColumnWidths(
     (_, col) => columns[col]?.width ?? defaultColumnWidth,
   );
 }
+

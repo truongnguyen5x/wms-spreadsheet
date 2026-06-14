@@ -29,7 +29,6 @@ export const ClipboardOverlay = memo(function ClipboardOverlay({
     range.startCol,
     range.endCol,
   );
-
   const className = [
     styles.clipboardOverlay,
     hideLeftBorder ? styles.hideLeftBorder : "",
@@ -37,7 +36,6 @@ export const ClipboardOverlay = memo(function ClipboardOverlay({
   ]
     .filter(Boolean)
     .join(" ");
-
   return (
     <div
       className={className}
@@ -51,3 +49,4 @@ export const ClipboardOverlay = memo(function ClipboardOverlay({
     />
   );
 });
+

@@ -13,15 +13,15 @@ export function pointerToColumn(
   frozenWidth = 0,
   frozenHeaderEl?: HTMLElement | null,
 ): number {
-  const scrollableTotalWidth = Math.max(0, getTotalSize(columnWidths) - frozenWidth);
-
+  const scrollableTotalWidth = Math.max(
+    0,
+    getTotalSize(columnWidths) - frozenWidth,
+  );
   let contentX: number;
-
   if (frozenHeaderEl && frozenWidth > 0) {
     const frozenRect = frozenHeaderEl.getBoundingClientRect();
     const inFrozenZone =
       clientX >= frozenRect.left && clientX < frozenRect.right;
-
     if (inFrozenZone && scrollLeft > 0) {
       contentX = frozenWidth + scrollLeft;
     } else if (inFrozenZone) {
@@ -48,11 +48,7 @@ export function pointerToColumn(
     );
   }
 
-  return clamp(
-    findIndexAtOffset(columnWidths, contentX),
-    0,
-    columnCount - 1,
-  );
+  return clamp(findIndexAtOffset(columnWidths, contentX), 0, columnCount - 1);
 }
 
 export function pointerToRow(
@@ -64,12 +60,11 @@ export function pointerToRow(
 ): number {
   const rect = headerPaneEl.getBoundingClientRect();
   const totalHeight = getTotalSize(rowHeights);
-
   const contentY = clamp(
     scrollTop + (clientY - rect.top),
     0,
     Math.max(0, totalHeight - 1),
   );
-
   return clamp(findIndexAtOffset(rowHeights, contentY), 0, rowCount - 1);
 }
+

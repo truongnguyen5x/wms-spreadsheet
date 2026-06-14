@@ -12,7 +12,6 @@ import { getScrollableColumnLeft } from "../../utils/frozenColumns";
 import styles from "../../styles/spreadsheet.module.scss";
 
 export type TColumnHeaderMode = "frozen" | "scrollable";
-
 export interface IColumnHeaderRowProps {
   colStart: number;
   colEnd: number;
@@ -56,7 +55,6 @@ export const ColumnHeaderRow = memo(function ColumnHeaderRow({
 }: IColumnHeaderRowProps) {
   const headers: React.ReactNode[] = [];
   const handles: React.ReactNode[] = [];
-
   if (colEnd >= colStart) {
     for (let col = colStart; col <= colEnd; col++) {
       const columnLeft =
@@ -68,7 +66,6 @@ export const ColumnHeaderRow = memo(function ColumnHeaderRow({
         selectionRange !== null &&
         col >= selectionRange.startCol &&
         col <= selectionRange.endCol;
-
       headers.push(
         <div
           key={col}
@@ -88,10 +85,8 @@ export const ColumnHeaderRow = memo(function ColumnHeaderRow({
           {getColumnHeaderContent(col, columns)}
         </div>,
       );
-
       const isHandleHovered =
         hoveredHandle?.axis === "column" && hoveredHandle.index === col;
-
       handles.push(
         <div
           key={`resize-${col}`}
@@ -121,7 +116,6 @@ export const ColumnHeaderRow = memo(function ColumnHeaderRow({
     (mode === "frozen"
       ? styles.frozenColumnHeaderPane
       : `${styles.columnHeaderPane}${withFrozenDivider ? ` ${styles.scrollableWithFrozenDivider}` : ""}`);
-
   return (
     <div ref={headerPaneRef} className={paneClass}>
       <div

@@ -5,7 +5,6 @@ import { pointerToColumn, pointerToRow } from "../utils/pointerToHeader";
 
 const EDGE_THRESHOLD = 40;
 const MAX_SCROLL_SPEED = 16;
-
 export interface IUseDragAutoScrollOptions {
   isDragging: boolean;
   dragMode: TSelectionDragMode;
@@ -39,12 +38,10 @@ function getEdgeScrollDeltas(
   let scrollDx = 0;
   let scrollDy = 0;
   let nearEdge = false;
-
   const distTop = clientY - rect.top;
   const distBottom = rect.bottom - clientY;
   const distLeft = clientX - rect.left;
   const distRight = rect.right - clientX;
-
   if (vertical) {
     if (clientY < rect.top) {
       scrollDy = -MAX_SCROLL_SPEED;
@@ -107,23 +104,18 @@ export function useDragAutoScroll({
   const onColumnFocusRef = useRef(onColumnFocus);
   const onRowFocusRef = useRef(onRowFocus);
   const dragModeRef = useRef(dragMode);
-
   useEffect(() => {
     onCellFocusRef.current = onCellFocus;
   }, [onCellFocus]);
-
   useEffect(() => {
     onColumnFocusRef.current = onColumnFocus;
   }, [onColumnFocus]);
-
   useEffect(() => {
     onRowFocusRef.current = onRowFocus;
   }, [onRowFocus]);
-
   useEffect(() => {
     dragModeRef.current = dragMode;
   }, [dragMode]);
-
   const tick = useCallback(() => {
     const el = scrollRef.current;
     if (!el) {
@@ -133,11 +125,9 @@ export function useDragAutoScroll({
 
     const { clientX, clientY } = pointerRef.current;
     const mode = dragModeRef.current;
-
     let edgeRect = el.getBoundingClientRect();
     let horizontal = true;
     let vertical = true;
-
     if (mode === "column" && columnHeaderRef?.current) {
       edgeRect = columnHeaderRef.current.getBoundingClientRect();
       horizontal = true;
@@ -155,7 +145,6 @@ export function useDragAutoScroll({
       horizontal,
       vertical,
     );
-
     if (
       horizontal &&
       frozenWidth > 0 &&
@@ -169,8 +158,14 @@ export function useDragAutoScroll({
     if (scrollDx !== 0 || scrollDy !== 0) {
       const maxScrollLeft = Math.max(0, el.scrollWidth - el.clientWidth);
       const maxScrollTop = Math.max(0, el.scrollHeight - el.clientHeight);
-      el.scrollLeft = Math.max(0, Math.min(maxScrollLeft, el.scrollLeft + scrollDx));
-      el.scrollTop = Math.max(0, Math.min(maxScrollTop, el.scrollTop + scrollDy));
+      el.scrollLeft = Math.max(
+        0,
+        Math.min(maxScrollLeft, el.scrollLeft + scrollDx),
+      );
+      el.scrollTop = Math.max(
+        0,
+        Math.min(maxScrollTop, el.scrollTop + scrollDy),
+      );
     }
 
     if (mode === "column" && columnHeaderRef?.current) {
@@ -225,13 +220,11 @@ export function useDragAutoScroll({
     frozenColumnHeaderRef,
     frozenBodyRef,
   ]);
-
   const scheduleTick = useCallback(() => {
     if (rafRef.current === null) {
       rafRef.current = requestAnimationFrame(tick);
     }
   }, [tick]);
-
   useEffect(() => {
     if (!isDragging) {
       if (rafRef.current !== null) {
@@ -245,9 +238,7 @@ export function useDragAutoScroll({
       pointerRef.current = { clientX: e.clientX, clientY: e.clientY };
       scheduleTick();
     };
-
     document.addEventListener("mousemove", handleMouseMove);
-
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
       if (rafRef.current !== null) {
@@ -257,3 +248,4 @@ export function useDragAutoScroll({
     };
   }, [isDragging, scheduleTick]);
 }
+
