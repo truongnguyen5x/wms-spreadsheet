@@ -30,7 +30,27 @@
   background: #f8f9fa;
   border-right: 1px solid #dadce0;
   border-bottom: 1px solid #dadce0;
-  box-sizing: border-box;
+  //  box-sizing: border-box;
+}
+
+.frozenColumnHeaderPane {
+  flex-shrink: 0;
+  height: 28px;
+  overflow: hidden;
+  background: #f8f9fa;
+  border-bottom: 1px solid #dadce0;
+  position: relative;
+}
+
+.frozenBodyPane {
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+  background: #fff;
+}
+
+.scrollableWithFrozenDivider {
+  box-shadow: inset 1px 0 0 #dadce0;
 }
 
 .columnHeaderPane {

@@ -38,6 +38,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       onColumnResize,
       onRowResize,
       initialData,
+      frozenColumnCount,
     },
     ref,
   ) {
@@ -246,6 +247,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           store={store}
           rowCount={rowCount}
           columnCount={columnCount}
+          frozenColumnCount={frozenColumnCount}
           dimensions={dimensions}
           overscan={overscan}
           selection={selection}

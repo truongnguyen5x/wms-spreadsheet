@@ -13,16 +13,47 @@ export function pointerToCell(
   columnWidths: readonly number[],
   rowCount: number,
   columnCount: number,
+  frozenWidth = 0,
+  frozenBodyEl?: HTMLElement | null,
 ): ICellAddress {
-  const rect = scrollEl.getBoundingClientRect();
-  const totalWidth = getTotalSize(columnWidths);
   const totalHeight = getTotalSize(rowHeights);
+  const scrollableTotalWidth = Math.max(0, getTotalSize(columnWidths) - frozenWidth);
+  const scrollLeft = scrollEl.scrollLeft;
 
-  const contentX = clamp(
-    scrollEl.scrollLeft + (clientX - rect.left),
-    0,
-    Math.max(0, totalWidth - 1),
-  );
+  let contentX: number;
+
+  if (frozenBodyEl && frozenWidth > 0) {
+    const frozenRect = frozenBodyEl.getBoundingClientRect();
+    const inFrozenZone =
+      clientX >= frozenRect.left && clientX < frozenRect.right;
+
+    if (inFrozenZone && scrollLeft > 0) {
+      contentX = frozenWidth + scrollLeft;
+    } else if (inFrozenZone) {
+      contentX = clamp(
+        clientX - frozenRect.left,
+        0,
+        Math.max(0, frozenWidth - 1),
+      );
+    } else {
+      const rect = scrollEl.getBoundingClientRect();
+      contentX = clamp(
+        frozenWidth + scrollLeft + (clientX - rect.left),
+        frozenWidth,
+        Math.max(frozenWidth, frozenWidth + scrollableTotalWidth - 1),
+      );
+    }
+  } else {
+    const rect = scrollEl.getBoundingClientRect();
+    const totalWidth = getTotalSize(columnWidths);
+    contentX = clamp(
+      scrollLeft + (clientX - rect.left),
+      0,
+      Math.max(0, totalWidth - 1),
+    );
+  }
+
+  const rect = scrollEl.getBoundingClientRect();
   const contentY = clamp(
     scrollEl.scrollTop + (clientY - rect.top),
     0,

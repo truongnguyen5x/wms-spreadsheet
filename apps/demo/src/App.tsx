@@ -1,8 +1,5 @@
 import { useRef } from "react";
-import {
-  Spreadsheet,
-  type ISpreadsheetRef,
-} from "@wms/spreadsheet";
+import { Spreadsheet, type ISpreadsheetRef } from "@wms/spreadsheet";
 import styles from "./App.module.scss";
 
 let renderCount = 0;
@@ -61,6 +58,7 @@ export default function App() {
           ref={sheetRef}
           rowCount={10000}
           columnCount={26}
+          frozenColumnCount={2}
           initialData={{
             "2:2": "Hello",
             "4:1": "World",

@@ -17,6 +17,7 @@ export function computeVisibleRange(
   rowCount: number,
   columnCount: number,
   overscan = 3,
+  frozenColumnCount = 0,
 ): IVisibleRange {
   const startRow = Math.max(
     0,
@@ -26,14 +27,33 @@ export function computeVisibleRange(
     rowCount - 1,
     findIndexAtOffset(rowHeights, scrollTop + viewportHeight) + overscan,
   );
-  const startCol = Math.max(
+
+  const scrollableColumnCount = columnCount - frozenColumnCount;
+
+  if (scrollableColumnCount <= 0) {
+    return {
+      startRow,
+      endRow,
+      startCol: 0,
+      endCol: Math.max(0, columnCount - 1),
+    };
+  }
+
+  const scrollableWidths = columnWidths.slice(frozenColumnCount);
+
+  const scrollableStartCol = Math.max(
     0,
-    findIndexAtOffset(columnWidths, scrollLeft) - overscan,
+    findIndexAtOffset(scrollableWidths, scrollLeft) - overscan,
   );
-  const endCol = Math.min(
-    columnCount - 1,
-    findIndexAtOffset(columnWidths, scrollLeft + viewportWidth) + overscan,
+  const scrollableEndCol = Math.min(
+    scrollableColumnCount - 1,
+    findIndexAtOffset(scrollableWidths, scrollLeft + viewportWidth) + overscan,
   );
 
-  return { startRow, endRow, startCol, endCol };
+  return {
+    startRow,
+    endRow,
+    startCol: frozenColumnCount + scrollableStartCol,
+    endCol: frozenColumnCount + scrollableEndCol,
+  };
 }

@@ -16,6 +16,9 @@ export interface IUseDragAutoScrollOptions {
   columnWidths: readonly number[];
   rowCount: number;
   columnCount: number;
+  frozenWidth?: number;
+  frozenColumnHeaderRef?: RefObject<HTMLDivElement | null>;
+  frozenBodyRef?: RefObject<HTMLDivElement | null>;
   onCellFocus: (row: number, col: number) => void;
   onColumnFocus?: (col: number) => void;
   onRowFocus?: (row: number) => void;
@@ -91,6 +94,9 @@ export function useDragAutoScroll({
   columnWidths,
   rowCount,
   columnCount,
+  frozenWidth = 0,
+  frozenColumnHeaderRef,
+  frozenBodyRef,
   onCellFocus,
   onColumnFocus,
   onRowFocus,
@@ -142,13 +148,23 @@ export function useDragAutoScroll({
       vertical = true;
     }
 
-    const { scrollDx, scrollDy, nearEdge } = getEdgeScrollDeltas(
+    let { scrollDx, scrollDy, nearEdge } = getEdgeScrollDeltas(
       clientX,
       clientY,
       edgeRect,
       horizontal,
       vertical,
     );
+
+    if (
+      horizontal &&
+      frozenWidth > 0 &&
+      el.scrollLeft > 0 &&
+      clientX < edgeRect.left
+    ) {
+      scrollDx = -MAX_SCROLL_SPEED;
+      nearEdge = true;
+    }
 
     if (scrollDx !== 0 || scrollDy !== 0) {
       const maxScrollLeft = Math.max(0, el.scrollWidth - el.clientWidth);
@@ -164,6 +180,8 @@ export function useDragAutoScroll({
         el.scrollLeft,
         columnWidths,
         columnCount,
+        frozenWidth,
+        frozenColumnHeaderRef?.current,
       );
       onColumnFocusRef.current?.(col);
     } else if (mode === "row" && rowHeaderRef?.current) {
@@ -184,6 +202,8 @@ export function useDragAutoScroll({
         columnWidths,
         rowCount,
         columnCount,
+        frozenWidth,
+        frozenBodyRef?.current,
       );
       onCellFocusRef.current(cell.row, cell.col);
     }
@@ -201,6 +221,9 @@ export function useDragAutoScroll({
     columnWidths,
     rowCount,
     columnCount,
+    frozenWidth,
+    frozenColumnHeaderRef,
+    frozenBodyRef,
   ]);
 
   const scheduleTick = useCallback(() => {

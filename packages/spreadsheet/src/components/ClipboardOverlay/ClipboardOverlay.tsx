@@ -7,11 +7,13 @@ import styles from "../../styles/spreadsheet.module.scss";
 export interface IClipboardOverlayProps {
   range: INormalizedRange;
   dimensions: IGridDimensions;
+  columnLeftOffset?: number;
 }
 
 export const ClipboardOverlay = memo(function ClipboardOverlay({
   range,
   dimensions,
+  columnLeftOffset = 0,
 }: IClipboardOverlayProps) {
   const rowBounds = computeRangeBounds(
     dimensions.rowHeights,
@@ -29,7 +31,7 @@ export const ClipboardOverlay = memo(function ClipboardOverlay({
       className={styles.clipboardOverlay}
       style={{
         top: rowBounds.offset,
-        left: colBounds.offset,
+        left: colBounds.offset - columnLeftOffset,
         width: colBounds.size,
         height: rowBounds.size,
       }}

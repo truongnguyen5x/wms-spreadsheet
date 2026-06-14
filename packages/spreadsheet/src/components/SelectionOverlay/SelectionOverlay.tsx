@@ -1,22 +1,22 @@
 import { memo } from "react";
-import type { INormalizedRange, ISelection } from "../../types";
-import { isSingleCellSelection, normalizeSelection } from "../../utils/normalizeRange";
+import type { INormalizedRange } from "../../types";
 import { computeRangeBounds } from "../../utils/gridDimensions";
 import type { IGridDimensions } from "../../hooks/useGridDimensions";
 import styles from "../../styles/spreadsheet.module.scss";
 
 export interface ISelectionOverlayProps {
-  selection: ISelection;
+  range: INormalizedRange;
   dimensions: IGridDimensions;
+  columnLeftOffset?: number;
+  showFillHandle?: boolean;
 }
 
 export const SelectionOverlay = memo(function SelectionOverlay({
-  selection,
+  range,
   dimensions,
+  columnLeftOffset = 0,
+  showFillHandle = false,
 }: ISelectionOverlayProps) {
-  const range: INormalizedRange = normalizeSelection(selection);
-  const isSingle = isSingleCellSelection(selection);
-
   const rowBounds = computeRangeBounds(
     dimensions.rowHeights,
     range.startRow,
@@ -30,16 +30,16 @@ export const SelectionOverlay = memo(function SelectionOverlay({
 
   return (
     <div
-      className={`${styles.selectionOverlay}${isSingle ? ` ${styles.selectionOverlaySingle}` : ""}`}
+      className={`${styles.selectionOverlay}${showFillHandle ? ` ${styles.selectionOverlaySingle}` : ""}`}
       style={{
         top: rowBounds.offset,
-        left: colBounds.offset,
+        left: colBounds.offset - columnLeftOffset,
         width: colBounds.size,
         height: rowBounds.size,
       }}
       aria-hidden
     >
-      {isSingle ? (
+      {showFillHandle ? (
         <span className={styles.fillHandle} />
       ) : (
         <span className={styles.selectionHandle} />

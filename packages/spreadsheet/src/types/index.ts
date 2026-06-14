@@ -51,6 +51,8 @@ export interface ISpreadsheetProps {
   onColumnResize?: (col: number, width: number) => void;
   onRowResize?: (row: number, height: number) => void;
   initialData?: ISheetData;
+  /** Số cột cố định từ trái (0 = không cố định). Ví dụ 2 → cột A, B. */
+  frozenColumnCount?: number;
 }
 
 export const DEFAULT_ROW_HEIGHT = 28;

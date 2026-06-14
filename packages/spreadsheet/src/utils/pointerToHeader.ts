@@ -10,15 +10,43 @@ export function pointerToColumn(
   scrollLeft: number,
   columnWidths: readonly number[],
   columnCount: number,
+  frozenWidth = 0,
+  frozenHeaderEl?: HTMLElement | null,
 ): number {
-  const rect = headerPaneEl.getBoundingClientRect();
-  const totalWidth = getTotalSize(columnWidths);
+  const scrollableTotalWidth = Math.max(0, getTotalSize(columnWidths) - frozenWidth);
 
-  const contentX = clamp(
-    scrollLeft + (clientX - rect.left),
-    0,
-    Math.max(0, totalWidth - 1),
-  );
+  let contentX: number;
+
+  if (frozenHeaderEl && frozenWidth > 0) {
+    const frozenRect = frozenHeaderEl.getBoundingClientRect();
+    const inFrozenZone =
+      clientX >= frozenRect.left && clientX < frozenRect.right;
+
+    if (inFrozenZone && scrollLeft > 0) {
+      contentX = frozenWidth + scrollLeft;
+    } else if (inFrozenZone) {
+      contentX = clamp(
+        clientX - frozenRect.left,
+        0,
+        Math.max(0, frozenWidth - 1),
+      );
+    } else {
+      const rect = headerPaneEl.getBoundingClientRect();
+      contentX = clamp(
+        frozenWidth + scrollLeft + (clientX - rect.left),
+        frozenWidth,
+        Math.max(frozenWidth, frozenWidth + scrollableTotalWidth - 1),
+      );
+    }
+  } else {
+    const rect = headerPaneEl.getBoundingClientRect();
+    const totalWidth = getTotalSize(columnWidths);
+    contentX = clamp(
+      scrollLeft + (clientX - rect.left),
+      0,
+      Math.max(0, totalWidth - 1),
+    );
+  }
 
   return clamp(
     findIndexAtOffset(columnWidths, contentX),
