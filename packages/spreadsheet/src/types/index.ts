@@ -102,6 +102,7 @@ export type TSheetDataInput =
   | string[][]
   | Record<string, string>[];
 export type TSheetDataOutput = ISheetData | Record<string, string>[];
+export type TSheetRowDataOutput = ISheetData | Record<string, string>;
 export interface ICellInput {
   row: number;
   col?: number | null;
@@ -132,6 +133,7 @@ export interface ISpreadsheetRef {
   setCellValues(cells: ICellInput[]): void;
   loadData(data: TSheetDataInput): void;
   getData(): TSheetDataOutput;
+  getRowData(row: number): TSheetRowDataOutput;
   getActiveCell(): ICellAddress | null;
   setActiveCell(cell: ICellAddress): void;
   getSelection(): ISelection | null;

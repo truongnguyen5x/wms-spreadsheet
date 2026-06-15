@@ -143,21 +143,21 @@ export default function App() {
   renderCount += 1;
   const sheetRef = useRef<ISpreadsheetRef>(null);
 
-  // useEffect(() => {
-  //   const ref = sheetRef.current;
-  //   if (!ref) return;
+  useEffect(() => {
+    const ref = sheetRef.current;
+    if (!ref) return;
 
-  //   ref.setCellsMeta([
-  //     {
-  //       row: 1,
-  //       colName: "due_date",
-  //       meta: { maxDate: "2026-06-20" }
-  //     },
-  //     { row: 0, colName: "sku", meta: { invalid: true } },
-  //     { row: 1, colName: "sku", meta: { disabled: true } },
-  //     { row: 2, colName: "sku", meta: { invalid: true, disabled: true } }
-  //   ]);
-  // }, []);
+    ref.setCellsMeta([
+      {
+        row: 1,
+        colName: "due_date",
+        meta: { maxDate: "2026-06-20" },
+      },
+      { row: 0, colName: "sku", meta: { invalid: true } },
+      { row: 1, colName: "sku", meta: { disabled: true } },
+      { row: 2, colName: "sku", meta: { invalid: true, disabled: true } },
+    ]);
+  }, []);
 
   const setQtyByColName = () => {
     sheetRef.current?.setCellValue(0, null, "99", "qty");
@@ -177,6 +177,14 @@ export default function App() {
     const data = sheetRef.current?.getData();
     console.log("Sheet data:", data);
     alert(JSON.stringify(data, null, 2));
+  };
+
+  const readRowData = () => {
+    const active = sheetRef.current?.getActiveCell();
+    const row = active?.row ?? 0;
+    const data = sheetRef.current?.getRowData(row);
+    console.log(`Row ${row} data:`, data);
+    alert(`Row ${row + 1}:\n${JSON.stringify(data, null, 2)}`);
   };
 
   const readActiveCell = () => {
@@ -215,6 +223,9 @@ export default function App() {
           <button type="button" onClick={readData}>
             getData()
           </button>
+          <button type="button" onClick={readRowData}>
+            getRowData()
+          </button>
           <button type="button" onClick={readActiveCell}>
             Read active cell
           </button>
@@ -231,9 +242,9 @@ export default function App() {
           ref={sheetRef}
           rowCount={10000}
           columnCount={26}
-          //  columns={COLUMNS}
+          columns={COLUMNS}
           frozenColumnCount={1}
-          //  initialData={INITIAL_DATA}
+          initialData={INITIAL_DATA}
           customCellRegistry={CUSTOM_CELLS}
           onChange={(changes) => {
             console.log("Changes:", changes);

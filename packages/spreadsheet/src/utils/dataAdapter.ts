@@ -1,6 +1,10 @@
 import type { CellStore } from "../store/CellStore";
-import type { ISheetData, ISpreadsheetColumn } from "../types";
-import { cellKey } from "./cellKey";
+import type {
+  ISheetData,
+  ISpreadsheetColumn,
+  TSheetRowDataOutput,
+} from "../types";
+import { cellKey, parseCellKey } from "./cellKey";
 
 const CELL_KEY_PATTERN = /^\d+:\d+$/;
 export function is2DArray(data: unknown): data is string[][] {
@@ -105,6 +109,35 @@ export function normalizeToSheetData(
   throw new Error("Unsupported data format");
 }
 
+export function exportRowData(
+  store: CellStore,
+  columns: ISpreadsheetColumn[] | undefined,
+  row: number,
+): TSheetRowDataOutput {
+  if (!columns?.length) {
+    const result: ISheetData = {};
+    for (const key of store.getKeys()) {
+      const { row: keyRow, col } = parseCellKey(key);
+      if (keyRow !== row) continue;
+      const value = store.getValue(row, col);
+      if (value !== "") {
+        result[key] = value;
+      }
+    }
+    return result;
+  }
+
+  const rowObject: Record<string, string> = {};
+  for (let col = 0; col < columns.length; col++) {
+    const value = store.getValue(row, col);
+    if (value !== "") {
+      rowObject[columns[col].colName] = value;
+    }
+  }
+
+  return rowObject;
+}
+
 export function exportSheetData(
   store: CellStore,
   columns: ISpreadsheetColumn[] | undefined,
@@ -116,18 +149,9 @@ export function exportSheetData(
 
   const result: Record<string, string>[] = [];
   for (let row = 0; row < rowCount; row++) {
-    const rowObject: Record<string, string> = {};
-    let hasData = false;
-    for (let col = 0; col < columns.length; col++) {
-      const value = store.getValue(row, col);
-      if (value !== "") {
-        rowObject[columns[col].colName] = value;
-        hasData = true;
-      }
-    }
-
-    if (hasData) {
-      result.push(rowObject);
+    const rowData = exportRowData(store, columns, row);
+    if (Object.keys(rowData).length > 0) {
+      result.push(rowData);
     }
   }
 

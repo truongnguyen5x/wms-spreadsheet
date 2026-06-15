@@ -123,7 +123,8 @@ function App() {
 | `getCellValue(row, col)` | Đọc giá trị 1 cell |
 | `setCellValues(cells)` | Set hàng loạt — chỉ cell thay đổi re-render |
 | `loadData(data)` | Bulk load / thay thế data |
-| `getData()` | Export toàn bộ sparse data |
+| `getData()` | Export toàn bộ data (sparse `row:col` hoặc array object nếu có `columns`) |
+| `getRowData(row)` | Export data của 1 dòng (cùng format với `getData()`) |
 | `getActiveCell()` | Lấy cell focus (điểm cuối selection) |
 | `setActiveCell({ row, col })` | Chọn 1 cell (collapse range) |
 | `getSelection()` | Lấy `{ anchor, focus }` |

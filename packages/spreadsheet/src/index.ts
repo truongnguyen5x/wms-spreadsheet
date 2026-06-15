@@ -20,6 +20,7 @@ export type {
   TCellType,
   TSheetDataInput,
   TSheetDataOutput,
+  TSheetRowDataOutput,
 } from "./types";
 export {
   DEFAULT_COLUMN_WIDTH,

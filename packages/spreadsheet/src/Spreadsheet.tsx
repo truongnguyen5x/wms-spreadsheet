@@ -29,6 +29,7 @@ import {
   type TSheetDataInput,
 } from "./types";
 import {
+  exportRowData,
   exportSheetData,
   buildInitialColumnWidths,
   getEffectiveColumnCount,
@@ -170,6 +171,9 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         },
         getData() {
           return exportSheetData(store, columnsRef.current, rowCount);
+        },
+        getRowData(row: number) {
+          return exportRowData(store, columnsRef.current, row);
         },
         getActiveCell() {
           return selection?.focus ?? null;
