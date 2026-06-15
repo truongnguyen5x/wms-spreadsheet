@@ -1,0 +1,58 @@
+$track-width: 34px;
+$track-height: 18px;
+$knob-size: 14px;
+$knob-inset: 1px;
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 2px 0 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  outline: none;
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+}
+
+.track {
+  position: relative;
+  display: inline-block;
+  width: $track-width;
+  height: $track-height;
+  border-radius: $track-height * 0.5;
+  background-color: #fff;
+  border: 1px solid #000;
+  box-sizing: border-box;
+  transition:
+    background-color 0.22s ease,
+    border-color 0.22s ease;
+}
+
+.trackChecked {
+  background-color: #ff0033;
+  border-color: #ff0033;
+}
+
+.knob {
+  position: absolute;
+  top: $knob-inset;
+  left: $knob-inset;
+  width: $knob-size;
+  height: $knob-size;
+  border-radius: 50%;
+  background-color: #000;
+  transition:
+    transform 0.22s ease,
+    background-color 0.22s ease;
+}
+
+.trackChecked .knob {
+  transform: translateX($track-width - $knob-size - $knob-inset * 2 - 1px);
+  background-color: #fff;
+}

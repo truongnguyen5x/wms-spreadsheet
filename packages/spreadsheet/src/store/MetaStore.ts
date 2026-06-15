@@ -12,8 +12,13 @@ function isDefaultMeta(meta: ICellMeta): boolean {
   return (
     (meta.type === undefined || meta.type === "text") &&
     meta.options === undefined &&
+    meta.dateFormat === undefined &&
+    meta.minDate === undefined &&
+    meta.maxDate === undefined &&
     meta.customKey === undefined &&
-    meta.customProps === undefined
+    meta.customProps === undefined &&
+    meta.invalid !== true &&
+    meta.disabled !== true
   );
 }
 
@@ -23,9 +28,12 @@ export class MetaStore {
   getMeta(row: number, col: number): ICellMeta {
     return this.data.get(cellKey(row, col)) ?? EMPTY_META;
   }
+  getStoredMeta(row: number, col: number): Partial<ICellMeta> {
+    return this.data.get(cellKey(row, col)) ?? {};
+  }
   setMeta(row: number, col: number, meta: Partial<ICellMeta>): void {
     const key = cellKey(row, col);
-    const prev = this.data.get(key) ?? EMPTY_META;
+    const prev = this.data.get(key) ?? {};
     const next: ICellMeta = { ...prev, ...meta };
 
     if (isDefaultMeta(next)) {
@@ -40,7 +48,7 @@ export class MetaStore {
     const changedKeys = new Set<string>();
     for (const { row, col, meta } of cells) {
       const key = cellKey(row, col);
-      const prev = this.data.get(key) ?? EMPTY_META;
+      const prev = this.data.get(key) ?? {};
       const next: ICellMeta = { ...prev, ...meta };
 
       if (isDefaultMeta(next)) {

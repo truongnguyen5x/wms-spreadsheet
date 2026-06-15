@@ -47,6 +47,11 @@ export const SpreadsheetCell = memo(function SpreadsheetCell({
   useCellMeta(metaStore, row, col);
   const meta = resolveCellMeta(metaStore, row, col, columns);
   const column = columns?.[col];
+  const stateClass = meta.disabled
+    ? styles.disabled
+    : meta.invalid
+      ? styles.invalid
+      : "";
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     onMouseDown(row, col);
@@ -54,7 +59,7 @@ export const SpreadsheetCell = memo(function SpreadsheetCell({
 
   return (
     <div
-      className={`${styles.cell} ${isActive ? styles.active : ""}`}
+      className={`${styles.cell} ${isActive ? styles.active : ""} ${stateClass}`}
       style={{ top, left, width, height }}
       onMouseDown={handleMouseDown}
       onMouseEnter={() => onMouseEnter(row, col)}

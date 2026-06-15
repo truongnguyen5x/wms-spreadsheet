@@ -1,9 +1,11 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, type RefObject } from "react";
 import type { CellStore } from "../store/CellStore";
+import type { MetaStore } from "../store/MetaStore";
 import type {
   ICellAddress,
   ICellInput,
   IClipboardData,
+  ISpreadsheetColumn,
   ISelection,
 } from "../types";
 import {
@@ -13,9 +15,12 @@ import {
   tsvToMatrix,
 } from "../utils/clipboard";
 import { normalizeSelection } from "../utils/normalizeRange";
+import { isCellDisabled, resolveCellMeta } from "../utils/resolveCellMeta";
 
 export interface IUseClipboardOptions {
   store: CellStore;
+  metaStore: MetaStore;
+  columnsRef: RefObject<ISpreadsheetColumn[] | undefined>;
   rowCount: number;
   columnCount: number;
   onChange?: (changes: ICellInput[]) => void;
@@ -30,11 +35,25 @@ export interface IUseClipboardResult {
 
 export function useClipboard({
   store,
+  metaStore,
+  columnsRef,
   rowCount,
   columnCount,
   onChange,
 }: IUseClipboardOptions): IUseClipboardResult {
   const [clipboard, setClipboard] = useState<IClipboardData | null>(null);
+  const canWriteCell = useCallback(
+    (row: number, col: number) => {
+      const meta = resolveCellMeta(
+        metaStore,
+        row,
+        col,
+        columnsRef.current ?? undefined,
+      );
+      return !isCellDisabled(meta);
+    },
+    [metaStore, columnsRef],
+  );
   const clearClipboard = useCallback(() => {
     setClipboard(null);
   }, []);
@@ -72,6 +91,7 @@ export function useClipboard({
           focusCell.col,
           rowCount,
           columnCount,
+          canWriteCell,
         );
         if (changes.length > 0) {
           onChange?.(changes);
@@ -79,7 +99,7 @@ export function useClipboard({
       }
       setClipboard(null);
     },
-    [clipboard, store, rowCount, columnCount, onChange],
+    [clipboard, store, rowCount, columnCount, onChange, canWriteCell],
   );
   return { clipboard, handleCopy, handlePaste, clearClipboard };
 }

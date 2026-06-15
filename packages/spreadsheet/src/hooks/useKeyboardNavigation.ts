@@ -9,7 +9,7 @@ import type {
 } from "../types";
 import { clearSelectionValues } from "../utils/clearSelection";
 import { createSelection, normalizeSelection } from "../utils/normalizeRange";
-import { isCellEditable, resolveCellMeta } from "../utils/resolveCellMeta";
+import { isCellDisabled, isCellEditable, resolveCellMeta } from "../utils/resolveCellMeta";
 
 export interface IUseKeyboardNavigationOptions {
   rowCount: number;
@@ -73,6 +73,18 @@ export function useKeyboardNavigation({
     },
     [columnsRef, metaStore, startEditing],
   );
+  const isWritableCell = useCallback(
+    (row: number, col: number) => {
+      const meta = resolveCellMeta(
+        metaStore,
+        row,
+        col,
+        columnsRef.current ?? undefined,
+      );
+      return !isCellDisabled(meta);
+    },
+    [columnsRef, metaStore],
+  );
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -111,7 +123,12 @@ export function useKeyboardNavigation({
         case "Delete":
         case "Backspace":
           e.preventDefault();
-          clearSelectionValues(store, normalizeSelection(selection), onChange);
+          clearSelectionValues(
+            store,
+            normalizeSelection(selection),
+            onChange,
+            isWritableCell,
+          );
           break;
         default:
           if ((e.ctrlKey || e.metaKey) && e.key === "c") {
@@ -125,6 +142,13 @@ export function useKeyboardNavigation({
             break;
           }
           if (isPrintableKey(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            const meta = resolveCellMeta(
+              metaStore,
+              selection.focus.row,
+              selection.focus.col,
+              columnsRef.current ?? undefined,
+            );
+            if (meta.type === "date") break;
             e.preventDefault();
             tryStartEditing(selection.focus, e.key);
           }
@@ -138,6 +162,7 @@ export function useKeyboardNavigation({
     editingCell,
     moveFocus,
     tryStartEditing,
+    isWritableCell,
     containerRef,
     store,
     onChange,

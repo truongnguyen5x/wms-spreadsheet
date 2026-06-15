@@ -38,6 +38,7 @@ export function pasteAt(
   targetCol: number,
   rowCount: number,
   columnCount: number,
+  canWrite?: (row: number, col: number) => boolean,
 ): ICellStoreInput[] {
   const changes: ICellStoreInput[] = [];
   for (let r = 0; r < values.length; r++) {
@@ -47,6 +48,7 @@ export function pasteAt(
     for (let c = 0; c < rowValues.length; c++) {
       const destCol = targetCol + c;
       if (destCol >= columnCount) break;
+      if (canWrite && !canWrite(destRow, destCol)) continue;
       const value = rowValues[c] ?? "";
       if (store.getValue(destRow, destCol) !== value) {
         changes.push({ row: destRow, col: destCol, value });

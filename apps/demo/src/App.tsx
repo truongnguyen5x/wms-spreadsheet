@@ -11,25 +11,32 @@ const SELECT_OPTIONS = [
   { id: "1", label: "Lựa chọn 1", color: "#e8eaed" },
   { id: "2", label: "Lựa chọn 2", color: "#d2e3fc" },
   { id: "3", label: "Lựa chọn 3", color: "#ceead6" },
+  { id: "4", label: "Giao hàng nhanhhhhhhhhhhhhhhh", color: "#fce8e6" },
+  { id: "5", label: "Giao hàng tiêu chuẩn", color: "#fff3e0" },
+  { id: "6", label: "Lưu kho tạm", color: "#e6f4ea" },
+  { id: "7", label: "Hủy đơn", color: "#f1f3f4" },
+  { id: "8", label: "Lựa chọn đặc biệt A", color: "#d2e3fc" },
+  { id: "9", label: "Lựa chọn đặc biệt B", color: "#ceead6" },
 ];
 
 const CUSTOM_CELLS: Record<string, ICustomCellDefinition> = {
   statusBadge: {
-    render: ({ value }) => (
-      <span
-        style={{
-          display: "inline-block",
-          padding: "2px 8px",
-          borderRadius: 4,
-          background: value === "done" ? "#ceead6" : "#fce8e6",
-          color: value === "done" ? "#137333" : "#c5221f",
-          fontSize: 12,
-          fontWeight: 600,
-        }}
-      >
-        {value === "done" ? "Hoàn thành" : "Chờ xử lý"}
-      </span>
-    ),
+    render: ({ value }) =>
+      !!value ? (
+        <span
+          style={{
+            display: "inline-block",
+            padding: "2px 8px",
+            borderRadius: 4,
+            background: value === "done" ? "#ceead6" : "#fce8e6",
+            color: value === "done" ? "#137333" : "#c5221f",
+            fontSize: 12,
+            fontWeight: 600,
+          }}
+        >
+          {value === "done" ? "Hoàn thành" : "Chờ xử lý"}
+        </span>
+      ) : null,
     editor: ({ value, onCommit, onCancel }) => (
       <select
         style={{
@@ -63,13 +70,40 @@ const COLUMNS: ISpreadsheetColumn[] = [
     colRender: () => <span style={{ fontWeight: 700 }}>SL</span>,
   },
   { colName: "name", width: 200 },
-  { colName: "choice", colText: "Lựa chọn", width: 140 },
-  { colName: "active", colText: "Kích hoạt", width: 90 },
+  {
+    colName: "choice",
+    colText: "Lựa chọn",
+    width: 140,
+    meta: { type: "select", options: SELECT_OPTIONS },
+  },
+  {
+    colName: "active",
+    colText: "Kích hoạt",
+    width: 90,
+    meta: { type: "switch" },
+  },
   {
     colName: "status",
     colText: "Trạng thái",
     width: 130,
-    customKey: "statusBadge",
+    meta: { customKey: "statusBadge" },
+  },
+  {
+    colName: "self_ship",
+    colText: "Tự ship",
+    width: 90,
+    meta: { type: "boolean" },
+  },
+  {
+    colName: "due_date",
+    colText: "Ngày hạn",
+    width: 130,
+    meta: {
+      type: "date",
+      dateFormat: "YYYY-MM-DD",
+      minDate: "2026-06-01",
+      maxDate: "2026-06-30",
+    },
   },
 ];
 
@@ -81,6 +115,7 @@ const INITIAL_DATA = [
     choice: "1",
     active: "true",
     status: "pending",
+    due_date: "15/06/2026",
   },
   {
     sku: "A002",
@@ -89,6 +124,7 @@ const INITIAL_DATA = [
     choice: "2",
     active: "false",
     status: "done",
+    due_date: "20/06/2026",
   },
   {
     sku: "A003",
@@ -97,6 +133,7 @@ const INITIAL_DATA = [
     choice: "",
     active: "true",
     status: "pending",
+    due_date: "",
   },
 ];
 
@@ -106,31 +143,21 @@ export default function App() {
   renderCount += 1;
   const sheetRef = useRef<ISpreadsheetRef>(null);
 
-  useEffect(() => {
-    const ref = sheetRef.current;
-    if (!ref) return;
+  // useEffect(() => {
+  //   const ref = sheetRef.current;
+  //   if (!ref) return;
 
-    ref.setCellsMeta([
-      {
-        row: 0,
-        colName: "choice",
-        meta: { type: "select", options: SELECT_OPTIONS },
-      },
-      {
-        row: 1,
-        colName: "choice",
-        meta: { type: "select", options: SELECT_OPTIONS },
-      },
-      {
-        row: 2,
-        colName: "choice",
-        meta: { type: "select", options: SELECT_OPTIONS },
-      },
-      { row: 0, colName: "active", meta: { type: "boolean" } },
-      { row: 1, colName: "active", meta: { type: "boolean" } },
-      { row: 2, colName: "active", meta: { type: "boolean" } },
-    ]);
-  }, []);
+  //   ref.setCellsMeta([
+  //     {
+  //       row: 1,
+  //       colName: "due_date",
+  //       meta: { maxDate: "2026-06-20" }
+  //     },
+  //     { row: 0, colName: "sku", meta: { invalid: true } },
+  //     { row: 1, colName: "sku", meta: { disabled: true } },
+  //     { row: 2, colName: "sku", meta: { invalid: true, disabled: true } }
+  //   ]);
+  // }, []);
 
   const setQtyByColName = () => {
     sheetRef.current?.setCellValue(0, null, "99", "qty");
@@ -163,6 +190,17 @@ export default function App() {
     );
   };
 
+  const setOptionForCell = () => {
+    sheetRef?.current?.setCellMeta(
+      0,
+      null,
+      {
+        type: "select",
+        options: [{ id: "1", label: "aaaa" }],
+      },
+      "self_ship",
+    );
+  };
   return (
     <div className={styles.app}>
       <header className={styles.toolbar}>
@@ -180,6 +218,9 @@ export default function App() {
           <button type="button" onClick={readActiveCell}>
             Read active cell
           </button>
+          <button type="button" onClick={setOptionForCell}>
+            Set option for cell
+          </button>
         </div>
         <span className={styles.stats}>
           App renders: {renderCount} | Kéo chuột chọn range | Delete xóa
@@ -190,9 +231,9 @@ export default function App() {
           ref={sheetRef}
           rowCount={10000}
           columnCount={26}
-          columns={COLUMNS}
+          //  columns={COLUMNS}
           frozenColumnCount={1}
-          initialData={INITIAL_DATA}
+          //  initialData={INITIAL_DATA}
           customCellRegistry={CUSTOM_CELLS}
           onChange={(changes) => {
             console.log("Changes:", changes);

@@ -6,9 +6,11 @@ export function clearSelectionValues(
   store: CellStore,
   range: INormalizedRange,
   onChange?: (changes: ICellInput[]) => void,
+  isWritable?: (row: number, col: number) => boolean,
 ): void {
   const toClear: ICellStoreInput[] = [];
   for (const { row, col } of iterRangeCells(range)) {
+    if (isWritable && !isWritable(row, col)) continue;
     if (store.getValue(row, col) !== "") {
       toClear.push({ row, col, value: "" });
     }

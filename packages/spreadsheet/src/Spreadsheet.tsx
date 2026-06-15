@@ -35,7 +35,7 @@ import {
   normalizeToSheetData,
   resolveColIndex,
 } from "./utils/dataAdapter";
-import { resolveCellMeta, isCellEditable } from "./utils/resolveCellMeta";
+import { resolveCellMeta, isCellEditable, isCellDisabled } from "./utils/resolveCellMeta";
 import { createSelection } from "./utils/normalizeRange";
 
 export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
@@ -106,10 +106,15 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       onRowResize,
     });
     const [editingCell, setEditingCell] = useState<ICellAddress | null>(null);
+    const [editingInitialInput, setEditingInitialInput] = useState<
+      string | undefined
+    >();
     const gridContainerRef = useRef<HTMLDivElement>(null);
     const { clipboard, handleCopy, handlePaste, clearClipboard } = useClipboard(
       {
         store,
+        metaStore,
+        columnsRef,
         rowCount,
         columnCount: effectiveColumnCount,
         onChange,
@@ -119,6 +124,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       (cell: ICellAddress) => {
         setSelection(createSelection(cell));
         setEditingCell(null);
+        setEditingInitialInput(undefined);
       },
       [setSelection],
     );
@@ -230,7 +236,14 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         if (!isCellEditable(meta)) return;
         clearClipboard();
         if (initialValue !== undefined) {
-          store.setValue(cell.row, cell.col, initialValue);
+          if (meta.type === "select") {
+            setEditingInitialInput(initialValue);
+          } else {
+            store.setValue(cell.row, cell.col, initialValue);
+            setEditingInitialInput(undefined);
+          }
+        } else {
+          setEditingInitialInput(undefined);
         }
         setSelection(createSelection(cell));
         setEditingCell(cell);
@@ -274,6 +287,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       ) => {
         store.setValue(row, col, value);
         setEditingCell(null);
+        setEditingInitialInput(undefined);
         onChange?.([{ row, col, value }]);
         if (value.includes("\n") && !dimensions.isRowHeightManual(row)) {
           const CELL_PADDING = 8;
@@ -313,13 +327,21 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
     );
     const handleCancelEdit = useCallback(() => {
       setEditingCell(null);
+      setEditingInitialInput(undefined);
     }, []);
     const handleBooleanToggle = useCallback(
       (row: number, col: number, nextValue: string) => {
+        const meta = resolveCellMeta(
+          metaStore,
+          row,
+          col,
+          columnsRef.current,
+        );
+        if (isCellDisabled(meta)) return;
         store.setValue(row, col, nextValue);
         onChange?.([{ row, col, value: nextValue }]);
       },
-      [store, onChange],
+      [store, metaStore, onChange],
     );
     const onCopy = useCallback(() => {
       if (selection) handleCopy(selection);
@@ -363,6 +385,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           selection={selection}
           clipboardRange={clipboard?.range ?? null}
           editingCell={editingCell}
+          editingInitialInput={editingInitialInput}
           isDragging={isDragging}
           dragMode={dragMode}
           headerResize={headerResize}

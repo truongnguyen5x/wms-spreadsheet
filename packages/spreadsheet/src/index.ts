@@ -32,4 +32,5 @@ export { CellStore } from "./store/CellStore";
 export { MetaStore } from "./store/MetaStore";
 export { columnLabel } from "./utils/columnLabel";
 export { cellKey } from "./utils/cellKey";
+export { DEFAULT_DATE_FORMAT } from "./utils/dateUtils";
 

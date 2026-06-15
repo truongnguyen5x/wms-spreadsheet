@@ -1,6 +1,12 @@
 import type { ReactNode } from "react";
 
-export type TCellType = "text" | "select" | "boolean" | "custom";
+export type TCellType =
+  | "text"
+  | "select"
+  | "boolean"
+  | "switch"
+  | "date"
+  | "custom";
 export type ICommitDirection = "stay" | "down" | "right";
 export interface ISelectOption {
   id: string;
@@ -11,8 +17,16 @@ export interface ISelectOption {
 export interface ICellMeta {
   type?: TCellType;
   options?: ISelectOption[];
+  /** Định dạng ngày lưu và hiển thị. Mặc định DD/MM/YYYY */
+  dateFormat?: string;
+  /** Ngày sớm nhất được chọn (chuỗi theo dateFormat của cell/cột) */
+  minDate?: string;
+  /** Ngày muộn nhất được chọn (chuỗi theo dateFormat của cell/cột) */
+  maxDate?: string;
   customKey?: string;
   customProps?: Record<string, unknown>;
+  invalid?: boolean;
+  disabled?: boolean;
 }
 
 export interface ICellRenderParams {
@@ -75,12 +89,8 @@ export interface ISpreadsheetColumn {
   colText?: string;
   /** Custom render header cell; ưu tiên hơn colText. */
   colRender?: (params: IColumnHeaderRenderParams) => ReactNode;
-  /** Cell type mặc định cho cả cột. */
-  cellType?: TCellType;
-  /** Options cho cell type select ở cấp cột. */
-  options?: ISelectOption[];
-  /** Key tra cứu customCellRegistry. */
-  customKey?: string;
+  /** Meta mặc định cho toàn cột; cell meta override từng field. */
+  meta?: Partial<ICellMeta>;
   /** Override render cell body; ưu tiên hơn registry. */
   cellRender?: (params: ICellRenderParams) => ReactNode;
   /** Override editor cell; ưu tiên hơn registry. */

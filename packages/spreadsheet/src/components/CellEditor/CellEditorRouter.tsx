@@ -9,6 +9,7 @@ import type {
 import styles from "../../styles/spreadsheet.module.scss";
 import { CellEditor } from "./CellEditor";
 import { SelectCellEditor } from "./SelectCellEditor";
+import { DateCellEditor } from "./DateCellEditor";
 
 function CustomEditorContainer({
   top,
@@ -72,6 +73,7 @@ export interface ICellEditorRouterProps {
   left: number;
   width: number;
   height: number;
+  initialInput?: string;
   onCommit: (value: string, direction: ICommitDirection) => void;
   onCancel: () => void;
 }
@@ -87,6 +89,7 @@ export function CellEditorRouter({
   left,
   width,
   height,
+  initialInput,
   onCommit,
   onCancel,
 }: ICellEditorRouterProps) {
@@ -126,6 +129,24 @@ export function CellEditorRouter({
       <SelectCellEditor
         value={value}
         options={meta.options ?? []}
+        top={top}
+        left={left}
+        width={width}
+        height={height}
+        initialInput={initialInput}
+        onCommit={(nextValue) => onCommit(nextValue, "stay")}
+        onCancel={onCancel}
+      />
+    );
+  }
+
+  if (type === "date") {
+    return (
+      <DateCellEditor
+        value={value}
+        dateFormat={meta.dateFormat}
+        minDate={meta.minDate}
+        maxDate={meta.maxDate}
         top={top}
         left={left}
         width={width}

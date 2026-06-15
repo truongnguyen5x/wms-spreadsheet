@@ -4,13 +4,7 @@ import type { ICellMeta, ISpreadsheetColumn, TCellType } from "../types";
 const DEFAULT_META: ICellMeta = { type: "text" };
 
 function columnToMeta(column?: ISpreadsheetColumn): Partial<ICellMeta> {
-  if (!column) return {};
-
-  return {
-    type: column.cellType,
-    options: column.options,
-    customKey: column.customKey,
-  };
+  return column?.meta ?? {};
 }
 
 function inferCellType(meta: ICellMeta): TCellType {
@@ -25,7 +19,7 @@ export function resolveCellMeta(
   col: number,
   columns?: ISpreadsheetColumn[],
 ): ICellMeta {
-  const cellMeta = metaStore.getMeta(row, col);
+  const cellMeta = metaStore.getStoredMeta(row, col);
   const columnMeta = columnToMeta(columns?.[col]);
   const merged: ICellMeta = {
     ...DEFAULT_META,
@@ -38,7 +32,12 @@ export function resolveCellMeta(
   return merged;
 }
 
+export function isCellDisabled(meta: ICellMeta): boolean {
+  return meta.disabled === true;
+}
+
 export function isCellEditable(meta: ICellMeta): boolean {
-  return meta.type !== "boolean";
+  if (isCellDisabled(meta)) return false;
+  return meta.type !== "boolean" && meta.type !== "switch";
 }
 

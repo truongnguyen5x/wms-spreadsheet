@@ -5,6 +5,11 @@ import type {
   ISelectOption,
   ISpreadsheetColumn,
 } from "../types";
+import { SwitchCell } from "../components/SwitchCell";
+import {
+  DEFAULT_DATE_FORMAT,
+  formatDateValue,
+} from "./dateUtils";
 import styles from "../styles/spreadsheet.module.scss";
 
 function findSelectOption(
@@ -21,13 +26,14 @@ function renderText({ value }: ICellRenderParams): ReactNode {
 
 function renderSelect({ value, meta }: ICellRenderParams): ReactNode {
   const option = findSelectOption(meta.options, value);
-  if (!option && !value) return null;
+  const label = option?.label ?? (value || "");
+
   return (
     <span
       className={styles.selectPill}
       style={option?.color ? { backgroundColor: option.color } : undefined}
     >
-      <span className={styles.selectPillLabel}>{option?.label ?? value}</span>
+      <span className={styles.selectPillLabel}>{label}</span>
       <span className={styles.selectCaret} aria-hidden>
         ▾
       </span>
@@ -43,22 +49,55 @@ function renderBoolean({
   row,
   col,
   value,
+  meta,
   onToggle,
 }: IBooleanRenderParams): ReactNode {
   const checked = value === "true";
   return (
-    <label
-      className={styles.booleanCell}
-      onMouseDown={(e) => e.stopPropagation()}
-      onClick={(e) => e.stopPropagation()}
-    >
+    <div className={styles.booleanCell}>
       <input
         type="checkbox"
         className={styles.booleanCheckbox}
         checked={checked}
+        disabled={meta.disabled}
         onChange={() => onToggle(row, col, checked ? "false" : "true")}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       />
-    </label>
+    </div>
+  );
+}
+
+function renderSwitch({
+  row,
+  col,
+  value,
+  meta,
+  onToggle,
+}: IBooleanRenderParams): ReactNode {
+  const checked = value === "true";
+  return (
+    <div className={styles.switchCell}>
+      <SwitchCell
+        checked={checked}
+        disabled={meta.disabled}
+        onChange={(next) => onToggle(row, col, next ? "true" : "false")}
+      />
+    </div>
+  );
+}
+
+function renderDate({ value, meta }: ICellRenderParams): ReactNode {
+  const format = meta.dateFormat ?? DEFAULT_DATE_FORMAT;
+  const display = value ? formatDateValue(value, format) : "";
+
+  return (
+    <span className={styles.datePill}>
+      <span className={styles.datePillLabel}>{display}</span>
+      <span className={styles.dateCaret} aria-hidden>
+        ▾
+      </span>
+    </span>
   );
 }
 
@@ -98,6 +137,10 @@ export function renderCellContent({
       return renderSelect(params);
     case "boolean":
       return renderBoolean({ ...params, onToggle: onBooleanToggle });
+    case "switch":
+      return renderSwitch({ ...params, onToggle: onBooleanToggle });
+    case "date":
+      return renderDate(params);
     case "custom":
       return renderCustom(params, column, customCellRegistry);
     default:

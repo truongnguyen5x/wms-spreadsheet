@@ -50,6 +50,7 @@ export interface ISpreadsheetGridProps {
   selection: ISelection | null;
   clipboardRange: INormalizedRange | null;
   editingCell: { row: number; col: number } | null;
+  editingInitialInput?: string;
   isDragging: boolean;
   dragMode: TSelectionDragMode;
   headerResize: IUseHeaderResizeResult;
@@ -83,6 +84,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
   selection,
   clipboardRange,
   editingCell,
+  editingInitialInput,
   isDragging,
   dragMode,
   headerResize,
@@ -356,6 +358,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
         left={dimensions.getColumnLeft(col)}
         width={dimensions.getColumnWidth(col)}
         height={dimensions.getRowHeight(row)}
+        initialInput={editingInitialInput}
         onCommit={(commitValue, direction) =>
           onCommitEdit(row, col, commitValue, direction)
         }
@@ -364,6 +367,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     );
   }, [
     editingCell,
+    editingInitialInput,
     frozenColumnCount,
     store,
     metaStore,
@@ -444,6 +448,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
         left={left}
         width={dimensions.getColumnWidth(col)}
         height={dimensions.getRowHeight(row)}
+        initialInput={editingInitialInput}
         onCommit={(commitValue, direction) =>
           onCommitEdit(row, col, commitValue, direction)
         }
@@ -452,6 +457,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     );
   }, [
     editingCell,
+    editingInitialInput,
     hasFrozenColumns,
     frozenColumnCount,
     store,
