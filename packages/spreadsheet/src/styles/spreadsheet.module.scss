@@ -285,11 +285,12 @@
   white-space: nowrap;
 }
 
-.dateCaret {
+.dateIcon {
   flex-shrink: 0;
-  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
   color: #5f6368;
-  line-height: 1;
+  line-height: 0;
 }
 
 .booleanCell {
