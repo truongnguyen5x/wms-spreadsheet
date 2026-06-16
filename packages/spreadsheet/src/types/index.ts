@@ -7,6 +7,8 @@ export type TCellType =
   | "switch"
   | "date"
   | "custom";
+export type THorizontalAlign = "left" | "center" | "right";
+export type TVerticalAlign = "top" | "middle" | "bottom";
 export type ICommitDirection = "stay" | "down" | "right";
 export interface ISelectOption {
   id: string;
@@ -91,6 +93,10 @@ export interface ISpreadsheetColumn {
   colRender?: (params: IColumnHeaderRenderParams) => ReactNode;
   /** Meta mặc định cho toàn cột; cell meta override từng field. */
   meta?: Partial<ICellMeta>;
+  /** Căn ngang nội dung body cell. Mặc định "left". Không áp header. */
+  horizontalAlign?: THorizontalAlign;
+  /** Căn dọc nội dung body cell. Mặc định "top". Không áp header. */
+  verticalAlign?: TVerticalAlign;
   /** Override render cell body; ưu tiên hơn registry. */
   cellRender?: (params: ICellRenderParams) => ReactNode;
   /** Override editor cell; ưu tiên hơn registry. */

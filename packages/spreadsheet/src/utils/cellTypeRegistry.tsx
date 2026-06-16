@@ -54,17 +54,15 @@ function renderBoolean({
 }: IBooleanRenderParams): ReactNode {
   const checked = value === "true";
   return (
-    <div className={styles.booleanCell}>
-      <input
-        type="checkbox"
-        className={styles.booleanCheckbox}
-        checked={checked}
-        disabled={meta.disabled}
-        onChange={() => onToggle(row, col, checked ? "false" : "true")}
-        onMouseDown={(e) => e.stopPropagation()}
-        onClick={(e) => e.stopPropagation()}
-      />
-    </div>
+    <input
+      type="checkbox"
+      className={styles.booleanCheckbox}
+      checked={checked}
+      disabled={meta.disabled}
+      onChange={() => onToggle(row, col, checked ? "false" : "true")}
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+    />
   );
 }
 
@@ -77,13 +75,11 @@ function renderSwitch({
 }: IBooleanRenderParams): ReactNode {
   const checked = value === "true";
   return (
-    <div className={styles.switchCell}>
-      <SwitchCell
-        checked={checked}
-        disabled={meta.disabled}
-        onChange={(next) => onToggle(row, col, next ? "true" : "false")}
-      />
-    </div>
+    <SwitchCell
+      checked={checked}
+      disabled={meta.disabled}
+      onChange={(next) => onToggle(row, col, next ? "true" : "false")}
+    />
   );
 }
 

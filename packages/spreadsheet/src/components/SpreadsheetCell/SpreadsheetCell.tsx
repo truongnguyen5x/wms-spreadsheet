@@ -5,6 +5,7 @@ import type { ICustomCellDefinition, ISpreadsheetColumn } from "../../types";
 import { useCellValue } from "../../hooks/useCellValue";
 import { useCellMeta } from "../../hooks/useCellMeta";
 import { resolveCellMeta } from "../../utils/resolveCellMeta";
+import { getCellAlignmentStyle } from "../../utils/cellAlignment";
 import { renderCellContent } from "../../utils/cellTypeRegistry";
 import styles from "../../styles/spreadsheet.module.scss";
 
@@ -60,7 +61,7 @@ export const SpreadsheetCell = memo(function SpreadsheetCell({
   return (
     <div
       className={`${styles.cell} ${isActive ? styles.active : ""} ${stateClass}`}
-      style={{ top, left, width, height }}
+      style={{ top, left, width, height, ...getCellAlignmentStyle(column) }}
       onMouseDown={handleMouseDown}
       onMouseEnter={() => onMouseEnter(row, col)}
       onDoubleClick={() => onDoubleClick(row, col)}
