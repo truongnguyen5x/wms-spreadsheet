@@ -19,6 +19,15 @@ const SELECT_OPTIONS = [
   { id: "9", label: "Lựa chọn đặc biệt B", color: "#ceead6" },
 ];
 
+const MULTI_SELECT_OPTIONS = [
+  { id: "1", label: "Tag A", color: "#e8eaed" },
+  { id: "2", label: "Tag B", color: "#d2e3fc" },
+  { id: "3", label: "Tag C", color: "#ceead6" },
+  { id: "4", label: "Giao hàng nhanh", color: "#fce8e6" },
+  { id: "5", label: "Giao hàng tiêu chuẩn", color: "#fff3e0" },
+  { id: "6", label: "Lưu kho tạm", color: "#e6f4ea" },
+];
+
 const CUSTOM_CELLS: Record<string, ICustomCellDefinition> = {
   statusBadge: {
     render: ({ value }) =>
@@ -79,6 +88,13 @@ const COLUMNS: ISpreadsheetColumn[] = [
     verticalAlign: "middle",
   },
   {
+    colName: "tags",
+    colText: "Tags",
+    width: 180,
+    meta: { type: "multiSelect", options: MULTI_SELECT_OPTIONS },
+    verticalAlign: "middle",
+  },
+  {
     colName: "active",
     colText: "Kích hoạt",
     width: 90,
@@ -119,6 +135,7 @@ const INITIAL_DATA = [
     qty: "10",
     name: "Item A",
     choice: "1",
+    tags: ["1", "3"],
     active: "true",
     status: "pending",
     due_date: "15/06/2026",
@@ -128,6 +145,7 @@ const INITIAL_DATA = [
     qty: "5",
     name: "Item B",
     choice: "2",
+    tags: ["2", "4", "5"],
     active: "false",
     status: "done",
     due_date: "20/06/2026",
@@ -137,6 +155,7 @@ const INITIAL_DATA = [
     qty: "3",
     name: "Item C",
     choice: "",
+    tags: [],
     active: "true",
     status: "pending",
     due_date: "",

@@ -30,14 +30,17 @@ import {
   type ISelection,
   type TSortDirection,
   type TSheetDataInput,
+  type TCellValue,
 } from "./types";
 import {
   exportRowData,
   exportSheetData,
   buildInitialColumnWidths,
+  fromStoreValue,
   getEffectiveColumnCount,
   normalizeToSheetData,
   resolveColIndex,
+  toStoreValue,
 } from "./utils/dataAdapter";
 import { resolveCellMeta, isCellEditable, isCellDisabled } from "./utils/resolveCellMeta";
 import { createSelection } from "./utils/normalizeRange";
@@ -160,7 +163,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         setCellValue(
           row: number,
           col: number | null,
-          value: string,
+          value: TCellValue,
           colName?: string,
         ) {
           const resolvedCol = resolveColIndex(
@@ -168,7 +171,8 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
             colName,
             columnsRef.current,
           );
-          store.setValue(row, resolvedCol, value);
+          const column = columnsRef.current?.[resolvedCol];
+          store.setValue(row, resolvedCol, toStoreValue(value, column));
         },
         getCellValue(row: number, col: number | null, colName?: string) {
           const resolvedCol = resolveColIndex(
@@ -176,19 +180,27 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
             colName,
             columnsRef.current,
           );
-          return store.getValue(row, resolvedCol);
+          const column = columnsRef.current?.[resolvedCol];
+          return fromStoreValue(
+            store.getValue(row, resolvedCol),
+            column,
+          );
         },
         setCellValues(cells) {
           store.setValues(
-            cells.map(({ row, col, colName, value }) => ({
-              row,
-              col: resolveColIndex(
+            cells.map(({ row, col, colName, value }) => {
+              const resolvedCol = resolveColIndex(
                 col ?? null,
                 colName,
                 columnsRef.current,
-              ),
-              value,
-            })),
+              );
+              const column = columnsRef.current?.[resolvedCol];
+              return {
+                row,
+                col: resolvedCol,
+                value: toStoreValue(value, column),
+              };
+            }),
           );
         },
         loadData(data: TSheetDataInput) {
@@ -277,7 +289,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         if (!isCellEditable(meta)) return;
         clearClipboard();
         if (initialValue !== undefined) {
-          if (meta.type === "select") {
+          if (meta.type === "select" || meta.type === "multiSelect") {
             setEditingInitialInput(initialValue);
           } else {
             store.setValue(cell.row, cell.col, initialValue);
@@ -329,7 +341,10 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         store.setValue(row, col, value);
         setEditingCell(null);
         setEditingInitialInput(undefined);
-        onChange?.([{ row, col, value }]);
+        const column = columnsRef.current?.[col];
+        onChange?.([
+          { row, col, value: fromStoreValue(value, column) },
+        ]);
         if (value.includes("\n") && !dimensions.isRowHeightManual(row)) {
           const CELL_PADDING = 8;
           const lineCount = value.split("\n").length;

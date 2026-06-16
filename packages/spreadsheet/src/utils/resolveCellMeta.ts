@@ -9,8 +9,9 @@ function columnToMeta(column?: ISpreadsheetColumn): Partial<ICellMeta> {
 
 function inferCellType(meta: ICellMeta): TCellType {
   if (meta.customKey) return "custom";
+  if (meta.type) return meta.type;
   if (meta.options?.length) return "select";
-  return meta.type ?? "text";
+  return "text";
 }
 
 export function resolveCellMeta(

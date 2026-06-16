@@ -307,6 +307,35 @@
   line-height: 1;
 }
 
+.multiSelectField {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.multiSelectChips {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.multiSelectChip {
+  flex-shrink: 0;
+  max-width: 50px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: #e8eaed;
+  font-size: 12px;
+  line-height: 15px;
+  color: #202124;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 .datePill {
   display: flex;
   align-items: center;

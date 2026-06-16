@@ -10,6 +10,11 @@ import {
   DEFAULT_DATE_FORMAT,
   formatDateValue,
 } from "./dateUtils";
+import {
+  DEFAULT_MULTI_SELECT_CHIP_COLOR,
+  parseMultiSelectValue,
+  resolveMultiSelectOptions,
+} from "./multiSelectUtils";
 import styles from "../styles/spreadsheet.module.scss";
 
 function findSelectOption(
@@ -36,6 +41,31 @@ function renderSelect({ value, meta }: ICellRenderParams): ReactNode {
       <span className={styles.selectPillLabel}>{label}</span>
       <span className={styles.selectCaret} aria-hidden>
         ▾
+      </span>
+    </span>
+  );
+}
+
+function renderMultiSelect({ value, meta }: ICellRenderParams): ReactNode {
+  const ids = parseMultiSelectValue(value);
+  const resolved = resolveMultiSelectOptions(meta.options, ids);
+
+  if (!resolved.length) return null;
+
+  return (
+    <span className={styles.multiSelectField}>
+      <span className={styles.multiSelectChips}>
+        {resolved.map((item) => (
+          <span
+            key={item.id}
+            className={styles.multiSelectChip}
+            style={{
+              backgroundColor: item.color ?? DEFAULT_MULTI_SELECT_CHIP_COLOR,
+            }}
+          >
+            {item.label}
+          </span>
+        ))}
       </span>
     </span>
   );
@@ -143,6 +173,8 @@ export function renderCellContent({
   switch (type) {
     case "select":
       return renderSelect(params);
+    case "multiSelect":
+      return renderMultiSelect(params);
     case "boolean":
       return renderBoolean({ ...params, onToggle: onBooleanToggle });
     case "switch":

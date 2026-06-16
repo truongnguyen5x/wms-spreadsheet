@@ -2,16 +2,22 @@ import type { CellStore } from "../store/CellStore";
 import type {
   ISheetData,
   ISpreadsheetColumn,
+  TCellValue,
   TSheetRowDataOutput,
+  TSheetRowRecord,
 } from "../types";
 import { cellKey, parseCellKey } from "./cellKey";
+import {
+  parseMultiSelectValue,
+  serializeMultiSelectValue,
+} from "./multiSelectUtils";
 
 const CELL_KEY_PATTERN = /^\d+:\d+$/;
 export function is2DArray(data: unknown): data is string[][] {
   return Array.isArray(data) && (data.length === 0 || Array.isArray(data[0]));
 }
 
-export function isObjectArray(data: unknown): data is Record<string, string>[] {
+export function isObjectArray(data: unknown): data is TSheetRowRecord[] {
   return (
     Array.isArray(data) &&
     data.length > 0 &&
@@ -19,6 +25,36 @@ export function isObjectArray(data: unknown): data is Record<string, string>[] {
     data[0] !== null &&
     !Array.isArray(data[0])
   );
+}
+
+function isMultiSelectColumn(column: ISpreadsheetColumn | undefined): boolean {
+  return column?.meta?.type === "multiSelect";
+}
+
+export function toStoreValue(
+  value: TCellValue,
+  column: ISpreadsheetColumn | undefined,
+): string {
+  if (isMultiSelectColumn(column)) {
+    if (Array.isArray(value)) {
+      return serializeMultiSelectValue(value);
+    }
+    if (typeof value === "string" && value !== "") {
+      return value;
+    }
+    return "";
+  }
+  return String(value ?? "");
+}
+
+export function fromStoreValue(
+  raw: string,
+  column: ISpreadsheetColumn | undefined,
+): TCellValue {
+  if (isMultiSelectColumn(column)) {
+    return parseMultiSelectValue(raw);
+  }
+  return raw;
 }
 
 export function isSheetData(data: unknown): data is ISheetData {
@@ -69,14 +105,19 @@ function matrixToSheetData(data: string[][]): ISheetData {
 }
 
 function objectArrayToSheetData(
-  data: Record<string, string>[],
+  data: TSheetRowRecord[],
   columns: ISpreadsheetColumn[],
 ): ISheetData {
   const result: ISheetData = {};
   for (let row = 0; row < data.length; row++) {
     const rowData = data[row];
     for (let col = 0; col < columns.length; col++) {
-      const value = String(rowData[columns[col].colName] ?? "");
+      const column = columns[col];
+      const rawValue = rowData[column.colName];
+      const value = toStoreValue(
+        rawValue === undefined || rawValue === null ? "" : rawValue,
+        column,
+      );
       if (value !== "") {
         result[cellKey(row, col)] = value;
       }
@@ -127,12 +168,12 @@ export function exportRowData(
     return result;
   }
 
-  const rowObject: Record<string, string> = {};
+  const rowObject: TSheetRowRecord = {};
   for (let col = 0; col < columns.length; col++) {
-    const value = store.getValue(row, col);
-    if (value !== "") {
-      rowObject[columns[col].colName] = value;
-    }
+    const column = columns[col];
+    const raw = store.getValue(row, col);
+    if (raw === "") continue;
+    rowObject[column.colName] = fromStoreValue(raw, column);
   }
 
   return rowObject;
@@ -142,12 +183,12 @@ export function exportSheetData(
   store: CellStore,
   columns: ISpreadsheetColumn[] | undefined,
   rowCount: number,
-): ISheetData | Record<string, string>[] {
+): ISheetData | TSheetRowRecord[] {
   if (!columns?.length) {
     return store.getAllData();
   }
 
-  const result: Record<string, string>[] = [];
+  const result: TSheetRowRecord[] = [];
   for (let row = 0; row < rowCount; row++) {
     const rowData = exportRowData(store, columns, row);
     if (Object.keys(rowData).length > 0) {

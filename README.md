@@ -9,7 +9,7 @@ Thư viện Spreadsheet cho React — giao diện giống Google Sheets, hỗ tr
 - `CellStore` + `MetaStore` ngoài React tree — mỗi cell subscribe riêng qua `useSyncExternalStore`
 - Zero UI dependency — không MUI, không react-virtual
 - **Định nghĩa cột** (`columns`) — `colName`, width, meta mặc định, căn lề, custom render/editor
-- **Cell types** — `text`, `select`, `boolean`, `switch`, `date`, `custom` (qua `customCellRegistry`)
+- **Cell types** — `text`, `select`, `multiSelect`, `boolean`, `switch`, `date`, `custom` (qua `customCellRegistry`)
 - **Cell meta** — `disabled`, `invalid`, override meta theo cell/cột
 - **Copy/paste range** — Ctrl+C / Ctrl+V (Cmd trên macOS), định dạng TSV; clipboard nội bộ fallback khi system clipboard không khả dụng
 - **Range selection** — kéo cell, kéo header cột/hàng; Delete/Backspace xóa cả range
@@ -214,6 +214,7 @@ sheetRef.current?.setCellMeta(1, null, { disabled: true }, "sku");
 |------|-----------|---------|
 | `text` | Double-click / F2 / gõ ký tự | Mặc định |
 | `select` | Popup chọn | `options: ISelectOption[]` |
+| `multiSelect` | Popup chọn nhiều | `options: ISelectOption[]` (hỗ trợ `color`); giá trị `string[]` (id); view hiển thị nhiều pill màu |
 | `boolean` | Click toggle | Không vào edit mode |
 | `switch` | Click toggle | Giá trị `"true"` / `"false"` |
 | `date` | Date picker | `dateFormat`, `minDate`, `maxDate` |

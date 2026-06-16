@@ -3,10 +3,12 @@ import type { ReactNode } from "react";
 export type TCellType =
   | "text"
   | "select"
+  | "multiSelect"
   | "boolean"
   | "switch"
   | "date"
   | "custom";
+export type TCellValue = string | string[];
 export type THorizontalAlign = "left" | "center" | "right";
 export type TVerticalAlign = "top" | "middle" | "bottom";
 export type ICommitDirection = "stay" | "down" | "right";
@@ -105,17 +107,18 @@ export interface ISpreadsheetColumn {
   cellEditor?: (params: ICellEditorParams) => ReactNode;
 }
 
+export type TSheetRowRecord = Record<string, TCellValue>;
 export type TSheetDataInput =
   | ISheetData
   | string[][]
-  | Record<string, string>[];
-export type TSheetDataOutput = ISheetData | Record<string, string>[];
-export type TSheetRowDataOutput = ISheetData | Record<string, string>;
+  | TSheetRowRecord[];
+export type TSheetDataOutput = ISheetData | TSheetRowRecord[];
+export type TSheetRowDataOutput = ISheetData | TSheetRowRecord;
 export interface ICellInput {
   row: number;
   col?: number | null;
   colName?: string;
-  value: string;
+  value: TCellValue;
 }
 
 /** Input nội bộ cho CellStore — luôn dùng index cột. */
@@ -134,10 +137,14 @@ export interface ISpreadsheetRef {
   setCellValue(
     row: number,
     col: number | null,
-    value: string,
+    value: TCellValue,
     colName?: string,
   ): void;
-  getCellValue(row: number, col: number | null, colName?: string): string;
+  getCellValue(
+    row: number,
+    col: number | null,
+    colName?: string,
+  ): TCellValue;
   setCellValues(cells: ICellInput[]): void;
   loadData(data: TSheetDataInput): void;
   getData(): TSheetDataOutput;

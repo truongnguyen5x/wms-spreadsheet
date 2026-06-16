@@ -9,6 +9,7 @@ import type {
 import styles from "../../styles/spreadsheet.module.scss";
 import { CellEditor } from "./CellEditor";
 import { SelectCellEditor } from "./SelectCellEditor";
+import { MultiSelectCellEditor } from "./MultiSelectCellEditor";
 import { DateCellEditor } from "./DateCellEditor";
 
 function CustomEditorContainer({
@@ -127,6 +128,22 @@ export function CellEditorRouter({
   if (type === "select") {
     return (
       <SelectCellEditor
+        value={value}
+        options={meta.options ?? []}
+        top={top}
+        left={left}
+        width={width}
+        height={height}
+        initialInput={initialInput}
+        onCommit={(nextValue) => onCommit(nextValue, "stay")}
+        onCancel={onCancel}
+      />
+    );
+  }
+
+  if (type === "multiSelect") {
+    return (
+      <MultiSelectCellEditor
         value={value}
         options={meta.options ?? []}
         top={top}

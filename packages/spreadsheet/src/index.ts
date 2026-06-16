@@ -23,6 +23,7 @@ export type {
   TSortDirection,
   THorizontalAlign,
   TCellType,
+  TCellValue,
   TVerticalAlign,
   TSheetDataInput,
   TSheetDataOutput,
