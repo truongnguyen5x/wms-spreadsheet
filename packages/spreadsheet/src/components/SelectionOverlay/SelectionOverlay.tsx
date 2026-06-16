@@ -2,11 +2,16 @@ import { memo } from "react";
 import type { INormalizedRange } from "../../types";
 import { computeRangeBounds } from "../../utils/gridDimensions";
 import type { IGridDimensions } from "../../hooks/useGridDimensions";
+import {
+  computeVisiblePhysicalRangeBounds,
+  type IVisibleRowLayout,
+} from "../../utils/visibleRowLayout";
 import styles from "../../styles/spreadsheet.module.scss";
 
 export interface ISelectionOverlayProps {
   range: INormalizedRange;
   dimensions: IGridDimensions;
+  visibleRowLayout?: IVisibleRowLayout;
   columnLeftOffset?: number;
   showFillHandle?: boolean;
   hideLeftBorder?: boolean;
@@ -17,17 +22,25 @@ export interface ISelectionOverlayProps {
 export const SelectionOverlay = memo(function SelectionOverlay({
   range,
   dimensions,
+  visibleRowLayout,
   columnLeftOffset = 0,
   showFillHandle = false,
   hideLeftBorder = false,
   hideRightBorder = false,
   showHandle = true,
 }: ISelectionOverlayProps) {
-  const rowBounds = computeRangeBounds(
-    dimensions.rowHeights,
-    range.startRow,
-    range.endRow,
-  );
+  const rowBounds = visibleRowLayout
+    ? computeVisiblePhysicalRangeBounds(
+        visibleRowLayout,
+        range.startRow,
+        range.endRow,
+      )
+    : computeRangeBounds(
+        dimensions.rowHeights,
+        range.startRow,
+        range.endRow,
+      );
+  if (rowBounds === null) return null;
   const colBounds = computeRangeBounds(
     dimensions.columnWidths,
     range.startCol,

@@ -23,6 +23,7 @@ export interface IUseClipboardOptions {
   columnsRef: RefObject<ISpreadsheetColumn[] | undefined>;
   rowCount: number;
   columnCount: number;
+  visibleRowIndicesRef: RefObject<readonly number[]>;
   onChange?: (changes: ICellInput[]) => void;
 }
 
@@ -39,6 +40,7 @@ export function useClipboard({
   columnsRef,
   rowCount,
   columnCount,
+  visibleRowIndicesRef,
   onChange,
 }: IUseClipboardOptions): IUseClipboardResult {
   const [clipboard, setClipboard] = useState<IClipboardData | null>(null);
@@ -60,14 +62,20 @@ export function useClipboard({
   const handleCopy = useCallback(
     (selection: ISelection) => {
       const range = normalizeSelection(selection);
-      const data = copyRange(store, range);
+      const visibleRowIndices = visibleRowIndicesRef.current ?? [];
+      const isFiltered = visibleRowIndices.length < rowCount;
+      const data = copyRange(
+        store,
+        range,
+        isFiltered ? visibleRowIndices : undefined,
+      );
       setClipboard(data);
       const tsv = clipboardToTsv(data);
       void navigator.clipboard?.writeText(tsv).catch(() => {
         // Permission denied or clipboard unavailable — internal clipboard still works
       });
     },
-    [store],
+    [store, rowCount, visibleRowIndicesRef],
   );
   const handlePaste = useCallback(
     async (focusCell: ICellAddress) => {
@@ -84,6 +92,8 @@ export function useClipboard({
       }
 
       if (values && values.length > 0) {
+        const visibleRowIndices = visibleRowIndicesRef.current ?? [];
+        const isFiltered = visibleRowIndices.length < rowCount;
         const changes = pasteAt(
           store,
           values,
@@ -92,6 +102,7 @@ export function useClipboard({
           rowCount,
           columnCount,
           canWriteCell,
+          isFiltered ? visibleRowIndices : undefined,
         );
         if (changes.length > 0) {
           onChange?.(changes);
@@ -99,7 +110,15 @@ export function useClipboard({
       }
       setClipboard(null);
     },
-    [clipboard, store, rowCount, columnCount, onChange, canWriteCell],
+    [
+      clipboard,
+      store,
+      rowCount,
+      columnCount,
+      onChange,
+      canWriteCell,
+      visibleRowIndicesRef,
+    ],
   );
   return { clipboard, handleCopy, handlePaste, clearClipboard };
 }

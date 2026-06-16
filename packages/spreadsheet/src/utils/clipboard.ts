@@ -4,22 +4,41 @@ import type {
   IClipboardData,
   INormalizedRange,
 } from "../types";
+import { getVisiblePhysicalRowsInRange } from "./visibleRowLayout";
+
 export function copyRange(
   store: CellStore,
   range: INormalizedRange,
+  visibleRowIndices?: readonly number[],
 ): IClipboardData {
-  const rowCount = range.endRow - range.startRow + 1;
+  const rows =
+    visibleRowIndices !== undefined
+      ? getVisiblePhysicalRowsInRange(range, visibleRowIndices)
+      : Array.from(
+          { length: range.endRow - range.startRow + 1 },
+          (_, index) => range.startRow + index,
+        );
   const colCount = range.endCol - range.startCol + 1;
   const values: string[][] = [];
-  for (let r = 0; r < rowCount; r++) {
+  for (const physicalRow of rows) {
     const row: string[] = [];
     for (let c = 0; c < colCount; c++) {
-      row.push(store.getValue(range.startRow + r, range.startCol + c));
+      row.push(store.getValue(physicalRow, range.startCol + c));
     }
     values.push(row);
   }
 
-  return { range, values };
+  const copiedRange: INormalizedRange =
+    rows.length > 0
+      ? {
+          startRow: rows[0],
+          endRow: rows[rows.length - 1],
+          startCol: range.startCol,
+          endCol: range.endCol,
+        }
+      : range;
+
+  return { range: copiedRange, values };
 }
 
 export function clipboardToTsv(data: IClipboardData): string {
@@ -39,11 +58,25 @@ export function pasteAt(
   rowCount: number,
   columnCount: number,
   canWrite?: (row: number, col: number) => boolean,
+  visibleRowIndices?: readonly number[],
 ): ICellStoreInput[] {
   const changes: ICellStoreInput[] = [];
+  const useVisibleRows =
+    visibleRowIndices !== undefined &&
+    visibleRowIndices.length < rowCount;
+  const startVisibleIndex = useVisibleRows
+    ? visibleRowIndices.indexOf(targetRow)
+    : -1;
+
+  if (useVisibleRows && startVisibleIndex < 0) {
+    return changes;
+  }
+
   for (let r = 0; r < values.length; r++) {
-    const destRow = targetRow + r;
-    if (destRow >= rowCount) break;
+    const destRow = useVisibleRows
+      ? visibleRowIndices[startVisibleIndex + r]
+      : targetRow + r;
+    if (destRow === undefined || destRow >= rowCount) break;
     const rowValues = values[r] ?? [];
     for (let c = 0; c < rowValues.length; c++) {
       const destCol = targetCol + c;
@@ -75,4 +108,3 @@ export function applyChanges(
   }
   store.setValues(changes);
 }
-

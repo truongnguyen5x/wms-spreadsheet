@@ -22,6 +22,7 @@ export interface IUseKeyboardNavigationOptions {
   store: CellStore;
   metaStore: MetaStore;
   columnsRef: RefObject<ISpreadsheetColumn[] | undefined>;
+  visibleRowIndicesRef: RefObject<readonly number[]>;
   containerRef: RefObject<HTMLElement | null>;
   onChange?: (changes: ICellInput[]) => void;
   onCopy?: () => void;
@@ -42,6 +43,7 @@ export function useKeyboardNavigation({
   store,
   metaStore,
   columnsRef,
+  visibleRowIndicesRef,
   containerRef,
   onChange,
   onCopy,
@@ -121,15 +123,19 @@ export function useKeyboardNavigation({
           tryStartEditing(selection.focus);
           break;
         case "Delete":
-        case "Backspace":
+        case "Backspace": {
           e.preventDefault();
+          const visibleRowIndices = visibleRowIndicesRef.current ?? [];
+          const isFiltered = visibleRowIndices.length < rowCount;
           clearSelectionValues(
             store,
             normalizeSelection(selection),
             onChange,
             isWritableCell,
+            isFiltered ? visibleRowIndices : undefined,
           );
           break;
+        }
         default:
           if ((e.ctrlKey || e.metaKey) && e.key === "c") {
             e.preventDefault();
@@ -168,6 +174,8 @@ export function useKeyboardNavigation({
     onChange,
     onCopy,
     onPaste,
+    rowCount,
+    visibleRowIndicesRef,
   ]);
 }
 

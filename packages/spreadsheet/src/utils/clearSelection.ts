@@ -7,9 +7,15 @@ export function clearSelectionValues(
   range: INormalizedRange,
   onChange?: (changes: ICellInput[]) => void,
   isWritable?: (row: number, col: number) => boolean,
+  visibleRowIndices?: readonly number[],
 ): void {
+  const visibleRowSet =
+    visibleRowIndices !== undefined
+      ? new Set(visibleRowIndices)
+      : null;
   const toClear: ICellStoreInput[] = [];
   for (const { row, col } of iterRangeCells(range)) {
+    if (visibleRowSet && !visibleRowSet.has(row)) continue;
     if (isWritable && !isWritable(row, col)) continue;
     if (store.getValue(row, col) !== "") {
       toClear.push({ row, col, value: "" });
@@ -20,4 +26,3 @@ export function clearSelectionValues(
   store.setValues(toClear);
   onChange?.(toClear);
 }
-

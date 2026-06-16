@@ -352,9 +352,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
         : { frozen: null, scrollable: null },
     [clipboardRange, frozenColumnCount],
   );
-  const hasFilteredRows = visibleRowLayout.visibleCount !== rowCount;
   const frozenSelectionOverlay = useMemo(() => {
-    if (hasFilteredRows) return null;
     if (selection === null || clipboardCoversSelection) return null;
     const range = splitSelection.frozen;
     if (range === null) return null;
@@ -373,6 +371,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
       <SelectionOverlay
         range={range}
         dimensions={dimensions}
+        visibleRowLayout={visibleRowLayout}
         columnLeftOffset={0}
         showFillHandle={showFillHandle}
         hideLeftBorder={hideLeftBorder}
@@ -388,10 +387,9 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     selectionRange,
     frozenColumnCount,
     dimensions,
-    hasFilteredRows,
+    visibleRowLayout,
   ]);
   const frozenClipboardOverlay = useMemo(() => {
-    if (hasFilteredRows) return null;
     if (clipboardRange === null) return null;
     const range = splitClipboard.frozen;
     if (range === null) return null;
@@ -403,12 +401,13 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
       <ClipboardOverlay
         range={range}
         dimensions={dimensions}
+        visibleRowLayout={visibleRowLayout}
         columnLeftOffset={0}
         hideLeftBorder={hideLeftBorder}
         hideRightBorder={hideRightBorder}
       />
     );
-  }, [clipboardRange, splitClipboard, dimensions, hasFilteredRows]);
+  }, [clipboardRange, splitClipboard, dimensions, visibleRowLayout]);
   const frozenEditor = useMemo(() => {
     if (editingCell === null) return null;
     const { row, col } = editingCell;
@@ -450,7 +449,6 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     getRowTopByDisplayIndex,
   ]);
   const renderScrollableSelectionOverlay = () => {
-    if (hasFilteredRows) return null;
     if (selection === null || clipboardCoversSelection) return null;
     const range = splitSelection.scrollable;
     if (range === null) return null;
@@ -473,6 +471,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
       <SelectionOverlay
         range={range}
         dimensions={dimensions}
+        visibleRowLayout={visibleRowLayout}
         columnLeftOffset={hasFrozenColumns ? frozenWidth : 0}
         showFillHandle={showFillHandle}
         hideLeftBorder={hideLeftBorder}
@@ -483,7 +482,6 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
   };
 
   const renderScrollableClipboardOverlay = () => {
-    if (hasFilteredRows) return null;
     if (clipboardRange === null) return null;
     const range = splitClipboard.scrollable;
     if (range === null) return null;
@@ -495,6 +493,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
       <ClipboardOverlay
         range={range}
         dimensions={dimensions}
+        visibleRowLayout={visibleRowLayout}
         columnLeftOffset={hasFrozenColumns ? frozenWidth : 0}
         hideLeftBorder={hideLeftBorder}
         hideRightBorder={hideRightBorder}

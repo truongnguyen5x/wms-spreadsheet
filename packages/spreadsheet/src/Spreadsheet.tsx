@@ -124,6 +124,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       string | undefined
     >();
     const gridContainerRef = useRef<HTMLDivElement>(null);
+    const visibleRowIndicesRef = useRef<readonly number[]>([]);
     const [columnFilters, setColumnFilters] = useState<Map<number, IColumnFilterState>>(
       () => new Map(),
     );
@@ -141,6 +142,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         columnsRef,
         rowCount,
         columnCount: effectiveColumnCount,
+        visibleRowIndicesRef,
         onChange,
       },
     );
@@ -438,6 +440,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         ),
       [displayRowOrder, visiblePhysicalRows, dimensions.rowHeights],
     );
+    visibleRowIndicesRef.current = visibleRowLayout.visibleRowIndices;
     const onCopy = useCallback(() => {
       if (selection) handleCopy(selection);
     }, [selection, handleCopy]);
@@ -455,6 +458,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       store,
       metaStore,
       columnsRef,
+      visibleRowIndicesRef,
       containerRef: gridContainerRef,
       onChange,
       onCopy,

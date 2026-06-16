@@ -1,4 +1,5 @@
-import { findIndexAtOffset } from "./gridDimensions";
+import type { INormalizedRange } from "../types";
+import { findIndexAtOffset, sumSizes } from "./gridDimensions";
 
 export interface IVisibleRowLayout {
   visibleRowIndices: readonly number[];
@@ -54,4 +55,41 @@ export function findDisplayIndexAtOffset(
 ): number {
   if (layout.displayRowHeights.length === 0) return 0;
   return findIndexAtOffset(layout.displayRowHeights, offset);
+}
+
+export function getVisiblePhysicalRowsInRange(
+  range: INormalizedRange,
+  visibleRowIndices: readonly number[],
+): number[] {
+  const minRow = Math.min(range.startRow, range.endRow);
+  const maxRow = Math.max(range.startRow, range.endRow);
+  return visibleRowIndices.filter(
+    (physicalRow) => physicalRow >= minRow && physicalRow <= maxRow,
+  );
+}
+
+export function computeVisiblePhysicalRangeBounds(
+  layout: IVisibleRowLayout,
+  startPhysical: number,
+  endPhysical: number,
+): { offset: number; size: number } | null {
+  const minPhysical = Math.min(startPhysical, endPhysical);
+  const maxPhysical = Math.max(startPhysical, endPhysical);
+  let minDisplay = Infinity;
+  let maxDisplay = -Infinity;
+
+  for (let displayIndex = 0; displayIndex < layout.visibleRowIndices.length; displayIndex++) {
+    const physicalRow = layout.visibleRowIndices[displayIndex];
+    if (physicalRow === undefined) continue;
+    if (physicalRow < minPhysical || physicalRow > maxPhysical) continue;
+    minDisplay = Math.min(minDisplay, displayIndex);
+    maxDisplay = Math.max(maxDisplay, displayIndex);
+  }
+
+  if (minDisplay === Infinity || maxDisplay < 0) return null;
+
+  return {
+    offset: getDisplayRowTop(layout, minDisplay),
+    size: sumSizes(layout.displayRowHeights, minDisplay, maxDisplay),
+  };
 }
