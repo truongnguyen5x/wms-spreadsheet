@@ -112,6 +112,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
+  gap: 8px;
 }
 
 .footerRight {
@@ -121,7 +122,7 @@
 
 .primaryButton,
 .secondaryButton {
-  min-width: 88px;
+  min-width: 60px;
   height: 36px;
   border-radius: 6px;
   font-size: 14px;

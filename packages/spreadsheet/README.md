@@ -2,7 +2,7 @@
 
 Thư viện Spreadsheet React — virtual window, API imperative qua ref.
 
-Xem [README gốc](../../README.md) để biết hướng dẫn đầy đủ.
+Xem [README gốc](../../README.md) để biết hướng dẫn đầy đủ (API, cell types, filter, clipboard, v.v.).
 
 ## Cài đặt (trong monorepo)
 
@@ -36,22 +36,40 @@ npx vite build
 
 ```
 src/
-├── Spreadsheet.tsx          # forwardRef, expose ISpreadsheetRef
-├── store/CellStore.ts       # Data layer ngoài React
+├── Spreadsheet.tsx              # forwardRef, expose ISpreadsheetRef
+├── store/
+│   ├── CellStore.ts             # Data layer (values) ngoài React
+│   └── MetaStore.ts             # Meta layer (type, disabled, …)
 ├── hooks/
-│   ├── useCellValue.ts      # useSyncExternalStore per cell
-│   ├── useVirtualWindow.ts  # Virtual window + rAF scroll
-│   └── useKeyboardNavigation.ts
+│   ├── useCellValue.ts          # useSyncExternalStore per cell
+│   ├── useCellMeta.ts
+│   ├── useVirtualWindow.ts      # Virtual window + rAF scroll
+│   ├── useKeyboardNavigation.ts
+│   ├── useRangeSelection.ts
+│   ├── useClipboard.ts
+│   ├── useHeaderResize.ts
+│   └── useGridDimensions.ts
 ├── components/
-│   ├── SpreadsheetGrid/     # 4-pane layout
+│   ├── SpreadsheetGrid/         # 4-pane layout + frozen pane
 │   ├── SpreadsheetCell/
 │   ├── ColumnHeaderRow/
 │   ├── RowHeaderColumn/
 │   ├── CornerCell/
-│   └── CellEditor/
+│   ├── CellEditor/
+│   ├── SelectionOverlay/
+│   ├── ClipboardOverlay/
+│   ├── ColumnFilter/
+│   ├── FrozenColumnPane/
+│   └── SwitchCell/
 ├── utils/
 │   ├── cellKey.ts
 │   ├── columnLabel.ts
-│   └── computeVisibleRange.ts
+│   ├── computeVisibleRange.ts
+│   ├── dataAdapter.ts
+│   ├── clipboard.ts
+│   ├── columnFilter.ts
+│   ├── rowSort.ts
+│   ├── visibleRowLayout.ts
+│   └── resolveCellMeta.ts
 └── styles/spreadsheet.module.scss
 ```
