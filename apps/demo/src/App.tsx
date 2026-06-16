@@ -106,9 +106,9 @@ const COLUMNS: ISpreadsheetColumn[] = [
     width: 130,
     meta: {
       type: "date",
-      dateFormat: "YYYY-MM-DD",
-      minDate: "2026-06-01",
-      maxDate: "2026-06-30",
+      dateFormat: "DD/MM/YYYY",
+      minDate: "01/06/2026",
+      maxDate: "01/07/2026",
     },
   },
 ];

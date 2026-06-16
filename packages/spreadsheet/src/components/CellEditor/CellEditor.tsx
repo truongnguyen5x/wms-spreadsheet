@@ -21,8 +21,9 @@ export interface ICellEditorProps {
 
 function measureEditorHeight(value: string, rowHeight: number): number {
   const lineCount = Math.max(1, value.split("\n").length);
-  if (lineCount === 1) return rowHeight;
-  return lineCount * CELL_LINE_HEIGHT + CELL_EDITOR_VERTICAL_CHROME;
+  const contentHeight =
+    lineCount * CELL_LINE_HEIGHT + CELL_EDITOR_VERTICAL_CHROME;
+  return Math.max(rowHeight, contentHeight);
 }
 
 export function CellEditor({
