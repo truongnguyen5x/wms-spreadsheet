@@ -91,6 +91,8 @@ export interface ISpreadsheetColumn {
   colText?: string;
   /** Custom render header cell; ưu tiên hơn colText. */
   colRender?: (params: IColumnHeaderRenderParams) => ReactNode;
+  /** Hiển thị icon/filter popup ở header cột. */
+  showFilter?: boolean;
   /** Meta mặc định cho toàn cột; cell meta override từng field. */
   meta?: Partial<ICellMeta>;
   /** Căn ngang nội dung body cell. Mặc định "left". Không áp header. */
@@ -171,6 +173,29 @@ export interface ISpreadsheetProps {
   /** Registry custom cell render/editor theo customKey. */
   customCellRegistry?: Record<string, ICustomCellDefinition>;
 }
+
+export type TFilterCondition =
+  | "none"
+  | "isEmpty"
+  | "isNotEmpty"
+  | "isEqualTo"
+  | "isNotEqualTo"
+  | "beginsWith"
+  | "endsWith"
+  | "contains"
+  | "doesNotContain";
+export type TSortDirection = "asc" | "desc";
+export interface IColumnSortState {
+  col: number;
+  direction: TSortDirection;
+}
+export interface IColumnFilterState {
+  condition: TFilterCondition;
+  conditionValue?: string;
+  /** null = không giới hạn checkbox value. */
+  selectedValues: string[] | null;
+}
+export const FILTER_BLANK_VALUE = "__BLANK__";
 
 export const DEFAULT_ROW_HEIGHT = 28;
 export const DEFAULT_COLUMN_WIDTH = 100;

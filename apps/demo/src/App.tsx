@@ -3,7 +3,7 @@ import {
   Spreadsheet,
   type ICustomCellDefinition,
   type ISpreadsheetColumn,
-  type ISpreadsheetRef
+  type ISpreadsheetRef,
 } from "@wms/spreadsheet";
 import styles from "./App.module.scss";
 
@@ -16,7 +16,7 @@ const SELECT_OPTIONS = [
   { id: "6", label: "Lưu kho tạm", color: "#e6f4ea" },
   { id: "7", label: "Hủy đơn", color: "#f1f3f4" },
   { id: "8", label: "Lựa chọn đặc biệt A", color: "#d2e3fc" },
-  { id: "9", label: "Lựa chọn đặc biệt B", color: "#ceead6" }
+  { id: "9", label: "Lựa chọn đặc biệt B", color: "#ceead6" },
 ];
 
 const CUSTOM_CELLS: Record<string, ICustomCellDefinition> = {
@@ -31,7 +31,7 @@ const CUSTOM_CELLS: Record<string, ICustomCellDefinition> = {
             background: value === "done" ? "#ceead6" : "#fce8e6",
             color: value === "done" ? "#137333" : "#c5221f",
             fontSize: 12,
-            fontWeight: 600
+            fontWeight: 600,
           }}
         >
           {value === "done" ? "Hoàn thành" : "Chờ xử lý"}
@@ -47,7 +47,7 @@ const CUSTOM_CELLS: Record<string, ICustomCellDefinition> = {
           height: "100%",
           border: "2px solid #1a73e8",
           fontSize: 13,
-          boxSizing: "border-box"
+          boxSizing: "border-box",
         }}
         value={value}
         autoFocus
@@ -57,25 +57,26 @@ const CUSTOM_CELLS: Record<string, ICustomCellDefinition> = {
         <option value="pending">Chờ xử lý</option>
         <option value="done">Hoàn thành</option>
       </select>
-    )
-  }
+    ),
+  },
 };
 
 const COLUMNS: ISpreadsheetColumn[] = [
-  { colName: "sku", colText: "Mã SKU", width: 120 },
+  { colName: "sku", colText: "Mã SKU", width: 120, showFilter: true },
   {
     colName: "qty",
     colText: "SL",
     width: 80,
-    colRender: () => <span style={{ fontWeight: 700 }}>SL</span>
+    showFilter: true,
+    colRender: () => <span style={{ fontWeight: 700 }}>SL</span>,
   },
-  { colName: "name", width: 200, verticalAlign: "middle" },
+  { colName: "name", width: 200, verticalAlign: "middle", showFilter: true },
   {
     colName: "choice",
     colText: "Lựa chọn",
     width: 140,
     meta: { type: "select", options: SELECT_OPTIONS },
-    verticalAlign: "middle"
+    verticalAlign: "middle",
   },
   {
     colName: "active",
@@ -83,13 +84,13 @@ const COLUMNS: ISpreadsheetColumn[] = [
     width: 90,
     meta: { type: "switch" },
     horizontalAlign: "center",
-    verticalAlign: "middle"
+    verticalAlign: "middle",
   },
   {
     colName: "status",
     colText: "Trạng thái",
     width: 130,
-    meta: { customKey: "statusBadge" }
+    meta: { customKey: "statusBadge" },
   },
   {
     colName: "self_ship",
@@ -97,7 +98,7 @@ const COLUMNS: ISpreadsheetColumn[] = [
     width: 90,
     meta: { type: "boolean" },
     horizontalAlign: "right",
-    verticalAlign: "bottom"
+    verticalAlign: "bottom",
   },
   {
     colName: "due_date",
@@ -107,9 +108,9 @@ const COLUMNS: ISpreadsheetColumn[] = [
       type: "date",
       dateFormat: "YYYY-MM-DD",
       minDate: "2026-06-01",
-      maxDate: "2026-06-30"
-    }
-  }
+      maxDate: "2026-06-30",
+    },
+  },
 ];
 
 const INITIAL_DATA = [
@@ -120,7 +121,7 @@ const INITIAL_DATA = [
     choice: "1",
     active: "true",
     status: "pending",
-    due_date: "15/06/2026"
+    due_date: "15/06/2026",
   },
   {
     sku: "A002",
@@ -129,7 +130,7 @@ const INITIAL_DATA = [
     choice: "2",
     active: "false",
     status: "done",
-    due_date: "20/06/2026"
+    due_date: "20/06/2026",
   },
   {
     sku: "A003",
@@ -138,8 +139,8 @@ const INITIAL_DATA = [
     choice: "",
     active: "true",
     status: "pending",
-    due_date: ""
-  }
+    due_date: "",
+  },
 ];
 
 let renderCount = 0;
@@ -156,11 +157,11 @@ export default function App() {
       {
         row: 1,
         colName: "due_date",
-        meta: { maxDate: "2026-06-20" }
+        meta: { maxDate: "2026-06-20" },
       },
       { row: 0, colName: "sku", meta: { invalid: true } },
       { row: 1, colName: "sku", meta: { disabled: true } },
-      { row: 2, colName: "sku", meta: { invalid: true, disabled: true } }
+      { row: 2, colName: "sku", meta: { invalid: true, disabled: true } },
     ]);
   }, []);
 
@@ -173,7 +174,7 @@ export default function App() {
       5,
       null,
       { type: "select", options: SELECT_OPTIONS },
-      "choice"
+      "choice",
     );
     sheetRef.current?.setCellValue(5, null, "1", "choice");
   };
@@ -199,7 +200,7 @@ export default function App() {
     const value = sheetRef.current?.getCellValue(active.row, active.col);
     const meta = sheetRef.current?.getCellMeta(active.row, active.col);
     alert(
-      `Cell (${active.row + 1}, ${active.col + 1}): "${value}"\nMeta: ${JSON.stringify(meta)}`
+      `Cell (${active.row + 1}, ${active.col + 1}): "${value}"\nMeta: ${JSON.stringify(meta)}`,
     );
   };
 
@@ -209,9 +210,9 @@ export default function App() {
       null,
       {
         type: "select",
-        options: [{ id: "1", label: "aaaa" }]
+        options: [{ id: "1", label: "aaaa" }],
       },
-      "self_ship"
+      "self_ship",
     );
   };
   return (
@@ -245,7 +246,7 @@ export default function App() {
       <main className={styles.sheetContainer}>
         <Spreadsheet
           ref={sheetRef}
-          rowCount={10000}
+          rowCount={20000}
           columnCount={26}
           columns={COLUMNS}
           frozenColumnCount={1}

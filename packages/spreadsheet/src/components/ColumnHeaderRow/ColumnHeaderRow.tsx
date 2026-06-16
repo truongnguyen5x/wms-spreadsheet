@@ -1,6 +1,7 @@
 import { memo, type Ref } from "react";
 import {
   COLUMN_HEADER_HEIGHT,
+  type IColumnFilterState,
   RESIZE_HIT_ZONE,
   type INormalizedRange,
   type IResizeHandle,
@@ -9,6 +10,7 @@ import {
 import type { IGridDimensions } from "../../hooks/useGridDimensions";
 import { getColumnHeaderContent } from "../../utils/columnHeaderContent";
 import { getScrollableColumnLeft } from "../../utils/frozenColumns";
+import { isColumnFilterActive } from "../../utils/columnFilter";
 import styles from "../../styles/spreadsheet.module.scss";
 
 export type TColumnHeaderMode = "frozen" | "scrollable";
@@ -19,8 +21,10 @@ interface IColumnHeaderCellProps {
   columnWidth: number;
   isActive: boolean;
   columns?: ISpreadsheetColumn[];
+  activeFilterColumns: ReadonlyMap<number, IColumnFilterState>;
   onColumnMouseDown: (col: number) => void;
   onColumnMouseEnter: (col: number) => void;
+  onFilterIconClick: (col: number, anchorRect: DOMRect) => void;
 }
 
 const ColumnHeaderCell = memo(function ColumnHeaderCell({
@@ -29,9 +33,21 @@ const ColumnHeaderCell = memo(function ColumnHeaderCell({
   columnWidth,
   isActive,
   columns,
+  activeFilterColumns,
   onColumnMouseDown,
   onColumnMouseEnter,
+  onFilterIconClick,
 }: IColumnHeaderCellProps) {
+  const column = columns?.[col];
+  const showFilter = column?.showFilter === true;
+  const isFilterActive = showFilter
+    ? isColumnFilterActive(
+        activeFilterColumns.get(col) ?? {
+          condition: "none",
+          selectedValues: null,
+        },
+      )
+    : false;
   return (
     <div
       className={`${styles.headerCell}${isActive ? ` ${styles.active}` : ""}`}
@@ -47,7 +63,34 @@ const ColumnHeaderCell = memo(function ColumnHeaderCell({
       }}
       onMouseEnter={() => onColumnMouseEnter(col)}
     >
-      {getColumnHeaderContent(col, columns)}
+      <div className={styles.headerCellInner}>
+        <div className={styles.headerCellText}>
+          {getColumnHeaderContent(col, columns)}
+        </div>
+        {showFilter && (
+          <button
+            type="button"
+            className={`${styles.filterIconBtn}${isFilterActive ? ` ${styles.filterIconBtnActive}` : ""}`}
+            onMouseDown={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+            }}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onFilterIconClick(col, event.currentTarget.getBoundingClientRect());
+            }}
+            aria-label="Filter column"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden focusable="false">
+              <path
+                d="M4 6h16l-6.5 7.2V18l-3 1.8v-6.6L4 6z"
+                fill="currentColor"
+              />
+            </svg>
+          </button>
+        )}
+      </div>
     </div>
   );
 });
@@ -107,8 +150,10 @@ export interface IColumnHeaderRowProps {
   withFrozenDivider?: boolean;
   hoveredHandle: IResizeHandle | null;
   columns?: ISpreadsheetColumn[];
+  activeFilterColumns: ReadonlyMap<number, IColumnFilterState>;
   onColumnMouseDown: (col: number) => void;
   onColumnMouseEnter: (col: number) => void;
+  onFilterIconClick: (col: number, anchorRect: DOMRect) => void;
   onResizeHandleMouseEnter: (handle: IResizeHandle) => void;
   onResizeHandleMouseLeave: () => void;
   onResizeStart: (col: number, clientX: number) => void;
@@ -128,8 +173,10 @@ export const ColumnHeaderRow = memo(function ColumnHeaderRow({
   withFrozenDivider = false,
   hoveredHandle,
   columns,
+  activeFilterColumns,
   onColumnMouseDown,
   onColumnMouseEnter,
+  onFilterIconClick,
   onResizeHandleMouseEnter,
   onResizeHandleMouseLeave,
   onResizeStart,
@@ -155,8 +202,10 @@ export const ColumnHeaderRow = memo(function ColumnHeaderRow({
           columnWidth={columnWidth}
           isActive={isActive}
           columns={columns}
+          activeFilterColumns={activeFilterColumns}
           onColumnMouseDown={onColumnMouseDown}
           onColumnMouseEnter={onColumnMouseEnter}
+          onFilterIconClick={onFilterIconClick}
         />,
       );
       const isHandleHovered =

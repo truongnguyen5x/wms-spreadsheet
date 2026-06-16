@@ -20,6 +20,8 @@ export interface IRenderCellsOptions {
   customCellRegistry?: Record<string, ICustomCellDefinition>;
   selection?: ISelection | null;
   getColumnLeft: (col: number) => number;
+  resolvePhysicalRow?: (displayRow: number) => number;
+  getRowTop?: (displayRow: number) => number;
   onCellMouseDown: (row: number, col: number) => void;
   onCellMouseEnter: (row: number, col: number) => void;
   onCellDoubleClick: (row: number, col: number) => void;
@@ -38,6 +40,8 @@ export function renderCells({
   customCellRegistry,
   selection,
   getColumnLeft,
+  resolvePhysicalRow,
+  getRowTop,
   onCellMouseDown,
   onCellMouseEnter,
   onCellDoubleClick,
@@ -46,7 +50,8 @@ export function renderCells({
   const result: React.ReactNode[] = [];
   if (colEnd < colStart) return result;
   const focus = selection?.focus;
-  for (let row = rowStart; row <= rowEnd; row++) {
+  for (let displayRow = rowStart; displayRow <= rowEnd; displayRow++) {
+    const row = resolvePhysicalRow ? resolvePhysicalRow(displayRow) : displayRow;
     for (let col = colStart; col <= colEnd; col++) {
       const isActive =
         focus !== undefined &&
@@ -62,7 +67,7 @@ export function renderCells({
           columns={columns}
           customCellRegistry={customCellRegistry}
           isActive={isActive}
-          top={dimensions.getRowTop(row)}
+          top={getRowTop ? getRowTop(displayRow) : dimensions.getRowTop(row)}
           left={getColumnLeft(col)}
           width={dimensions.getColumnWidth(col)}
           height={dimensions.getRowHeight(row)}

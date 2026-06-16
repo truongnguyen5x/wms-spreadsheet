@@ -13,10 +13,14 @@ export type {
   ISelection,
   ISheetData,
   IColumnHeaderRenderParams,
+  IColumnFilterState,
+  IColumnSortState,
   ISelectOption,
   ISpreadsheetColumn,
   ISpreadsheetProps,
   ISpreadsheetRef,
+  TFilterCondition,
+  TSortDirection,
   THorizontalAlign,
   TCellType,
   TVerticalAlign,
@@ -29,6 +33,7 @@ export {
   DEFAULT_OVERSCAN,
   DEFAULT_ROW_HEIGHT,
   COLUMN_HEADER_HEIGHT,
+  FILTER_BLANK_VALUE,
   ROW_HEADER_WIDTH,
 } from "./types";
 export { CellStore } from "./store/CellStore";

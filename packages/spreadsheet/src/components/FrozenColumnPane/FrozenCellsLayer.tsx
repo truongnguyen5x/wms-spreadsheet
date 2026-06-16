@@ -17,6 +17,8 @@ export interface IFrozenCellsLayerProps {
   dimensions: IGridDimensions;
   columns?: ISpreadsheetColumn[];
   customCellRegistry?: Record<string, ICustomCellDefinition>;
+  resolvePhysicalRow?: (displayRow: number) => number;
+  getRowTop?: (displayRow: number) => number;
   onCellMouseDown: (row: number, col: number) => void;
   onCellMouseEnter: (row: number, col: number) => void;
   onCellDoubleClick: (row: number, col: number) => void;
@@ -32,6 +34,8 @@ export const FrozenCellsLayer = memo(function FrozenCellsLayer({
   dimensions,
   columns,
   customCellRegistry,
+  resolvePhysicalRow,
+  getRowTop,
   onCellMouseDown,
   onCellMouseEnter,
   onCellDoubleClick,
@@ -54,6 +58,8 @@ export const FrozenCellsLayer = memo(function FrozenCellsLayer({
         columns,
         customCellRegistry,
         getColumnLeft,
+        resolvePhysicalRow,
+        getRowTop,
         onCellMouseDown,
         onCellMouseEnter,
         onCellDoubleClick,
@@ -70,6 +76,8 @@ export const FrozenCellsLayer = memo(function FrozenCellsLayer({
       columns,
       customCellRegistry,
       getColumnLeft,
+      resolvePhysicalRow,
+      getRowTop,
       onCellMouseDown,
       onCellMouseEnter,
       onCellDoubleClick,

@@ -21,11 +21,14 @@ import {
   DEFAULT_OVERSCAN,
   DEFAULT_ROW_HEIGHT,
   type ICellAddress,
+  type IColumnFilterState,
+  type IColumnSortState,
   type ICellMetaInput,
   type ISpreadsheetColumn,
   type ISpreadsheetProps,
   type ISpreadsheetRef,
   type ISelection,
+  type TSortDirection,
   type TSheetDataInput,
 } from "./types";
 import {
@@ -38,6 +41,16 @@ import {
 } from "./utils/dataAdapter";
 import { resolveCellMeta, isCellEditable, isCellDisabled } from "./utils/resolveCellMeta";
 import { createSelection } from "./utils/normalizeRange";
+import {
+  computeVisibleRowIndices,
+  createDefaultColumnFilterState,
+} from "./utils/columnFilter";
+import { sortDisplayRowOrder } from "./utils/rowSort";
+import { buildVisibleRowLayout } from "./utils/visibleRowLayout";
+
+function buildIdentityRowOrder(rowCount: number): number[] {
+  return Array.from({ length: rowCount }, (_, index) => index);
+}
 
 export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
   function Spreadsheet(props, ref) {
@@ -111,6 +124,16 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       string | undefined
     >();
     const gridContainerRef = useRef<HTMLDivElement>(null);
+    const [columnFilters, setColumnFilters] = useState<Map<number, IColumnFilterState>>(
+      () => new Map(),
+    );
+    const [displayRowOrder, setDisplayRowOrder] = useState<number[]>(
+      () => buildIdentityRowOrder(rowCount),
+    );
+    const [columnSort, setColumnSort] = useState<IColumnSortState | null>(null);
+    const baselineRowOrderRef = useRef<number[]>(buildIdentityRowOrder(rowCount));
+    const [openFilterCol, setOpenFilterCol] = useState<number | null>(null);
+    const [filterAnchorRect, setFilterAnchorRect] = useState<DOMRect | null>(null);
     const { clipboard, handleCopy, handlePaste, clearClipboard } = useClipboard(
       {
         store,
@@ -168,6 +191,11 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         },
         loadData(data: TSheetDataInput) {
           store.clearAndLoad(normalizeToSheetData(data, columnsRef.current));
+          const identity = buildIdentityRowOrder(rowCount);
+          baselineRowOrderRef.current = identity;
+          setDisplayRowOrder(identity);
+          setColumnFilters(new Map());
+          setColumnSort(null);
         },
         getData() {
           return exportSheetData(store, columnsRef.current, rowCount);
@@ -229,6 +257,13 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       }),
       [store, metaStore, selection, setActiveCell, setSelection, rowCount],
     );
+    useEffect(() => {
+      const identity = buildIdentityRowOrder(rowCount);
+      baselineRowOrderRef.current = identity;
+      setDisplayRowOrder(identity);
+      setColumnFilters(new Map());
+      setColumnSort(null);
+    }, [rowCount]);
     const startEditing = useCallback(
       (cell: ICellAddress, initialValue?: string) => {
         const meta = resolveCellMeta(
@@ -347,6 +382,62 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       },
       [store, metaStore, onChange],
     );
+    const handleOpenColumnFilter = useCallback(
+      (col: number, anchorRect: DOMRect) => {
+        setOpenFilterCol(col);
+        setFilterAnchorRect(anchorRect);
+      },
+      [],
+    );
+    const handleCloseColumnFilter = useCallback(() => {
+      setOpenFilterCol(null);
+      setFilterAnchorRect(null);
+    }, []);
+    const handleApplyColumnFilter = useCallback(
+      (col: number, nextState: IColumnFilterState) => {
+        setColumnFilters((prev) => {
+          const next = new Map(prev);
+          next.set(col, {
+            condition: nextState.condition,
+            conditionValue: nextState.conditionValue,
+            selectedValues: nextState.selectedValues,
+          });
+          return next;
+        });
+      },
+      [],
+    );
+    const handleSortColumn = useCallback(
+      (col: number, direction: TSortDirection) => {
+        setDisplayRowOrder((prev) =>
+          sortDisplayRowOrder(store, col, direction, prev),
+        );
+        setColumnSort({ col, direction });
+      },
+      [store],
+    );
+    const handleResetColumnFilter = useCallback((col: number) => {
+      setDisplayRowOrder(baselineRowOrderRef.current);
+      setColumnSort(null);
+      setColumnFilters((prev) => {
+        const next = new Map(prev);
+        next.set(col, createDefaultColumnFilterState());
+        return next;
+      });
+    }, []);
+    const visiblePhysicalRows = useMemo(
+      () => computeVisibleRowIndices(store, rowCount, columns, columnFilters),
+      [store, rowCount, columns, columnFilters],
+    );
+    const visibleRowLayout = useMemo(
+      () =>
+        buildVisibleRowLayout(
+          displayRowOrder,
+          visiblePhysicalRows,
+          dimensions.rowHeights,
+        ),
+      [displayRowOrder, visiblePhysicalRows, dimensions.rowHeights],
+    );
     const onCopy = useCallback(() => {
       if (selection) handleCopy(selection);
     }, [selection, handleCopy]);
@@ -385,6 +476,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           columns={columns}
           customCellRegistry={customCellRegistry}
           dimensions={dimensions}
+          visibleRowLayout={visibleRowLayout}
           overscan={overscan}
           selection={selection}
           clipboardRange={clipboard?.range ?? null}
@@ -397,6 +489,15 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           onCellMouseEnter={handleCellMouseEnter}
           onColumnHeaderMouseDown={handleColumnHeaderMouseDown}
           onColumnHeaderMouseEnter={handleColumnHeaderMouseEnter}
+          onOpenColumnFilter={handleOpenColumnFilter}
+          openFilterCol={openFilterCol}
+          filterAnchorRect={filterAnchorRect}
+          columnFilters={columnFilters}
+          columnSort={columnSort}
+          onApplyColumnFilter={handleApplyColumnFilter}
+          onSortColumn={handleSortColumn}
+          onResetColumnFilter={handleResetColumnFilter}
+          onCloseColumnFilter={handleCloseColumnFilter}
           onRowHeaderMouseDown={handleRowHeaderMouseDown}
           onRowHeaderMouseEnter={handleRowHeaderMouseEnter}
           onCellDoubleClick={handleCellDoubleClick}

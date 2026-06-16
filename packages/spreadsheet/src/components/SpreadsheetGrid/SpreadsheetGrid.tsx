@@ -1,11 +1,15 @@
 import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import type { CellStore } from "../../store/CellStore";
 import type { MetaStore } from "../../store/MetaStore";
-import type {
-  ICustomCellDefinition,
-  ISelection,
-  INormalizedRange,
-  ISpreadsheetColumn,
+import {
+  FILTER_BLANK_VALUE,
+  type IColumnFilterState,
+  type IColumnSortState,
+  type ICustomCellDefinition,
+  type ISelection,
+  type INormalizedRange,
+  type ISpreadsheetColumn,
+  type TSortDirection,
 } from "../../types";
 import { useVirtualWindow } from "../../hooks/useVirtualWindow";
 import { useDragAutoScroll } from "../../hooks/useDragAutoScroll";
@@ -28,6 +32,15 @@ import {
 } from "../../utils/frozenColumns";
 import { renderCells } from "../../utils/renderCells";
 import { resolveCellMeta } from "../../utils/resolveCellMeta";
+import {
+  getDisplayRowTop,
+  getTotalVisibleHeight,
+  type IVisibleRowLayout,
+} from "../../utils/visibleRowLayout";
+import {
+  ColumnFilterPopup,
+  createFilterValueOptions,
+} from "../ColumnFilter";
 import { CornerCell } from "../CornerCell";
 import { ColumnHeaderRow } from "../ColumnHeaderRow";
 import { RowHeaderColumn } from "../RowHeaderColumn";
@@ -46,6 +59,7 @@ export interface ISpreadsheetGridProps {
   columns?: ISpreadsheetColumn[];
   customCellRegistry?: Record<string, ICustomCellDefinition>;
   dimensions: IGridDimensions;
+  visibleRowLayout: IVisibleRowLayout;
   overscan: number;
   selection: ISelection | null;
   clipboardRange: INormalizedRange | null;
@@ -58,6 +72,15 @@ export interface ISpreadsheetGridProps {
   onCellMouseEnter: (row: number, col: number) => void;
   onColumnHeaderMouseDown: (col: number) => void;
   onColumnHeaderMouseEnter: (col: number) => void;
+  onOpenColumnFilter: (col: number, anchorRect: DOMRect) => void;
+  openFilterCol: number | null;
+  filterAnchorRect: DOMRect | null;
+  columnFilters: ReadonlyMap<number, IColumnFilterState>;
+  columnSort: IColumnSortState | null;
+  onApplyColumnFilter: (col: number, nextState: IColumnFilterState) => void;
+  onSortColumn: (col: number, direction: TSortDirection) => void;
+  onResetColumnFilter: (col: number) => void;
+  onCloseColumnFilter: () => void;
   onRowHeaderMouseDown: (row: number) => void;
   onRowHeaderMouseEnter: (row: number) => void;
   onCellDoubleClick: (row: number, col: number) => void;
@@ -80,6 +103,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
   columns,
   customCellRegistry,
   dimensions,
+  visibleRowLayout,
   overscan,
   selection,
   clipboardRange,
@@ -92,6 +116,15 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
   onCellMouseEnter,
   onColumnHeaderMouseDown,
   onColumnHeaderMouseEnter,
+  onOpenColumnFilter,
+  openFilterCol,
+  filterAnchorRect,
+  columnFilters,
+  columnSort,
+  onApplyColumnFilter,
+  onSortColumn,
+  onResetColumnFilter,
+  onCloseColumnFilter,
   onRowHeaderMouseDown,
   onRowHeaderMouseEnter,
   onCellDoubleClick,
@@ -109,9 +142,9 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
   );
   const hasFrozenColumns = frozenColumnCount > 0;
   const virtual = useVirtualWindow({
-    rowCount,
+    rowCount: visibleRowLayout.visibleCount,
     columnCount,
-    rowHeights: dimensions.rowHeights,
+    rowHeights: visibleRowLayout.displayRowHeights,
     columnWidths: dimensions.columnWidths,
     overscan,
     frozenColumnCount,
@@ -121,10 +154,13 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     scrollTop,
     scrollLeft,
     scrollableTotalWidth,
-    totalHeight,
     frozenWidth,
   } = virtual;
   const { startRow, endRow, startCol, endCol } = visibleRange;
+  const totalHeight = useMemo(
+    () => getTotalVisibleHeight(visibleRowLayout),
+    [visibleRowLayout],
+  );
   const isDraggingRef = useRef(isDragging);
   isDraggingRef.current = isDragging;
   const scrollLeftRef = useRef(scrollLeft);
@@ -135,16 +171,24 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     scrollRef: virtual.scrollRef,
     columnHeaderRef,
     rowHeaderRef,
-    rowHeights: dimensions.rowHeights,
+    rowHeights: visibleRowLayout.displayRowHeights,
     columnWidths: dimensions.columnWidths,
-    rowCount,
+    rowCount: visibleRowLayout.visibleCount,
     columnCount,
     frozenWidth: hasFrozenColumns ? frozenWidth : 0,
     frozenColumnHeaderRef: hasFrozenColumns ? frozenColumnHeaderRef : undefined,
     frozenBodyRef: hasFrozenColumns ? frozenBodyRef : undefined,
-    onCellFocus: onCellMouseEnter,
+    onCellFocus: (displayRow, col) => {
+      const physicalRow = visibleRowLayout.visibleRowIndices[displayRow];
+      if (physicalRow === undefined) return;
+      onCellMouseEnter(physicalRow, col);
+    },
     onColumnFocus: onColumnHeaderMouseEnter,
-    onRowFocus: onRowHeaderMouseEnter,
+    onRowFocus: (displayRow) => {
+      const physicalRow = visibleRowLayout.visibleRowIndices[displayRow];
+      if (physicalRow === undefined) return;
+      onRowHeaderMouseEnter(physicalRow);
+    },
   });
   const focusCell = selection?.focus ?? null;
   const selectionRange = selection ? normalizeSelection(selection) : null;
@@ -156,7 +200,10 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
 
     const el = virtual.scrollRef.current;
     if (!el) return;
-    const cellTop = dimensions.getRowTop(focusCell.row);
+    const displayFocusRow =
+      visibleRowLayout.physicalToDisplay.get(focusCell.row) ?? -1;
+    if (displayFocusRow < 0) return;
+    const cellTop = getDisplayRowTop(visibleRowLayout, displayFocusRow);
     const cellBottom = cellTop + dimensions.getRowHeight(focusCell.row);
     const viewTop = el.scrollTop;
     const viewBottom = viewTop + el.clientHeight;
@@ -191,7 +238,20 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     virtual.scrollRef,
     frozenColumnCount,
     frozenWidth,
+    visibleRowLayout,
   ]);
+  const getRowTopByDisplayIndex = useCallback(
+    (displayRow: number) => getDisplayRowTop(visibleRowLayout, displayRow),
+    [visibleRowLayout],
+  );
+  const resolvePhysicalRow = useCallback(
+    (displayRow: number) => visibleRowLayout.visibleRowIndices[displayRow] ?? -1,
+    [visibleRowLayout],
+  );
+  const toDisplayRow = useCallback(
+    (physicalRow: number) => visibleRowLayout.physicalToDisplay.get(physicalRow) ?? -1,
+    [visibleRowLayout],
+  );
   const getFrozenColumnLeft = useCallback(
     (col: number) => dimensions.getColumnLeft(col),
     [dimensions],
@@ -243,6 +303,8 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
       customCellRegistry,
       selection,
       getColumnLeft: hasFrozenColumns ? getScrollableLeft : getFrozenColumnLeft,
+      resolvePhysicalRow,
+      getRowTop: getRowTopByDisplayIndex,
       onCellMouseDown,
       onCellMouseEnter,
       onCellDoubleClick,
@@ -267,6 +329,8 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     onCellMouseEnter,
     onCellDoubleClick,
     onBooleanToggle,
+    resolvePhysicalRow,
+    getRowTopByDisplayIndex,
   ]);
   const clipboardCoversSelection =
     clipboardRange !== null &&
@@ -288,7 +352,9 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
         : { frozen: null, scrollable: null },
     [clipboardRange, frozenColumnCount],
   );
+  const hasFilteredRows = visibleRowLayout.visibleCount !== rowCount;
   const frozenSelectionOverlay = useMemo(() => {
+    if (hasFilteredRows) return null;
     if (selection === null || clipboardCoversSelection) return null;
     const range = splitSelection.frozen;
     if (range === null) return null;
@@ -322,8 +388,10 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     selectionRange,
     frozenColumnCount,
     dimensions,
+    hasFilteredRows,
   ]);
   const frozenClipboardOverlay = useMemo(() => {
+    if (hasFilteredRows) return null;
     if (clipboardRange === null) return null;
     const range = splitClipboard.frozen;
     if (range === null) return null;
@@ -340,11 +408,13 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
         hideRightBorder={hideRightBorder}
       />
     );
-  }, [clipboardRange, splitClipboard, dimensions]);
+  }, [clipboardRange, splitClipboard, dimensions, hasFilteredRows]);
   const frozenEditor = useMemo(() => {
     if (editingCell === null) return null;
     const { row, col } = editingCell;
     if (!isFrozenColumn(col, frozenColumnCount)) return null;
+    const displayRow = toDisplayRow(row);
+    if (displayRow < 0) return null;
     const meta = resolveCellMeta(metaStore, row, col, columns);
     return (
       <CellEditorRouter
@@ -354,7 +424,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
         meta={meta}
         column={columns?.[col]}
         customCellRegistry={customCellRegistry}
-        top={dimensions.getRowTop(row)}
+        top={getRowTopByDisplayIndex(displayRow)}
         left={dimensions.getColumnLeft(col)}
         width={dimensions.getColumnWidth(col)}
         height={dimensions.getRowHeight(row)}
@@ -376,8 +446,11 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     dimensions,
     onCommitEdit,
     onCancelEdit,
+    toDisplayRow,
+    getRowTopByDisplayIndex,
   ]);
   const renderScrollableSelectionOverlay = () => {
+    if (hasFilteredRows) return null;
     if (selection === null || clipboardCoversSelection) return null;
     const range = splitSelection.scrollable;
     if (range === null) return null;
@@ -410,6 +483,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
   };
 
   const renderScrollableClipboardOverlay = () => {
+    if (hasFilteredRows) return null;
     if (clipboardRange === null) return null;
     const range = splitClipboard.scrollable;
     if (range === null) return null;
@@ -432,6 +506,8 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     if (editingCell === null) return null;
     const { row, col } = editingCell;
     if (hasFrozenColumns && isFrozenColumn(col, frozenColumnCount)) return null;
+    const displayRow = toDisplayRow(row);
+    if (displayRow < 0) return null;
     const left = hasFrozenColumns
       ? getScrollableColumnLeft(col, dimensions, frozenWidth)
       : dimensions.getColumnLeft(col);
@@ -444,7 +520,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
         meta={meta}
         column={columns?.[col]}
         customCellRegistry={customCellRegistry}
-        top={dimensions.getRowTop(row)}
+        top={getRowTopByDisplayIndex(displayRow)}
         left={left}
         width={dimensions.getColumnWidth(col)}
         height={dimensions.getRowHeight(row)}
@@ -468,6 +544,8 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     frozenWidth,
     onCommitEdit,
     onCancelEdit,
+    toDisplayRow,
+    getRowTopByDisplayIndex,
   ]);
   const handleColumnResizeStart = useCallback(
     (col: number, clientX: number) => {
@@ -500,6 +578,8 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
             columns={columns}
             onColumnMouseDown={onColumnHeaderMouseDown}
             onColumnMouseEnter={guardedFrozenColumnHeaderMouseEnter}
+            onFilterIconClick={onOpenColumnFilter}
+            activeFilterColumns={columnFilters}
             onResizeHandleMouseEnter={headerResize.onResizeHandleMouseEnter}
             onResizeHandleMouseLeave={headerResize.onResizeHandleMouseLeave}
             onResizeStart={handleColumnResizeStart}
@@ -522,6 +602,8 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
           columns={columns}
           onColumnMouseDown={onColumnHeaderMouseDown}
           onColumnMouseEnter={onColumnHeaderMouseEnter}
+          onFilterIconClick={onOpenColumnFilter}
+          activeFilterColumns={columnFilters}
           onResizeHandleMouseEnter={headerResize.onResizeHandleMouseEnter}
           onResizeHandleMouseLeave={headerResize.onResizeHandleMouseLeave}
           onResizeStart={handleColumnResizeStart}
@@ -531,6 +613,8 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
         <RowHeaderColumn
           visibleRange={visibleRange}
           dimensions={dimensions}
+          visibleRowIndices={visibleRowLayout.visibleRowIndices}
+          getDisplayRowTop={getRowTopByDisplayIndex}
           scrollTop={scrollTop}
           totalHeight={totalHeight}
           selectionRange={selectionRange}
@@ -557,6 +641,8 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
             isEditing={editingCell !== null}
             columns={columns}
             customCellRegistry={customCellRegistry}
+            resolvePhysicalRow={resolvePhysicalRow}
+            getRowTop={getRowTopByDisplayIndex}
             onCellMouseDown={onCellMouseDown}
             onCellMouseEnter={guardedFrozenCellMouseEnter}
             onCellDoubleClick={onCellDoubleClick}
@@ -586,6 +672,43 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
           </div>
         </div>
       </div>
+      {openFilterCol !== null &&
+        filterAnchorRect !== null &&
+        columns?.[openFilterCol]?.showFilter && (
+          <ColumnFilterPopup
+            anchorRect={filterAnchorRect}
+            filterState={columnFilters.get(openFilterCol) ?? {
+              condition: "none",
+              selectedValues: null,
+            }}
+            activeSortDirection={
+              columnSort?.col === openFilterCol ? columnSort.direction : undefined
+            }
+            valueOptions={createFilterValueOptions(
+              [
+                ...new Set(
+                  Array.from({ length: rowCount }, (_, row) => {
+                    const value = store.getValue(row, openFilterCol);
+                    return value.trim() === "" ? FILTER_BLANK_VALUE : value;
+                  }),
+                ),
+              ].sort((left, right) => left.localeCompare(right)),
+            )}
+            onSort={(direction) => {
+              onSortColumn(openFilterCol, direction);
+              onCloseColumnFilter();
+            }}
+            onApply={(nextState) => {
+              onApplyColumnFilter(openFilterCol, nextState);
+              onCloseColumnFilter();
+            }}
+            onReset={() => {
+              onResetColumnFilter(openFilterCol);
+              onCloseColumnFilter();
+            }}
+            onCancel={onCloseColumnFilter}
+          />
+        )}
     </div>
   );
 });

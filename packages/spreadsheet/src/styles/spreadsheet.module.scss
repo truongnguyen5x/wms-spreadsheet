@@ -105,6 +105,50 @@
   }
 }
 
+.headerCellInner {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 4px;
+  padding: 0 6px;
+}
+
+.headerCellText {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.filterIconBtn {
+  width: 20px;
+  height: 20px;
+  border: 0;
+  background: transparent;
+  border-radius: 3px;
+  color: #5f6368;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover {
+    background: #e8eaed;
+  }
+}
+
+.filterIconBtnActive {
+  color: #1a73e8;
+  background: #e8f0fe;
+}
+
 .rowHeaderCell {
   position: absolute;
   left: 0;

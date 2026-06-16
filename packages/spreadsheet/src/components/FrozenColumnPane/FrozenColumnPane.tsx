@@ -23,6 +23,8 @@ export interface IFrozenColumnPaneProps {
   isEditing: boolean;
   columns?: ISpreadsheetColumn[];
   customCellRegistry?: Record<string, ICustomCellDefinition>;
+  resolvePhysicalRow?: (displayRow: number) => number;
+  getRowTop?: (displayRow: number) => number;
   onCellMouseDown: (row: number, col: number) => void;
   onCellMouseEnter: (row: number, col: number) => void;
   onCellDoubleClick: (row: number, col: number) => void;
@@ -46,6 +48,8 @@ export const FrozenColumnPane = memo(function FrozenColumnPane({
   isEditing,
   columns,
   customCellRegistry,
+  resolvePhysicalRow,
+  getRowTop,
   onCellMouseDown,
   onCellMouseEnter,
   onCellDoubleClick,
@@ -77,6 +81,8 @@ export const FrozenColumnPane = memo(function FrozenColumnPane({
           dimensions={dimensions}
           columns={columns}
           customCellRegistry={customCellRegistry}
+          resolvePhysicalRow={resolvePhysicalRow}
+          getRowTop={getRowTop}
           onCellMouseDown={onCellMouseDown}
           onCellMouseEnter={onCellMouseEnter}
           onCellDoubleClick={onCellDoubleClick}

@@ -12,6 +12,8 @@ import styles from "../../styles/spreadsheet.module.scss";
 export interface IRowHeaderColumnProps {
   visibleRange: IVisibleRange;
   dimensions: IGridDimensions;
+  visibleRowIndices?: readonly number[];
+  getDisplayRowTop?: (displayRow: number) => number;
   scrollTop: number;
   totalHeight: number;
   selectionRange: INormalizedRange | null;
@@ -27,6 +29,8 @@ export interface IRowHeaderColumnProps {
 export const RowHeaderColumn = memo(function RowHeaderColumn({
   visibleRange,
   dimensions,
+  visibleRowIndices,
+  getDisplayRowTop,
   scrollTop,
   totalHeight,
   selectionRange,
@@ -40,8 +44,18 @@ export const RowHeaderColumn = memo(function RowHeaderColumn({
 }: IRowHeaderColumnProps) {
   const headers: React.ReactNode[] = [];
   const handles: React.ReactNode[] = [];
-  for (let row = visibleRange.startRow; row <= visibleRange.endRow; row++) {
-    const rowTop = dimensions.getRowTop(row);
+  for (
+    let displayRow = visibleRange.startRow;
+    displayRow <= visibleRange.endRow;
+    displayRow++
+  ) {
+    const row =
+      visibleRowIndices?.[displayRow] !== undefined
+        ? visibleRowIndices[displayRow]
+        : displayRow;
+    const rowTop = getDisplayRowTop
+      ? getDisplayRowTop(displayRow)
+      : dimensions.getRowTop(row);
     const rowHeight = dimensions.getRowHeight(row);
     const isActive =
       selectionRange !== null &&
