@@ -1,6 +1,7 @@
 import { memo, type ReactNode, type Ref } from "react";
 import type { CellStore } from "../../store/CellStore";
 import type { MetaStore } from "../../store/MetaStore";
+import type { MergeStore } from "../../store/MergeStore";
 import type {
   ICustomCellDefinition,
   ISpreadsheetColumn,
@@ -13,6 +14,7 @@ export interface IFrozenColumnPaneProps {
   bodyRef: Ref<HTMLDivElement>;
   store: CellStore;
   metaStore: MetaStore;
+  mergeStore: MergeStore;
   startRow: number;
   endRow: number;
   frozenColumnCount: number;
@@ -29,6 +31,7 @@ export interface IFrozenColumnPaneProps {
   onCellMouseEnter: (row: number, col: number) => void;
   onCellDoubleClick: (row: number, col: number) => void;
   onBooleanToggle: (row: number, col: number, nextValue: string) => void;
+  activeOverlay: ReactNode;
   selectionOverlay: ReactNode;
   clipboardOverlay: ReactNode;
   editor: ReactNode;
@@ -38,6 +41,7 @@ export const FrozenColumnPane = memo(function FrozenColumnPane({
   bodyRef,
   store,
   metaStore,
+  mergeStore,
   startRow,
   endRow,
   frozenColumnCount,
@@ -54,6 +58,7 @@ export const FrozenColumnPane = memo(function FrozenColumnPane({
   onCellMouseEnter,
   onCellDoubleClick,
   onBooleanToggle,
+  activeOverlay,
   selectionOverlay,
   clipboardOverlay,
   editor,
@@ -75,6 +80,7 @@ export const FrozenColumnPane = memo(function FrozenColumnPane({
         <FrozenCellsLayer
           store={store}
           metaStore={metaStore}
+          mergeStore={mergeStore}
           startRow={startRow}
           endRow={endRow}
           frozenColumnCount={frozenColumnCount}
@@ -88,6 +94,7 @@ export const FrozenColumnPane = memo(function FrozenColumnPane({
           onCellDoubleClick={onCellDoubleClick}
           onBooleanToggle={onBooleanToggle}
         />
+        {activeOverlay}
         {selectionOverlay}
         {clipboardOverlay}
         {editor}

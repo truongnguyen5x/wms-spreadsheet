@@ -9,9 +9,11 @@ export type {
   IClipboardData,
   ICommitDirection,
   ICustomCellDefinition,
+  IMergedRange,
   INormalizedRange,
   ISelection,
   ISheetData,
+  ISpreadsheetError,
   IColumnHeaderRenderParams,
   IColumnFilterState,
   IColumnSortState,
@@ -21,6 +23,7 @@ export type {
   ISpreadsheetRef,
   TFilterCondition,
   TSortDirection,
+  TSpreadsheetErrorCode,
   THorizontalAlign,
   TCellType,
   TCellValue,
@@ -39,6 +42,7 @@ export {
 } from "./types";
 export { CellStore } from "./store/CellStore";
 export { MetaStore } from "./store/MetaStore";
+export { MergeStore } from "./store/MergeStore";
 export { columnLabel } from "./utils/columnLabel";
 export { cellKey } from "./utils/cellKey";
 export { DEFAULT_DATE_FORMAT } from "./utils/dateUtils";

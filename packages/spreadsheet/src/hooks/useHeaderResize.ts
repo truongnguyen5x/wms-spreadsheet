@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { IResizeHandle, TResizeAxis } from "../types";
 import type { IGridDimensions } from "./useGridDimensions";
 
@@ -114,12 +114,21 @@ export function useHeaderResize({
       document.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isResizing]);
-  return {
-    hoveredHandle,
-    isResizing,
-    onResizeHandleMouseEnter,
-    onResizeHandleMouseLeave,
-    onResizeStart,
-  };
+  return useMemo(
+    () => ({
+      hoveredHandle,
+      isResizing,
+      onResizeHandleMouseEnter,
+      onResizeHandleMouseLeave,
+      onResizeStart,
+    }),
+    [
+      hoveredHandle,
+      isResizing,
+      onResizeHandleMouseEnter,
+      onResizeHandleMouseLeave,
+      onResizeStart,
+    ],
+  );
 }
 

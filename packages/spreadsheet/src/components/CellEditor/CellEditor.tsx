@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import {
-  CELL_EDITOR_VERTICAL_CHROME,
   CELL_LINE_HEIGHT,
+  CELL_VERTICAL_PADDING,
   type ICommitDirection,
 } from "../../types";
 import styles from "../../styles/spreadsheet.module.scss";
@@ -22,7 +22,7 @@ export interface ICellEditorProps {
 function measureEditorHeight(value: string, rowHeight: number): number {
   const lineCount = Math.max(1, value.split("\n").length);
   const contentHeight =
-    lineCount * CELL_LINE_HEIGHT + CELL_EDITOR_VERTICAL_CHROME;
+    lineCount * CELL_LINE_HEIGHT + CELL_VERTICAL_PADDING;
   return Math.max(rowHeight, contentHeight);
 }
 

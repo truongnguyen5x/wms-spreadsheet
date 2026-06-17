@@ -1,6 +1,5 @@
 import { memo, type Ref } from "react";
 import {
-  COLUMN_HEADER_HEIGHT,
   type IColumnFilterState,
   RESIZE_HIT_ZONE,
   type INormalizedRange,
@@ -19,9 +18,11 @@ interface IColumnHeaderCellProps {
   col: number;
   columnLeft: number;
   columnWidth: number;
+  colHeaderHeight: number;
   isActive: boolean;
   columns?: ISpreadsheetColumn[];
   activeFilterColumns: ReadonlyMap<number, IColumnFilterState>;
+  sortFilterDisabled?: boolean;
   onColumnMouseDown: (col: number) => void;
   onColumnMouseEnter: (col: number) => void;
   onFilterIconClick: (col: number, anchorRect: DOMRect) => void;
@@ -31,9 +32,11 @@ const ColumnHeaderCell = memo(function ColumnHeaderCell({
   col,
   columnLeft,
   columnWidth,
+  colHeaderHeight,
   isActive,
   columns,
   activeFilterColumns,
+  sortFilterDisabled = false,
   onColumnMouseDown,
   onColumnMouseEnter,
   onFilterIconClick,
@@ -55,7 +58,7 @@ const ColumnHeaderCell = memo(function ColumnHeaderCell({
         top: 0,
         left: columnLeft,
         width: columnWidth,
-        height: COLUMN_HEADER_HEIGHT,
+        height: colHeaderHeight,
       }}
       onMouseDown={(e) => {
         e.preventDefault();
@@ -67,7 +70,7 @@ const ColumnHeaderCell = memo(function ColumnHeaderCell({
         <div className={styles.headerCellText}>
           {getColumnHeaderContent(col, columns)}
         </div>
-        {showFilter && (
+        {showFilter && !sortFilterDisabled && (
           <button
             type="button"
             className={`${styles.filterIconBtn}${isFilterActive ? ` ${styles.filterIconBtnActive}` : ""}`}
@@ -139,6 +142,7 @@ const ColumnResizeHandle = memo(function ColumnResizeHandle({
 export interface IColumnHeaderRowProps {
   colStart: number;
   colEnd: number;
+  colHeaderHeight: number;
   dimensions: IGridDimensions;
   scrollLeft: number;
   canvasWidth: number;
@@ -151,6 +155,7 @@ export interface IColumnHeaderRowProps {
   hoveredHandle: IResizeHandle | null;
   columns?: ISpreadsheetColumn[];
   activeFilterColumns: ReadonlyMap<number, IColumnFilterState>;
+  sortFilterDisabled?: boolean;
   onColumnMouseDown: (col: number) => void;
   onColumnMouseEnter: (col: number) => void;
   onFilterIconClick: (col: number, anchorRect: DOMRect) => void;
@@ -159,9 +164,80 @@ export interface IColumnHeaderRowProps {
   onResizeStart: (col: number, clientX: number) => void;
 }
 
+function getSelectionOverlap(
+  range: INormalizedRange | null,
+  colStart: number,
+  colEnd: number,
+): { startCol: number; endCol: number } | null {
+  if (range === null) return null;
+  const startCol = Math.max(range.startCol, colStart);
+  const endCol = Math.min(range.endCol, colEnd);
+  if (endCol < startCol) return null;
+  return { startCol, endCol };
+}
+
+function isSelectionMaskEqualInViewport(
+  previousRange: INormalizedRange | null,
+  nextRange: INormalizedRange | null,
+  colStart: number,
+  colEnd: number,
+): boolean {
+  const previousOverlap = getSelectionOverlap(previousRange, colStart, colEnd);
+  const nextOverlap = getSelectionOverlap(nextRange, colStart, colEnd);
+  if (previousOverlap === null || nextOverlap === null) {
+    return previousOverlap === nextOverlap;
+  }
+  return (
+    previousOverlap.startCol === nextOverlap.startCol &&
+    previousOverlap.endCol === nextOverlap.endCol
+  );
+}
+
+function areColumnHeaderRowPropsEqual(
+  previousProps: IColumnHeaderRowProps,
+  nextProps: IColumnHeaderRowProps,
+): boolean {
+  if (previousProps.colStart !== nextProps.colStart) return false;
+  if (previousProps.colEnd !== nextProps.colEnd) return false;
+  if (previousProps.colHeaderHeight !== nextProps.colHeaderHeight) return false;
+  if (previousProps.dimensions !== nextProps.dimensions) return false;
+  if (previousProps.scrollLeft !== nextProps.scrollLeft) return false;
+  if (previousProps.canvasWidth !== nextProps.canvasWidth) return false;
+  if (previousProps.frozenWidth !== nextProps.frozenWidth) return false;
+  if (previousProps.mode !== nextProps.mode) return false;
+  if (previousProps.headerPaneRef !== nextProps.headerPaneRef) return false;
+  if (previousProps.paneClassName !== nextProps.paneClassName) return false;
+  if (previousProps.withFrozenDivider !== nextProps.withFrozenDivider) return false;
+  if (previousProps.hoveredHandle !== nextProps.hoveredHandle) return false;
+  if (previousProps.columns !== nextProps.columns) return false;
+  if (previousProps.activeFilterColumns !== nextProps.activeFilterColumns) return false;
+  if (previousProps.onColumnMouseDown !== nextProps.onColumnMouseDown) return false;
+  if (previousProps.onColumnMouseEnter !== nextProps.onColumnMouseEnter) return false;
+  if (previousProps.onFilterIconClick !== nextProps.onFilterIconClick) return false;
+  if (
+    previousProps.onResizeHandleMouseEnter !== nextProps.onResizeHandleMouseEnter
+  ) {
+    return false;
+  }
+  if (
+    previousProps.onResizeHandleMouseLeave !== nextProps.onResizeHandleMouseLeave
+  ) {
+    return false;
+  }
+  if (previousProps.onResizeStart !== nextProps.onResizeStart) return false;
+
+  return isSelectionMaskEqualInViewport(
+    previousProps.selectionRange,
+    nextProps.selectionRange,
+    nextProps.colStart,
+    nextProps.colEnd,
+  );
+}
+
 export const ColumnHeaderRow = memo(function ColumnHeaderRow({
   colStart,
   colEnd,
+  colHeaderHeight,
   dimensions,
   scrollLeft,
   canvasWidth,
@@ -174,6 +250,7 @@ export const ColumnHeaderRow = memo(function ColumnHeaderRow({
   hoveredHandle,
   columns,
   activeFilterColumns,
+  sortFilterDisabled = false,
   onColumnMouseDown,
   onColumnMouseEnter,
   onFilterIconClick,
@@ -200,9 +277,11 @@ export const ColumnHeaderRow = memo(function ColumnHeaderRow({
           col={col}
           columnLeft={columnLeft}
           columnWidth={columnWidth}
+          colHeaderHeight={colHeaderHeight}
           isActive={isActive}
           columns={columns}
           activeFilterColumns={activeFilterColumns}
+          sortFilterDisabled={sortFilterDisabled}
           onColumnMouseDown={onColumnMouseDown}
           onColumnMouseEnter={onColumnMouseEnter}
           onFilterIconClick={onFilterIconClick}
@@ -231,12 +310,16 @@ export const ColumnHeaderRow = memo(function ColumnHeaderRow({
       ? styles.frozenColumnHeaderPane
       : `${styles.columnHeaderPane}${withFrozenDivider ? ` ${styles.scrollableWithFrozenDivider}` : ""}`);
   return (
-    <div ref={headerPaneRef} className={paneClass}>
+    <div
+      ref={headerPaneRef}
+      className={paneClass}
+      style={{ height: colHeaderHeight }}
+    >
       <div
         className={styles.headerCanvas}
         style={{
           width: canvasWidth,
-          height: COLUMN_HEADER_HEIGHT,
+          height: colHeaderHeight,
           transform:
             mode === "scrollable" ? `translateX(${-scrollLeft}px)` : undefined,
         }}
@@ -246,4 +329,4 @@ export const ColumnHeaderRow = memo(function ColumnHeaderRow({
       </div>
     </div>
   );
-});
+}, areColumnHeaderRowPropsEqual);

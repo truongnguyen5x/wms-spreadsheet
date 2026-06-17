@@ -17,6 +17,7 @@ export interface ISpreadsheetCellProps {
   columns?: ISpreadsheetColumn[];
   customCellRegistry?: Record<string, ICustomCellDefinition>;
   isActive: boolean;
+  isMerged?: boolean;
   top: number;
   left: number;
   width: number;
@@ -35,6 +36,7 @@ export const SpreadsheetCell = memo(function SpreadsheetCell({
   columns,
   customCellRegistry,
   isActive,
+  isMerged = false,
   top,
   left,
   width,
@@ -60,7 +62,7 @@ export const SpreadsheetCell = memo(function SpreadsheetCell({
 
   return (
     <div
-      className={`${styles.cell} ${isActive ? styles.active : ""} ${stateClass}`}
+      className={`${styles.cell} ${isActive ? styles.active : ""} ${isMerged ? styles.mergedAnchor : ""} ${stateClass}`}
       style={{ top, left, width, height, ...getCellAlignmentStyle(column) }}
       onMouseDown={handleMouseDown}
       onMouseEnter={() => onMouseEnter(row, col)}

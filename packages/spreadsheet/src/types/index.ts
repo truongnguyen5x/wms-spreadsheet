@@ -79,6 +79,25 @@ export interface INormalizedRange {
   endCol: number;
 }
 
+export interface IMergedRange {
+  anchorRow: number;
+  anchorCol: number;
+  rowSpan: number;
+  colSpan: number;
+}
+
+export type TSpreadsheetErrorCode =
+  | "MERGE_COPY_NOT_ALLOWED"
+  | "MERGE_PASTE_NOT_ALLOWED"
+  | "MERGE_INVALID_RANGE"
+  | "MERGE_OVERLAP"
+  | "MERGE_SORT_FILTER_ACTIVE";
+
+export interface ISpreadsheetError {
+  code: TSpreadsheetErrorCode;
+  message: string;
+}
+
 export type ISheetData = Record<string, string>;
 export interface IColumnHeaderRenderParams {
   col: number;
@@ -161,6 +180,10 @@ export interface ISpreadsheetRef {
   ): void;
   getCellMeta(row: number, col: number | null, colName?: string): ICellMeta;
   setCellsMeta(cells: ICellMetaInput[]): void;
+  mergeCells(range?: INormalizedRange): boolean;
+  unmergeCells(row?: number, col?: number): boolean;
+  getMergedRanges(): IMergedRange[];
+  hasMergedCells(): boolean;
 }
 
 export interface ISpreadsheetProps {
@@ -168,10 +191,13 @@ export interface ISpreadsheetProps {
   columnCount: number;
   columns?: ISpreadsheetColumn[];
   rowHeight?: number;
+  /** Chiều cao hàng header cột (px). Mặc định COLUMN_HEADER_HEIGHT. */
+  colHeaderHeight?: number;
   columnWidth?: number;
   overscan?: number;
   className?: string;
   onChange?: (changes: ICellInput[]) => void;
+  onError?: (error: ISpreadsheetError) => void;
   onColumnResize?: (col: number, width: number) => void;
   onRowResize?: (row: number, height: number) => void;
   initialData?: TSheetDataInput;
@@ -207,7 +233,8 @@ export const FILTER_BLANK_VALUE = "__BLANK__";
 export const DEFAULT_ROW_HEIGHT = 28;
 export const DEFAULT_COLUMN_WIDTH = 100;
 export const CELL_LINE_HEIGHT = 20;
-export const CELL_EDITOR_VERTICAL_CHROME = 10;
+export const CELL_VERTICAL_PADDING = 8;
+export const CELL_EDITOR_VERTICAL_CHROME = CELL_VERTICAL_PADDING;
 export const ROW_HEADER_WIDTH = 46;
 export const COLUMN_HEADER_HEIGHT = 28;
 export const DEFAULT_OVERSCAN = 3;

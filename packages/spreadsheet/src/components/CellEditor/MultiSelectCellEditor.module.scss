@@ -26,6 +26,9 @@
 }
 
 .chip {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
   flex-shrink: 0;
   max-width: 50px;
   padding: 2px 8px;
@@ -34,7 +37,12 @@
   font-size: 12px;
   line-height: 15px;
   color: #202124;
+}
+
+.chipLabel {
+  min-width: 0;
   overflow: hidden;
+  //text-overflow: ellipsis;
   white-space: nowrap;
 }
 

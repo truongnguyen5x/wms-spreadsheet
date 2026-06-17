@@ -9,21 +9,26 @@ import {
 } from "react";
 import { CellStore } from "./store/CellStore";
 import { MetaStore } from "./store/MetaStore";
+import { MergeStore } from "./store/MergeStore";
 import { SpreadsheetGrid } from "./components/SpreadsheetGrid";
 import { useKeyboardNavigation } from "./hooks/useKeyboardNavigation";
 import { useClipboard } from "./hooks/useClipboard";
 import { useRangeSelection } from "./hooks/useRangeSelection";
 import { useGridDimensions } from "./hooks/useGridDimensions";
 import { useHeaderResize } from "./hooks/useHeaderResize";
+import { useMergeRevision } from "./hooks/useMergeRevision";
 import {
   CELL_LINE_HEIGHT,
+  CELL_VERTICAL_PADDING,
   DEFAULT_COLUMN_WIDTH,
   DEFAULT_OVERSCAN,
   DEFAULT_ROW_HEIGHT,
+  COLUMN_HEADER_HEIGHT,
   type ICellAddress,
   type IColumnFilterState,
   type IColumnSortState,
   type ICellMetaInput,
+  type INormalizedRange,
   type ISpreadsheetColumn,
   type ISpreadsheetProps,
   type ISpreadsheetRef,
@@ -43,7 +48,8 @@ import {
   toStoreValue,
 } from "./utils/dataAdapter";
 import { resolveCellMeta, isCellEditable, isCellDisabled } from "./utils/resolveCellMeta";
-import { createSelection } from "./utils/normalizeRange";
+import { createSelection, normalizeSelection } from "./utils/normalizeRange";
+import { selectionFromExpandedRange } from "./utils/mergeCell";
 import {
   computeVisibleRowIndices,
   createDefaultColumnFilterState,
@@ -62,10 +68,12 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       columnCount,
       columns,
       rowHeight = DEFAULT_ROW_HEIGHT,
+      colHeaderHeight = COLUMN_HEADER_HEIGHT,
       columnWidth = DEFAULT_COLUMN_WIDTH,
       overscan = DEFAULT_OVERSCAN,
       className,
       onChange,
+      onError,
       onColumnResize,
       onRowResize,
       initialData,
@@ -91,6 +99,25 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
     }
 
     const metaStore = metaStoreRef.current;
+    const mergeStoreRef = useRef<MergeStore | null>(null);
+    if (mergeStoreRef.current === null) {
+      mergeStoreRef.current = new MergeStore();
+    }
+
+    const mergeStore = mergeStoreRef.current;
+    const mergeRevision = useMergeRevision(mergeStore);
+    void mergeRevision;
+    const resolveCell = useCallback(
+      (row: number, col: number) => mergeStore.resolveAnchor(row, col),
+      [mergeStore],
+    );
+    const expandSelection = useCallback(
+      (next: ISelection) => {
+        const expanded = mergeStore.expandRange(normalizeSelection(next));
+        return selectionFromExpandedRange(expanded, next);
+      },
+      [mergeStore],
+    );
     const initialLoadedRef = useRef(false);
     useEffect(() => {
       if (initialData && !initialLoadedRef.current) {
@@ -109,7 +136,12 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       handleRowHeaderMouseEnter,
       isDragging,
       dragMode,
-    } = useRangeSelection({ rowCount, columnCount: effectiveColumnCount });
+    } = useRangeSelection({
+      rowCount,
+      columnCount: effectiveColumnCount,
+      resolveCell,
+      expandSelection,
+    });
     const dimensions = useGridDimensions({
       rowCount,
       columnCount: effectiveColumnCount,
@@ -138,15 +170,22 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
     const baselineRowOrderRef = useRef<number[]>(buildIdentityRowOrder(rowCount));
     const [openFilterCol, setOpenFilterCol] = useState<number | null>(null);
     const [filterAnchorRect, setFilterAnchorRect] = useState<DOMRect | null>(null);
+    const resetSortAndFilter = useCallback(() => {
+      setDisplayRowOrder([...baselineRowOrderRef.current]);
+      setColumnFilters(new Map());
+      setColumnSort(null);
+    }, []);
     const { clipboard, handleCopy, handlePaste, clearClipboard } = useClipboard(
       {
         store,
         metaStore,
+        mergeStore,
         columnsRef,
         rowCount,
         columnCount: effectiveColumnCount,
         visibleRowIndicesRef,
         onChange,
+        onError,
       },
     );
     const setActiveCell = useCallback(
@@ -171,8 +210,9 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
             colName,
             columnsRef.current,
           );
+          const anchor = mergeStore.resolveAnchor(row, resolvedCol);
           const column = columnsRef.current?.[resolvedCol];
-          store.setValue(row, resolvedCol, toStoreValue(value, column));
+          store.setValue(anchor.row, anchor.col, toStoreValue(value, column));
         },
         getCellValue(row: number, col: number | null, colName?: string) {
           const resolvedCol = resolveColIndex(
@@ -180,9 +220,10 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
             colName,
             columnsRef.current,
           );
+          const anchor = mergeStore.resolveAnchor(row, resolvedCol);
           const column = columnsRef.current?.[resolvedCol];
           return fromStoreValue(
-            store.getValue(row, resolvedCol),
+            store.getValue(anchor.row, anchor.col),
             column,
           );
         },
@@ -205,6 +246,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         },
         loadData(data: TSheetDataInput) {
           store.clearAndLoad(normalizeToSheetData(data, columnsRef.current));
+          mergeStore.clear();
           const identity = buildIdentityRowOrder(rowCount);
           baselineRowOrderRef.current = identity;
           setDisplayRowOrder(identity);
@@ -218,7 +260,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           return exportRowData(store, columnsRef.current, row);
         },
         getActiveCell() {
-          return selection?.focus ?? null;
+          return selection?.anchor ?? null;
         },
         setActiveCell(cell: ICellAddress) {
           setActiveCell(cell);
@@ -240,7 +282,8 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
             colName,
             columnsRef.current,
           );
-          metaStore.setMeta(row, resolvedCol, meta);
+          const anchor = mergeStore.resolveAnchor(row, resolvedCol);
+          metaStore.setMeta(anchor.row, anchor.col, meta);
         },
         getCellMeta(row: number, col: number | null, colName?: string) {
           const resolvedCol = resolveColIndex(
@@ -248,28 +291,91 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
             colName,
             columnsRef.current,
           );
+          const anchor = mergeStore.resolveAnchor(row, resolvedCol);
           return resolveCellMeta(
             metaStore,
-            row,
-            resolvedCol,
+            anchor.row,
+            anchor.col,
             columnsRef.current,
           );
         },
         setCellsMeta(cells: ICellMetaInput[]) {
           metaStore.setMetas(
-            cells.map(({ row, col, colName, meta }) => ({
-              row,
-              col: resolveColIndex(
+            cells.map(({ row, col, colName, meta }) => {
+              const resolvedCol = resolveColIndex(
                 col ?? null,
                 colName,
                 columnsRef.current,
-              ),
-              meta,
-            })),
+              );
+              const anchor = mergeStore.resolveAnchor(row, resolvedCol);
+              return {
+                row: anchor.row,
+                col: anchor.col,
+                meta,
+              };
+            }),
           );
         },
+        mergeCells(range?: INormalizedRange) {
+          const targetRange =
+            range ?? (selection ? normalizeSelection(selection) : null);
+          if (!targetRange) {
+            onError?.({
+              code: "MERGE_INVALID_RANGE",
+              message: "Vui lòng chọn vùng ô để gộp.",
+            });
+            return false;
+          }
+          if (!mergeStore.canMerge(targetRange)) {
+            onError?.({
+              code: "MERGE_OVERLAP",
+              message: "Không thể gộp ô vì vùng chọn không hợp lệ hoặc bị chồng lấn.",
+            });
+            return false;
+          }
+          resetSortAndFilter();
+          const merged = mergeStore.merge(targetRange, store, metaStore);
+          if (merged) {
+            setSelection(
+              createSelection({
+                row: targetRange.startRow,
+                col: targetRange.startCol,
+              }),
+            );
+          }
+          return merged;
+        },
+        unmergeCells(row?: number, col?: number) {
+          const targetRow = row ?? selection?.focus.row;
+          const targetCol = col ?? selection?.focus.col;
+          if (targetRow === undefined || targetCol === undefined) {
+            return false;
+          }
+          const unmerged = mergeStore.unmerge(targetRow, targetCol);
+          if (unmerged) {
+            const anchor = mergeStore.resolveAnchor(targetRow, targetCol);
+            setSelection(createSelection(anchor));
+          }
+          return unmerged;
+        },
+        getMergedRanges() {
+          return mergeStore.getAll();
+        },
+        hasMergedCells() {
+          return mergeStore.hasAny();
+        },
       }),
-      [store, metaStore, selection, setActiveCell, setSelection, rowCount],
+      [
+        store,
+        metaStore,
+        mergeStore,
+        selection,
+        setActiveCell,
+        setSelection,
+        rowCount,
+        onError,
+        resetSortAndFilter,
+      ],
     );
     useEffect(() => {
       const identity = buildIdentityRowOrder(rowCount);
@@ -280,10 +386,11 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
     }, [rowCount]);
     const startEditing = useCallback(
       (cell: ICellAddress, initialValue?: string) => {
+        const anchor = mergeStore.resolveAnchor(cell.row, cell.col);
         const meta = resolveCellMeta(
           metaStore,
-          cell.row,
-          cell.col,
+          anchor.row,
+          anchor.col,
           columnsRef.current,
         );
         if (!isCellEditable(meta)) return;
@@ -292,16 +399,16 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           if (meta.type === "select" || meta.type === "multiSelect") {
             setEditingInitialInput(initialValue);
           } else {
-            store.setValue(cell.row, cell.col, initialValue);
+            store.setValue(anchor.row, anchor.col, initialValue);
             setEditingInitialInput(undefined);
           }
         } else {
           setEditingInitialInput(undefined);
         }
-        setSelection(createSelection(cell));
-        setEditingCell(cell);
+        setSelection(createSelection(anchor));
+        setEditingCell(anchor);
       },
-      [clearClipboard, metaStore, store, setSelection],
+      [clearClipboard, metaStore, mergeStore, store, setSelection],
     );
     const handleCellMouseDown = useCallback(
       (row: number, col: number) => {
@@ -346,11 +453,10 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           { row, col, value: fromStoreValue(value, column) },
         ]);
         if (value.includes("\n") && !dimensions.isRowHeightManual(row)) {
-          const CELL_PADDING = 8;
           const lineCount = value.split("\n").length;
           const neededHeight = Math.max(
             rowHeight,
-            lineCount * CELL_LINE_HEIGHT + CELL_PADDING,
+            lineCount * CELL_LINE_HEIGHT + CELL_VERTICAL_PADDING,
           );
           dimensions.setRowHeight(row, neededHeight);
           onRowResize?.(row, neededHeight);
@@ -401,10 +507,17 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
     );
     const handleOpenColumnFilter = useCallback(
       (col: number, anchorRect: DOMRect) => {
+        if (mergeStore.hasAny()) {
+          onError?.({
+            code: "MERGE_SORT_FILTER_ACTIVE",
+            message: "Không thể lọc khi bảng có ô đã gộp.",
+          });
+          return;
+        }
         setOpenFilterCol(col);
         setFilterAnchorRect(anchorRect);
       },
-      [],
+      [mergeStore, onError],
     );
     const handleCloseColumnFilter = useCallback(() => {
       setOpenFilterCol(null);
@@ -412,6 +525,13 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
     }, []);
     const handleApplyColumnFilter = useCallback(
       (col: number, nextState: IColumnFilterState) => {
+        if (mergeStore.hasAny()) {
+          onError?.({
+            code: "MERGE_SORT_FILTER_ACTIVE",
+            message: "Không thể lọc khi bảng có ô đã gộp.",
+          });
+          return;
+        }
         setColumnFilters((prev) => {
           const next = new Map(prev);
           next.set(col, {
@@ -422,16 +542,23 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           return next;
         });
       },
-      [],
+      [mergeStore, onError],
     );
     const handleSortColumn = useCallback(
       (col: number, direction: TSortDirection) => {
+        if (mergeStore.hasAny()) {
+          onError?.({
+            code: "MERGE_SORT_FILTER_ACTIVE",
+            message: "Không thể sắp xếp khi bảng có ô đã gộp.",
+          });
+          return;
+        }
         setDisplayRowOrder((prev) =>
           sortDisplayRowOrder(store, col, direction, prev),
         );
         setColumnSort({ col, direction });
       },
-      [store],
+      [store, mergeStore, onError],
     );
     const handleResetColumnFilter = useCallback((col: number) => {
       setDisplayRowOrder(baselineRowOrderRef.current);
@@ -472,6 +599,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       stopEditing: handleCancelEdit,
       store,
       metaStore,
+      mergeStore,
       columnsRef,
       visibleRowIndicesRef,
       containerRef: gridContainerRef,
@@ -479,6 +607,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       onCopy,
       onPaste,
     });
+    const hasMergedCells = mergeStore.hasAny();
     return (
       <div
         ref={gridContainerRef}
@@ -489,6 +618,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         <SpreadsheetGrid
           store={store}
           metaStore={metaStore}
+          mergeStore={mergeStore}
           rowCount={rowCount}
           columnCount={effectiveColumnCount}
           frozenColumnCount={frozenColumnCount}
@@ -497,6 +627,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           dimensions={dimensions}
           visibleRowLayout={visibleRowLayout}
           overscan={overscan}
+          colHeaderHeight={colHeaderHeight}
           selection={selection}
           clipboardRange={clipboard?.range ?? null}
           editingCell={editingCell}
@@ -504,6 +635,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           isDragging={isDragging}
           dragMode={dragMode}
           headerResize={headerResize}
+          sortFilterDisabled={hasMergedCells}
           onCellMouseDown={handleCellMouseDown}
           onCellMouseEnter={handleCellMouseEnter}
           onColumnHeaderMouseDown={handleColumnHeaderMouseDown}

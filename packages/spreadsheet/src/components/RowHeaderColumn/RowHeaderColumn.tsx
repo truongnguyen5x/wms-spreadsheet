@@ -26,6 +26,74 @@ export interface IRowHeaderColumnProps {
   onResizeStart: (row: number, clientY: number) => void;
 }
 
+function getSelectionRowOverlap(
+  range: INormalizedRange | null,
+  rowStart: number,
+  rowEnd: number,
+): { startRow: number; endRow: number } | null {
+  if (range === null) return null;
+  const startRow = Math.max(range.startRow, rowStart);
+  const endRow = Math.min(range.endRow, rowEnd);
+  if (endRow < startRow) return null;
+  return { startRow, endRow };
+}
+
+function isSelectionMaskEqualInViewport(
+  previousRange: INormalizedRange | null,
+  nextRange: INormalizedRange | null,
+  rowStart: number,
+  rowEnd: number,
+): boolean {
+  const previousOverlap = getSelectionRowOverlap(previousRange, rowStart, rowEnd);
+  const nextOverlap = getSelectionRowOverlap(nextRange, rowStart, rowEnd);
+  if (previousOverlap === null || nextOverlap === null) {
+    return previousOverlap === nextOverlap;
+  }
+  return (
+    previousOverlap.startRow === nextOverlap.startRow &&
+    previousOverlap.endRow === nextOverlap.endRow
+  );
+}
+
+function areRowHeaderColumnPropsEqual(
+  previousProps: IRowHeaderColumnProps,
+  nextProps: IRowHeaderColumnProps,
+): boolean {
+  if (previousProps.visibleRange.startRow !== nextProps.visibleRange.startRow) {
+    return false;
+  }
+  if (previousProps.visibleRange.endRow !== nextProps.visibleRange.endRow) {
+    return false;
+  }
+  if (previousProps.dimensions !== nextProps.dimensions) return false;
+  if (previousProps.visibleRowIndices !== nextProps.visibleRowIndices) return false;
+  if (previousProps.getDisplayRowTop !== nextProps.getDisplayRowTop) return false;
+  if (previousProps.scrollTop !== nextProps.scrollTop) return false;
+  if (previousProps.totalHeight !== nextProps.totalHeight) return false;
+  if (previousProps.headerPaneRef !== nextProps.headerPaneRef) return false;
+  if (previousProps.hoveredHandle !== nextProps.hoveredHandle) return false;
+  if (previousProps.onRowMouseDown !== nextProps.onRowMouseDown) return false;
+  if (previousProps.onRowMouseEnter !== nextProps.onRowMouseEnter) return false;
+  if (
+    previousProps.onResizeHandleMouseEnter !== nextProps.onResizeHandleMouseEnter
+  ) {
+    return false;
+  }
+  if (
+    previousProps.onResizeHandleMouseLeave !== nextProps.onResizeHandleMouseLeave
+  ) {
+    return false;
+  }
+  if (previousProps.onResizeStart !== nextProps.onResizeStart) return false;
+
+  return isSelectionMaskEqualInViewport(
+    previousProps.selectionRange,
+    nextProps.selectionRange,
+    nextProps.visibleRange.startRow,
+    nextProps.visibleRange.endRow,
+  );
+}
+
 export const RowHeaderColumn = memo(function RowHeaderColumn({
   visibleRange,
   dimensions,
@@ -119,5 +187,5 @@ export const RowHeaderColumn = memo(function RowHeaderColumn({
       </div>
     </div>
   );
-});
+}, areRowHeaderColumnPropsEqual);
 

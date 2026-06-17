@@ -10,6 +10,8 @@ export interface IUseRangeSelectionOptions {
   initialCell?: ICellAddress;
   rowCount: number;
   columnCount: number;
+  resolveCell?: (row: number, col: number) => ICellAddress;
+  expandSelection?: (selection: ISelection) => ISelection;
 }
 
 export interface IUseRangeSelectionResult {
@@ -25,10 +27,28 @@ export interface IUseRangeSelectionResult {
   dragMode: TSelectionDragMode;
 }
 
+function applySelectionTransforms(
+  selection: ISelection,
+  resolveCell?: (row: number, col: number) => ICellAddress,
+  expandSelection?: (selection: ISelection) => ISelection,
+): ISelection {
+  const resolved: ISelection = {
+    anchor: resolveCell
+      ? resolveCell(selection.anchor.row, selection.anchor.col)
+      : selection.anchor,
+    focus: resolveCell
+      ? resolveCell(selection.focus.row, selection.focus.col)
+      : selection.focus,
+  };
+  return expandSelection ? expandSelection(resolved) : resolved;
+}
+
 export function useRangeSelection({
   initialCell = { row: 0, col: 0 },
   rowCount,
   columnCount,
+  resolveCell,
+  expandSelection,
 }: IUseRangeSelectionOptions): IUseRangeSelectionResult {
   const [selection, setSelectionState] = useState<ISelection | null>(() =>
     createSelection(initialCell),
@@ -37,23 +57,52 @@ export function useRangeSelection({
   const dragModeRef = useRef<TSelectionDragMode>("cell");
   const [isDragging, setIsDragging] = useState(false);
   const [dragMode, setDragMode] = useState<TSelectionDragMode>("cell");
-  const setSelection = useCallback((next: ISelection) => {
-    setSelectionState(next);
-  }, []);
-  const handleCellMouseDown = useCallback((row: number, col: number) => {
-    dragModeRef.current = "cell";
-    setDragMode("cell");
-    isDraggingRef.current = true;
-    setIsDragging(true);
-    setSelectionState(createSelection({ row, col }));
-  }, []);
-  const handleCellMouseEnter = useCallback((row: number, col: number) => {
-    if (!isDraggingRef.current || dragModeRef.current !== "cell") return;
-    setSelectionState((prev) => {
-      if (!prev) return createSelection({ row, col });
-      return { anchor: prev.anchor, focus: { row, col } };
-    });
-  }, []);
+  const setSelection = useCallback(
+    (next: ISelection) => {
+      setSelectionState(
+        applySelectionTransforms(next, resolveCell, expandSelection),
+      );
+    },
+    [resolveCell, expandSelection],
+  );
+  const handleCellMouseDown = useCallback(
+    (row: number, col: number) => {
+      dragModeRef.current = "cell";
+      setDragMode("cell");
+      isDraggingRef.current = true;
+      setIsDragging(true);
+      const cell = resolveCell ? resolveCell(row, col) : { row, col };
+      setSelectionState(
+        applySelectionTransforms(
+          createSelection(cell),
+          resolveCell,
+          expandSelection,
+        ),
+      );
+    },
+    [resolveCell, expandSelection],
+  );
+  const handleCellMouseEnter = useCallback(
+    (row: number, col: number) => {
+      if (!isDraggingRef.current || dragModeRef.current !== "cell") return;
+      const cell = resolveCell ? resolveCell(row, col) : { row, col };
+      setSelectionState((prev) => {
+        if (!prev) {
+          return applySelectionTransforms(
+            createSelection(cell),
+            resolveCell,
+            expandSelection,
+          );
+        }
+        return applySelectionTransforms(
+          { anchor: prev.anchor, focus: cell },
+          resolveCell,
+          expandSelection,
+        );
+      });
+    },
+    [resolveCell, expandSelection],
+  );
   const handleColumnHeaderMouseDown = useCallback(
     (col: number) => {
       dragModeRef.current = "column";

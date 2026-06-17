@@ -1,5 +1,6 @@
 import { useCallback, useEffect, type RefObject } from "react";
 import type { CellStore } from "../store/CellStore";
+import type { MergeStore } from "../store/MergeStore";
 import type { MetaStore } from "../store/MetaStore";
 import type {
   ICellAddress,
@@ -21,6 +22,7 @@ export interface IUseKeyboardNavigationOptions {
   stopEditing: () => void;
   store: CellStore;
   metaStore: MetaStore;
+  mergeStore: MergeStore;
   columnsRef: RefObject<ISpreadsheetColumn[] | undefined>;
   visibleRowIndicesRef: RefObject<readonly number[]>;
   containerRef: RefObject<HTMLElement | null>;
@@ -33,6 +35,48 @@ function isPrintableKey(key: string): boolean {
   return key.length === 1 && !key.startsWith("Arrow");
 }
 
+function getNextFocusCell(
+  current: ICellAddress,
+  deltaRow: number,
+  deltaCol: number,
+  mergeStore: MergeStore,
+  rowCount: number,
+  columnCount: number,
+): ICellAddress {
+  const merge = mergeStore.getMergeAt(current.row, current.col);
+
+  if (merge) {
+    if (deltaCol > 0) {
+      return {
+        row: current.row,
+        col: Math.min(columnCount - 1, merge.anchorCol + merge.colSpan),
+      };
+    }
+    if (deltaCol < 0) {
+      return {
+        row: current.row,
+        col: Math.max(0, merge.anchorCol - 1),
+      };
+    }
+    if (deltaRow > 0) {
+      return {
+        row: Math.min(rowCount - 1, merge.anchorRow + merge.rowSpan),
+        col: current.col,
+      };
+    }
+    if (deltaRow < 0) {
+      return {
+        row: Math.max(0, merge.anchorRow - 1),
+        col: current.col,
+      };
+    }
+  }
+
+  const newRow = Math.max(0, Math.min(rowCount - 1, current.row + deltaRow));
+  const newCol = Math.max(0, Math.min(columnCount - 1, current.col + deltaCol));
+  return mergeStore.resolveAnchor(newRow, newCol);
+}
+
 export function useKeyboardNavigation({
   rowCount,
   columnCount,
@@ -42,6 +86,7 @@ export function useKeyboardNavigation({
   startEditing,
   store,
   metaStore,
+  mergeStore,
   columnsRef,
   visibleRowIndicesRef,
   containerRef,
@@ -52,40 +97,44 @@ export function useKeyboardNavigation({
   const moveFocus = useCallback(
     (deltaRow: number, deltaCol: number) => {
       const focus = selection?.focus ?? { row: 0, col: 0 };
-      const newRow = Math.max(0, Math.min(rowCount - 1, focus.row + deltaRow));
-      const newCol = Math.max(
-        0,
-        Math.min(columnCount - 1, focus.col + deltaCol),
+      const newCell = getNextFocusCell(
+        focus,
+        deltaRow,
+        deltaCol,
+        mergeStore,
+        rowCount,
+        columnCount,
       );
-      const newCell = { row: newRow, col: newCol };
       setSelection(createSelection(newCell));
     },
-    [selection, rowCount, columnCount, setSelection],
+    [selection, rowCount, columnCount, setSelection, mergeStore],
   );
   const tryStartEditing = useCallback(
     (cell: ICellAddress, initialValue?: string) => {
+      const anchor = mergeStore.resolveAnchor(cell.row, cell.col);
       const meta = resolveCellMeta(
         metaStore,
-        cell.row,
-        cell.col,
+        anchor.row,
+        anchor.col,
         columnsRef.current ?? undefined,
       );
       if (!isCellEditable(meta)) return;
-      startEditing(cell, initialValue);
+      startEditing(anchor, initialValue);
     },
-    [columnsRef, metaStore, startEditing],
+    [columnsRef, metaStore, mergeStore, startEditing],
   );
   const isWritableCell = useCallback(
     (row: number, col: number) => {
+      const anchor = mergeStore.resolveAnchor(row, col);
       const meta = resolveCellMeta(
         metaStore,
-        row,
-        col,
+        anchor.row,
+        anchor.col,
         columnsRef.current ?? undefined,
       );
       return !isCellDisabled(meta);
     },
-    [columnsRef, metaStore],
+    [columnsRef, metaStore, mergeStore],
   );
   useEffect(() => {
     const container = containerRef.current;
@@ -133,6 +182,7 @@ export function useKeyboardNavigation({
             onChange,
             isWritableCell,
             isFiltered ? visibleRowIndices : undefined,
+            mergeStore,
           );
           break;
         }
@@ -154,7 +204,13 @@ export function useKeyboardNavigation({
               selection.focus.col,
               columnsRef.current ?? undefined,
             );
-            if (meta.type === "date") break;
+            if (meta.type === "date") {
+              if (e.key >= "0" && e.key <= "9") {
+                e.preventDefault();
+                tryStartEditing(selection.focus, e.key);
+              }
+              break;
+            }
             e.preventDefault();
             tryStartEditing(selection.focus, e.key);
           }
@@ -176,6 +232,7 @@ export function useKeyboardNavigation({
     onPaste,
     rowCount,
     visibleRowIndicesRef,
+    mergeStore,
   ]);
 }
 

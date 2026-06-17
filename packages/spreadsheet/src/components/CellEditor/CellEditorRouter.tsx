@@ -168,6 +168,7 @@ export function CellEditorRouter({
         left={left}
         width={width}
         height={height}
+        initialInput={initialInput}
         onCommit={(nextValue) => onCommit(nextValue, "stay")}
         onCancel={onCancel}
       />

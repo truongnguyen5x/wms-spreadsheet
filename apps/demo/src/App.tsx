@@ -1,9 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Spreadsheet,
   type ICustomCellDefinition,
   type ISpreadsheetColumn,
-  type ISpreadsheetRef,
+  type ISpreadsheetError,
+  type ISpreadsheetRef
 } from "@wms/spreadsheet";
 import styles from "./App.module.scss";
 
@@ -16,7 +17,7 @@ const SELECT_OPTIONS = [
   { id: "6", label: "Lưu kho tạm", color: "#e6f4ea" },
   { id: "7", label: "Hủy đơn", color: "#f1f3f4" },
   { id: "8", label: "Lựa chọn đặc biệt A", color: "#d2e3fc" },
-  { id: "9", label: "Lựa chọn đặc biệt B", color: "#ceead6" },
+  { id: "9", label: "Lựa chọn đặc biệt B", color: "#ceead6" }
 ];
 
 const MULTI_SELECT_OPTIONS = [
@@ -25,7 +26,7 @@ const MULTI_SELECT_OPTIONS = [
   { id: "3", label: "Tag C", color: "#ceead6" },
   { id: "4", label: "Giao hàng nhanh", color: "#fce8e6" },
   { id: "5", label: "Giao hàng tiêu chuẩn", color: "#fff3e0" },
-  { id: "6", label: "Lưu kho tạm", color: "#e6f4ea" },
+  { id: "6", label: "Lưu kho tạm", color: "#e6f4ea" }
 ];
 
 const CUSTOM_CELLS: Record<string, ICustomCellDefinition> = {
@@ -40,7 +41,7 @@ const CUSTOM_CELLS: Record<string, ICustomCellDefinition> = {
             background: value === "done" ? "#ceead6" : "#fce8e6",
             color: value === "done" ? "#137333" : "#c5221f",
             fontSize: 12,
-            fontWeight: 600,
+            fontWeight: 600
           }}
         >
           {value === "done" ? "Hoàn thành" : "Chờ xử lý"}
@@ -56,7 +57,7 @@ const CUSTOM_CELLS: Record<string, ICustomCellDefinition> = {
           height: "100%",
           border: "2px solid #1a73e8",
           fontSize: 13,
-          boxSizing: "border-box",
+          boxSizing: "border-box"
         }}
         value={value}
         autoFocus
@@ -66,8 +67,8 @@ const CUSTOM_CELLS: Record<string, ICustomCellDefinition> = {
         <option value="pending">Chờ xử lý</option>
         <option value="done">Hoàn thành</option>
       </select>
-    ),
-  },
+    )
+  }
 };
 
 const COLUMNS: ISpreadsheetColumn[] = [
@@ -75,9 +76,29 @@ const COLUMNS: ISpreadsheetColumn[] = [
   {
     colName: "qty",
     colText: "SL",
-    width: 80,
+    width: 110,
     showFilter: true,
-    colRender: () => <span style={{ fontWeight: 700 }}>SL</span>,
+    colRender: () => (
+      <div
+        style={{
+          display: "flex",
+          gap: "2px",
+          alignItems: "center",
+          justifyContent: "center"
+        }}
+      >
+        <p
+          style={{
+            maxWidth: "60px",
+            wordBreak: "break-word",
+            whiteSpace: "pre-line"
+          }}
+        >
+          Số lượng tối đa
+        </p>
+        <p style={{ color: "red" }}>*</p>
+      </div>
+    )
   },
   { colName: "name", width: 200, verticalAlign: "middle", showFilter: true },
   {
@@ -85,14 +106,14 @@ const COLUMNS: ISpreadsheetColumn[] = [
     colText: "Lựa chọn",
     width: 140,
     meta: { type: "select", options: SELECT_OPTIONS },
-    verticalAlign: "middle",
+    verticalAlign: "middle"
   },
   {
     colName: "tags",
     colText: "Tags",
     width: 180,
     meta: { type: "multiSelect", options: MULTI_SELECT_OPTIONS },
-    verticalAlign: "middle",
+    verticalAlign: "middle"
   },
   {
     colName: "active",
@@ -100,13 +121,13 @@ const COLUMNS: ISpreadsheetColumn[] = [
     width: 90,
     meta: { type: "switch" },
     horizontalAlign: "center",
-    verticalAlign: "middle",
+    verticalAlign: "middle"
   },
   {
     colName: "status",
     colText: "Trạng thái",
     width: 130,
-    meta: { customKey: "statusBadge" },
+    meta: { customKey: "statusBadge" }
   },
   {
     colName: "self_ship",
@@ -114,7 +135,7 @@ const COLUMNS: ISpreadsheetColumn[] = [
     width: 90,
     meta: { type: "boolean" },
     horizontalAlign: "right",
-    verticalAlign: "bottom",
+    verticalAlign: "bottom"
   },
   {
     colName: "due_date",
@@ -122,11 +143,9 @@ const COLUMNS: ISpreadsheetColumn[] = [
     width: 130,
     meta: {
       type: "date",
-      dateFormat: "DD/MM/YYYY",
-      minDate: "01/06/2026",
-      maxDate: "01/07/2026",
-    },
-  },
+      dateFormat: "DD/MM/YYYY"
+    }
+  }
 ];
 
 const INITIAL_DATA = [
@@ -137,8 +156,7 @@ const INITIAL_DATA = [
     choice: "1",
     tags: ["1", "3"],
     active: "true",
-    status: "pending",
-    due_date: "15/06/2026",
+    status: "pending"
   },
   {
     sku: "A002",
@@ -147,8 +165,7 @@ const INITIAL_DATA = [
     choice: "2",
     tags: ["2", "4", "5"],
     active: "false",
-    status: "done",
-    due_date: "20/06/2026",
+    status: "done"
   },
   {
     sku: "A003",
@@ -158,8 +175,8 @@ const INITIAL_DATA = [
     tags: [],
     active: "true",
     status: "pending",
-    due_date: "",
-  },
+    due_date: ""
+  }
 ];
 
 let renderCount = 0;
@@ -167,6 +184,25 @@ let renderCount = 0;
 export default function App() {
   renderCount += 1;
   const sheetRef = useRef<ISpreadsheetRef>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!errorMessage) return;
+    const timer = window.setTimeout(() => setErrorMessage(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [errorMessage]);
+
+  const handleSpreadsheetError = (error: ISpreadsheetError) => {
+    setErrorMessage(error.message);
+  };
+
+  const mergeSelection = () => {
+    sheetRef.current?.mergeCells();
+  };
+
+  const unmergeSelection = () => {
+    sheetRef.current?.unmergeCells();
+  };
 
   useEffect(() => {
     const ref = sheetRef.current;
@@ -176,11 +212,11 @@ export default function App() {
       {
         row: 1,
         colName: "due_date",
-        meta: { maxDate: "2026-06-20" },
+        meta: { maxDate: "2026-06-20" }
       },
       { row: 0, colName: "sku", meta: { invalid: true } },
       { row: 1, colName: "sku", meta: { disabled: true } },
-      { row: 2, colName: "sku", meta: { invalid: true, disabled: true } },
+      { row: 2, colName: "sku", meta: { invalid: true, disabled: true } }
     ]);
   }, []);
 
@@ -193,7 +229,7 @@ export default function App() {
       5,
       null,
       { type: "select", options: SELECT_OPTIONS },
-      "choice",
+      "choice"
     );
     sheetRef.current?.setCellValue(5, null, "1", "choice");
   };
@@ -219,7 +255,7 @@ export default function App() {
     const value = sheetRef.current?.getCellValue(active.row, active.col);
     const meta = sheetRef.current?.getCellMeta(active.row, active.col);
     alert(
-      `Cell (${active.row + 1}, ${active.col + 1}): "${value}"\nMeta: ${JSON.stringify(meta)}`,
+      `Cell (${active.row + 1}, ${active.col + 1}): "${value}"\nMeta: ${JSON.stringify(meta)}`
     );
   };
 
@@ -229,9 +265,9 @@ export default function App() {
       null,
       {
         type: "select",
-        options: [{ id: "1", label: "aaaa" }],
+        options: [{ id: "1", label: "aaaa" }]
       },
-      "self_ship",
+      "self_ship"
     );
   };
   return (
@@ -257,6 +293,12 @@ export default function App() {
           <button type="button" onClick={setOptionForCell}>
             Set option for cell
           </button>
+          <button type="button" onClick={mergeSelection}>
+            Gộp ô (merge)
+          </button>
+          <button type="button" onClick={unmergeSelection}>
+            Bỏ gộp (unmerge)
+          </button>
         </div>
         <span className={styles.stats}>
           App renders: {renderCount} | Kéo chuột chọn range | Delete xóa
@@ -268,14 +310,21 @@ export default function App() {
           rowCount={20000}
           columnCount={26}
           columns={COLUMNS}
-          frozenColumnCount={1}
+          // colHeaderHeight={50}
+          frozenColumnCount={2}
           initialData={INITIAL_DATA}
           customCellRegistry={CUSTOM_CELLS}
           onChange={(changes) => {
             console.log("Changes:", changes);
           }}
+          onError={handleSpreadsheetError}
         />
       </main>
+      {errorMessage && (
+        <div className={styles.snackbar} role="alert">
+          {errorMessage}
+        </div>
+      )}
     </div>
   );
 }

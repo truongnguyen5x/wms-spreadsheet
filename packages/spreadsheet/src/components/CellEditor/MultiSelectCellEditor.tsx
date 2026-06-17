@@ -185,7 +185,7 @@ export function MultiSelectCellEditor({
                 backgroundColor: item.color ?? DEFAULT_MULTI_SELECT_CHIP_COLOR,
               }}
             >
-              {item.label}
+              <span className={styles.chipLabel}>{item.label}</span>
             </span>
           ))}
         </span>

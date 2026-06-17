@@ -1,6 +1,7 @@
 import { memo, useCallback, useMemo } from "react";
 import type { CellStore } from "../../store/CellStore";
 import type { MetaStore } from "../../store/MetaStore";
+import type { MergeStore } from "../../store/MergeStore";
 import type {
   ICustomCellDefinition,
   ISpreadsheetColumn,
@@ -11,6 +12,7 @@ import { renderCells } from "../../utils/renderCells";
 export interface IFrozenCellsLayerProps {
   store: CellStore;
   metaStore: MetaStore;
+  mergeStore: MergeStore;
   startRow: number;
   endRow: number;
   frozenColumnCount: number;
@@ -28,6 +30,7 @@ export interface IFrozenCellsLayerProps {
 export const FrozenCellsLayer = memo(function FrozenCellsLayer({
   store,
   metaStore,
+  mergeStore,
   startRow,
   endRow,
   frozenColumnCount,
@@ -50,6 +53,7 @@ export const FrozenCellsLayer = memo(function FrozenCellsLayer({
       renderCells({
         store,
         metaStore,
+        mergeStore,
         dimensions,
         rowStart: startRow,
         rowEnd: endRow,
@@ -68,6 +72,7 @@ export const FrozenCellsLayer = memo(function FrozenCellsLayer({
     [
       store,
       metaStore,
+      mergeStore,
       dimensions.columnWidths,
       dimensions.rowHeights,
       startRow,

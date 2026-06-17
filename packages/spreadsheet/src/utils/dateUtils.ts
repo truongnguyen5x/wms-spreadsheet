@@ -55,7 +55,7 @@ export function formatDate(date: Date, format: string): string {
     .replace(/DD/g, day);
 }
 
-function getFormatTokenOrder(format: string): ("DD" | "MM" | "YYYY")[] {
+export function getFormatTokenOrder(format: string): ("DD" | "MM" | "YYYY")[] {
   const tokens: ("DD" | "MM" | "YYYY")[] = [];
   const regex = /(DD|MM|YYYY)/g;
   let match: RegExpExecArray | null;
@@ -65,7 +65,7 @@ function getFormatTokenOrder(format: string): ("DD" | "MM" | "YYYY")[] {
   return tokens;
 }
 
-function getSeparator(format: string): string {
+export function getSeparator(format: string): string {
   const match = format.match(/[^DMY]+/);
   return match?.[0] ?? "/";
 }

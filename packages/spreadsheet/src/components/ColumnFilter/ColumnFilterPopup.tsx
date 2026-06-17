@@ -28,6 +28,7 @@ export interface IColumnFilterPopupProps {
   filterState: IColumnFilterState;
   activeSortDirection?: TSortDirection;
   valueOptions: IFilterValueOption[];
+  sortFilterDisabled?: boolean;
   onSort: (direction: TSortDirection) => void;
   onApply: (nextState: IColumnFilterState) => void;
   onReset: () => void;
@@ -65,6 +66,7 @@ export function ColumnFilterPopup({
   filterState,
   activeSortDirection,
   valueOptions,
+  sortFilterDisabled = false,
   onSort,
   onApply,
   onReset,
@@ -192,6 +194,7 @@ export function ColumnFilterPopup({
         type="button"
         className={styles.actionButton}
         aria-pressed={activeSortDirection === "asc"}
+        disabled={sortFilterDisabled}
         onClick={() => onSort("asc")}
       >
         <span className={styles.actionButtonContent}>
@@ -205,6 +208,7 @@ export function ColumnFilterPopup({
         type="button"
         className={styles.actionButton}
         aria-pressed={activeSortDirection === "desc"}
+        disabled={sortFilterDisabled}
         onClick={() => onSort("desc")}
       >
         <span className={styles.actionButtonContent}>
@@ -222,6 +226,7 @@ export function ColumnFilterPopup({
         <select
           className={styles.select}
           value={draftFilter.condition}
+          disabled={sortFilterDisabled}
           onChange={handleConditionChange}
         >
           {CONDITION_OPTIONS.map((option) => (

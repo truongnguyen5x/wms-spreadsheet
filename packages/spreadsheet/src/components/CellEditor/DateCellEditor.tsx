@@ -9,12 +9,17 @@ import {
 import { createPortal } from "react-dom";
 import { DEFAULT_ROW_HEIGHT } from "../../types";
 import {
+  applyDigit,
+  createDateFieldState,
+  createDateFieldStateFromDate,
+  resolveDateFromField,
+  type IDateFieldState,
+} from "../../utils/dateFieldSections";
+import {
   DEFAULT_DATE_FORMAT,
   WEEKDAY_LABELS_VI,
-  addDays,
   addMonths,
   formatDate,
-  formatDateValue,
   getCalendarMonth,
   getMonthLabel,
   isDateInRange,
@@ -22,11 +27,11 @@ import {
   parseDateBounds,
   parseDateString,
 } from "../../utils/dateUtils";
+import { DateFieldSectionList } from "./DateFieldSectionList";
 import styles from "./DateCellEditor.module.scss";
 
 const CALENDAR_MIN_WIDTH = 260;
 const CALENDAR_GAP = 2;
-const MAX_SKIP_DAYS = 31;
 
 export interface IDateCellEditorProps {
   value: string;
@@ -37,6 +42,7 @@ export interface IDateCellEditorProps {
   left: number;
   width: number;
   height: number;
+  initialInput?: string;
   onCommit: (value: string) => void;
   onCancel: () => void;
 }
@@ -66,6 +72,18 @@ function computeCalendarPosition(
   return { top, left, width: calendarWidth };
 }
 
+function buildInitialFieldState(
+  value: string,
+  dateFormat: string,
+  initialInput?: string,
+): IDateFieldState {
+  let state = createDateFieldState(value, dateFormat);
+  if (initialInput && /^[0-9]$/.test(initialInput)) {
+    state = applyDigit(state, initialInput).state;
+  }
+  return state;
+}
+
 export function DateCellEditor({
   value,
   dateFormat = DEFAULT_DATE_FORMAT,
@@ -75,11 +93,12 @@ export function DateCellEditor({
   left,
   width,
   height: _height,
+  initialInput,
   onCommit,
   onCancel,
 }: IDateCellEditorProps) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const fieldRootRef = useRef<HTMLDivElement>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
   const committedRef = useRef(false);
 
@@ -87,7 +106,6 @@ export function DateCellEditor({
     () => parseDateString(value, dateFormat),
     [value, dateFormat],
   );
-  const displayValue = value ? formatDateValue(value, dateFormat) : "";
 
   const dateBounds = useMemo(
     () => parseDateBounds(minDate, maxDate, dateFormat),
@@ -104,13 +122,24 @@ export function DateCellEditor({
     return { year: base.getFullYear(), month: base.getMonth() };
   }, [parsedValue]);
 
+  const [fieldState, setFieldState] = useState(() =>
+    buildInitialFieldState(value, dateFormat, initialInput),
+  );
   const [viewYear, setViewYear] = useState(initialView.year);
   const [viewMonth, setViewMonth] = useState(initialView.month);
-  const [highlightedDate, setHighlightedDate] = useState<Date | null>(
-    () => parsedValue,
-  );
+  const [highlightedDate, setHighlightedDate] = useState<Date | null>(() => {
+    const fromField = resolveDateFromField(
+      buildInitialFieldState(value, dateFormat, initialInput),
+    );
+    return fromField ?? parsedValue;
+  });
   const [calendarPosition, setCalendarPosition] =
     useState<ICalendarPosition | null>(null);
+
+  const fieldDate = useMemo(
+    () => resolveDateFromField(fieldState),
+    [fieldState],
+  );
 
   const calendarMonth = useMemo(
     () => getCalendarMonth(viewYear, viewMonth),
@@ -127,36 +156,12 @@ export function DateCellEditor({
     setViewMonth(date.getMonth());
   }, []);
 
-  const moveHighlightedDate = useCallback(
-    (deltaDays: number) => {
-      if (!highlightedDate) return;
-
-      let next = addDays(highlightedDate, deltaDays);
-      const direction = deltaDays >= 0 ? 1 : -1;
-
-      for (let i = 0; i < MAX_SKIP_DAYS; i += 1) {
-        if (!isDayDisabled(next)) {
-          setHighlightedDate(next);
-          if (
-            next.getFullYear() !== viewYear ||
-            next.getMonth() !== viewMonth
-          ) {
-            syncViewToDate(next);
-          }
-          return;
-        }
-        next = addDays(next, direction);
-      }
-    },
-    [highlightedDate, isDayDisabled, syncViewToDate, viewMonth, viewYear],
-  );
-
   const updateCalendarPosition = useCallback(() => {
-    const input = inputRef.current;
+    const fieldRoot = fieldRootRef.current;
     const calendar = calendarRef.current;
-    if (!input) return;
+    if (!fieldRoot) return;
 
-    const anchorRect = input.getBoundingClientRect();
+    const anchorRect = fieldRoot.getBoundingClientRect();
     const calendarHeight = calendar?.offsetHeight ?? 320;
     setCalendarPosition(computeCalendarPosition(anchorRect, calendarHeight));
   }, []);
@@ -171,12 +176,17 @@ export function DateCellEditor({
     [dateFormat, isDayDisabled, onCommit],
   );
 
-  useEffect(() => {
-    const input = inputRef.current;
-    if (!input) return;
-    input.focus();
-    input.select();
-  }, []);
+  const handleFieldStateChange = useCallback(
+    (nextState: IDateFieldState) => {
+      setFieldState(nextState);
+      const resolved = resolveDateFromField(nextState);
+      if (resolved) {
+        setHighlightedDate(resolved);
+        syncViewToDate(resolved);
+      }
+    },
+    [syncViewToDate],
+  );
 
   useLayoutEffect(() => {
     updateCalendarPosition();
@@ -220,7 +230,7 @@ export function DateCellEditor({
     commitDate(null);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDownExtra = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Escape") {
       e.preventDefault();
       committedRef.current = true;
@@ -230,38 +240,13 @@ export function DateCellEditor({
 
     if (e.key === "Enter" || e.key === "Tab") {
       e.preventDefault();
-      if (highlightedDate && !isDayDisabled(highlightedDate)) {
-        commitDate(highlightedDate);
-      } else if (parsedValue && !isDayDisabled(parsedValue)) {
-        commitDate(parsedValue);
+      const resolved = fieldDate ?? highlightedDate;
+      if (resolved && !isDayDisabled(resolved)) {
+        commitDate(resolved);
       } else {
         committedRef.current = true;
         onCancel();
       }
-      return;
-    }
-
-    if (!highlightedDate && e.key.startsWith("Arrow")) {
-      const today = new Date();
-      setHighlightedDate(today);
-      syncViewToDate(today);
-      return;
-    }
-
-    if (!highlightedDate) return;
-
-    if (e.key === "ArrowLeft") {
-      e.preventDefault();
-      moveHighlightedDate(-1);
-    } else if (e.key === "ArrowRight") {
-      e.preventDefault();
-      moveHighlightedDate(1);
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      moveHighlightedDate(-7);
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();
-      moveHighlightedDate(7);
     }
   };
 
@@ -274,6 +259,8 @@ export function DateCellEditor({
       onCancel();
     });
   };
+
+  const selectedDate = fieldDate ?? parsedValue;
 
   const calendarContent = (
     <div
@@ -330,7 +317,7 @@ export function DateCellEditor({
         {calendarMonth.days.map((item) => {
           const disabled = isDayDisabled(item.date);
           const isSelected =
-            parsedValue !== null && isSameDay(item.date, parsedValue);
+            selectedDate !== null && isSameDay(item.date, selectedDate);
           const isHighlighted =
             highlightedDate !== null && isSameDay(item.date, highlightedDate);
 
@@ -352,6 +339,7 @@ export function DateCellEditor({
               onMouseEnter={() => {
                 if (!disabled) {
                   setHighlightedDate(item.date);
+                  setFieldState(createDateFieldStateFromDate(item.date, dateFormat));
                 }
               }}
             >
@@ -388,16 +376,12 @@ export function DateCellEditor({
       className={styles.root}
       style={{ top, left, width, height: DEFAULT_ROW_HEIGHT }}
     >
-      <input
-        ref={inputRef}
-        type="text"
-        className={styles.input}
-        value={displayValue}
-        readOnly
-        onKeyDown={handleKeyDown}
+      <DateFieldSectionList
+        ref={fieldRootRef}
+        fieldState={fieldState}
+        onFieldStateChange={handleFieldStateChange}
+        onKeyDownExtra={handleKeyDownExtra}
         onBlur={handleBlur}
-        aria-haspopup="dialog"
-        aria-expanded
       />
       {createPortal(calendarContent, document.body)}
     </div>

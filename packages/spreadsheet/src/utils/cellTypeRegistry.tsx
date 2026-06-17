@@ -52,8 +52,10 @@ function renderMultiSelect({ value, meta }: ICellRenderParams): ReactNode {
 
   if (!resolved.length) return null;
 
+  const tooltip = resolved.map((item) => item.label).join(", ");
+
   return (
-    <span className={styles.multiSelectField}>
+    <span className={styles.multiSelectField} title={tooltip}>
       <span className={styles.multiSelectChips}>
         {resolved.map((item) => (
           <span
@@ -63,7 +65,7 @@ function renderMultiSelect({ value, meta }: ICellRenderParams): ReactNode {
               backgroundColor: item.color ?? DEFAULT_MULTI_SELECT_CHIP_COLOR,
             }}
           >
-            {item.label}
+            <span className={styles.multiSelectChipLabel}>{item.label}</span>
           </span>
         ))}
       </span>

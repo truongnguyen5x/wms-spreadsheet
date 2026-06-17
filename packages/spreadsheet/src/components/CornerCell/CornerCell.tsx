@@ -1,6 +1,9 @@
 import styles from "../../styles/spreadsheet.module.scss";
 
-export function CornerCell() {
-  return <div className={styles.corner} />;
+interface ICornerCellProps {
+  colHeaderHeight: number;
 }
 
+export function CornerCell({ colHeaderHeight }: ICornerCellProps) {
+  return <div className={styles.corner} style={{ height: colHeaderHeight }} />;
+}

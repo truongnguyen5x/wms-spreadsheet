@@ -54,7 +54,7 @@
 }
 
 .scrollableWithFrozenDivider {
-  box-shadow: inset 1px 0 0 #dadce0;
+  // box-shadow: inset 1px 0 0 #dadce0;
 }
 
 .columnHeaderPane {
@@ -197,6 +197,19 @@
     background: #f1f3f4;
     cursor: default;
   }
+
+  &.mergedAnchor {
+    z-index: 1;
+  }
+}
+
+.frozenActiveOverlay {
+  position: absolute;
+  box-sizing: border-box;
+  outline: 2px solid #1a73e8;
+  outline-offset: -2px;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .fillHandle {
@@ -262,15 +275,15 @@
 .cellEditor {
   position: absolute;
   box-sizing: border-box;
-  border: 2px solid #1a73e8;
-  padding: 3px;
+  padding: 4px;
   margin: 0;
   font-family: inherit;
   font-size: 13px;
   line-height: 20px;
   color: #202124;
   background: #fff;
-  outline: none;
+  outline: 2px solid #1a73e8;
+  outline-offset: -2px;
   resize: none;
   overflow: hidden;
   white-space: pre-wrap;
@@ -324,6 +337,9 @@
 }
 
 .multiSelectChip {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
   flex-shrink: 0;
   max-width: 50px;
   padding: 2px 8px;
@@ -332,7 +348,12 @@
   font-size: 12px;
   line-height: 15px;
   color: #202124;
+}
+
+.multiSelectChipLabel {
+  min-width: 0;
   overflow: hidden;
+  // text-overflow: ellipsis;
   white-space: nowrap;
 }
 

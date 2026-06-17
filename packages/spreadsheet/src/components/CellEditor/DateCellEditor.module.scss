@@ -4,7 +4,7 @@
   z-index: 10;
 }
 
-.input {
+.fieldRoot {
   box-sizing: border-box;
   width: 100%;
   border: 2px solid #1a73e8;
@@ -16,7 +16,39 @@
   color: #202124;
   background: #fff;
   outline: none;
-  cursor: default;
+  cursor: text;
+  white-space: nowrap;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.section {
+  display: inline;
+  cursor: text;
+}
+
+.sectionActive .sectionContent {
+  background: rgba(26, 115, 232, 0.12);
+  border-radius: 2px;
+}
+
+.sectionContent {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  min-width: 1ch;
+  outline: none;
+}
+
+.sectionPlaceholder {
+  color: #9aa0a6;
+}
+
+.separator {
+  color: #202124;
+  white-space: pre;
+  user-select: none;
 }
 
 .calendar {
