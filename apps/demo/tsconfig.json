@@ -4,7 +4,7 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@wms/spreadsheet": ["../../packages/spreadsheet/src/index.ts"]
+      "wms-spreadsheet": ["../../packages/spreadsheet/src/index.ts"]
     }
   },
   "include": ["src"]

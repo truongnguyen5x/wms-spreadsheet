@@ -1,136 +1,67 @@
-# @wms/spreadsheet
+# wms-spreadsheet
 
-Thư viện Spreadsheet React — virtual window, API imperative qua ref.
+Thư viện Spreadsheet cho React — giao diện giống Google Sheets, hỗ trợ **10.000+ dòng** mượt mà nhờ virtual window.
 
-Xem [README gốc](../../README.md) để biết hướng dẫn đầy đủ (API, cell types, filter, clipboard, merge, locale, v.v.).
+## Cài đặt
 
-## Tính năng chính
+```bash
+npm install wms-spreadsheet
+# hoặc
+pnpm add wms-spreadsheet
+```
 
-- Virtual window 2 chiều — render mượt 10.000+ dòng
-- API imperative qua `ref` — `setCellValue`, `loadData`, `mergeCells`, …
-- Cell types: `text`, `select`, `multiSelect`, `boolean`, `switch`, `date`, `custom`
-- Filter & sort cột, frozen columns, copy/paste range
-- **Merge cells** — `mergeCells()` / `unmergeCells()` qua ref
-- **Đa ngôn ngữ** — prop `locale` (partial override)
-- **Xử lý lỗi** — callback `onError` với `TSpreadsheetErrorCode`
+**Peer dependencies:** `react` và `react-dom` (^18 hoặc ^19).
 
-## Cài đặt (trong monorepo)
+## Sử dụng nhanh
 
-```json
-{
-  "dependencies": {
-    "@wms/spreadsheet": "workspace:*"
-  }
+```tsx
+import { useRef } from "react";
+import {
+  Spreadsheet,
+  type ISpreadsheetColumn,
+  type ISpreadsheetRef,
+} from "wms-spreadsheet";
+import "wms-spreadsheet/style.css";
+
+const COLUMNS: ISpreadsheetColumn[] = [
+  { colName: "sku", colText: "Mã SKU", width: 120, showFilter: true },
+  { colName: "qty", colText: "SL", width: 80 },
+  { colName: "active", colText: "Kích hoạt", width: 90, meta: { type: "switch" } },
+];
+
+const INITIAL_DATA = [
+  { sku: "A001", qty: "10", active: "true" },
+  { sku: "A002", qty: "5", active: "false" },
+];
+
+function App() {
+  const sheetRef = useRef<ISpreadsheetRef>(null);
+
+  return (
+    <div style={{ width: "100%", height: "600px" }}>
+      <Spreadsheet
+        ref={sheetRef}
+        columns={COLUMNS}
+        initialData={INITIAL_DATA}
+        rowCount={1000}
+      />
+    </div>
+  );
 }
 ```
 
-## Import nhanh
+## Tính năng
 
-```tsx
-import { Spreadsheet, type ISpreadsheetRef } from "@wms/spreadsheet";
-import "@wms/spreadsheet/style.css";
-```
+- Virtual window 2 chiều — chỉ render cell trong viewport
+- API imperative qua `ref` — `setCellValue`, `loadData`, `mergeCells`, …
+- Cell types: `text`, `select`, `multiSelect`, `boolean`, `switch`, `date`, `custom`
+- Copy/paste range (Ctrl+C / Ctrl+V), filter & sort cột, frozen columns
+- Merge cells, resize cột/hàng, đa ngôn ngữ (`locale` prop)
 
-## Export chính
+## Tài liệu đầy đủ
 
-```typescript
-// Component & ref
-export { Spreadsheet };
+Xem [README trên GitHub](https://github.com/truongnguyen5x/wms-spreadsheet#readme) để biết API ref, cell meta, custom cells, locale, xử lý lỗi, v.v.
 
-// Types
-export type {
-  ISpreadsheetProps,
-  ISpreadsheetRef,
-  ISpreadsheetColumn,
-  ISpreadsheetLocale,
-  ISpreadsheetError,
-  IMergedRange,
-  INormalizedRange,
-  ICellMeta,
-  ICustomCellDefinition,
-  TSpreadsheetErrorCode,
-  TCellValue,
-  TSheetDataInput,
-  TSheetDataOutput,
-  DeepPartial,
-};
+## License
 
-// Stores & utils
-export {
-  CellStore,
-  MetaStore,
-  MergeStore,
-  cellKey,
-  columnLabel,
-  DEFAULT_SPREADSHEET_LOCALE,
-  resolveSpreadsheetLocale,
-  DEFAULT_DATE_FORMAT,
-  DEFAULT_ROW_HEIGHT,
-  DEFAULT_COLUMN_WIDTH,
-  COLUMN_HEADER_HEIGHT,
-  ROW_HEADER_WIDTH,
-  FILTER_BLANK_VALUE,
-};
-```
-
-## Peer dependencies
-
-- `react` ^18 || ^19
-- `react-dom` ^18 || ^19
-
-## Build
-
-```bash
-npx vite build
-```
-
-## Cấu trúc source
-
-```
-src/
-├── Spreadsheet.tsx              # forwardRef, expose ISpreadsheetRef
-├── context/
-│   └── SpreadsheetLocaleContext.tsx
-├── locale/
-│   ├── defaultLocale.ts         # DEFAULT_SPREADSHEET_LOCALE
-│   └── resolveSpreadsheetLocale.ts
-├── store/
-│   ├── CellStore.ts             # Data layer (values) ngoài React
-│   ├── MetaStore.ts             # Meta layer (type, disabled, …)
-│   └── MergeStore.ts            # Merge ranges layer
-├── hooks/
-│   ├── useCellValue.ts          # useSyncExternalStore per cell
-│   ├── useCellMeta.ts
-│   ├── useVirtualWindow.ts      # Virtual window + rAF scroll
-│   ├── useKeyboardNavigation.ts
-│   ├── useRangeSelection.ts
-│   ├── useClipboard.ts
-│   ├── useHeaderResize.ts
-│   ├── useGridDimensions.ts
-│   └── useMergeRevision.ts
-├── components/
-│   ├── SpreadsheetGrid/         # 4-pane layout + frozen pane
-│   ├── SpreadsheetCell/
-│   ├── ColumnHeaderRow/
-│   ├── RowHeaderColumn/
-│   ├── CornerCell/
-│   ├── CellEditor/
-│   ├── SelectionOverlay/
-│   ├── ClipboardOverlay/
-│   ├── ColumnFilter/
-│   ├── FrozenColumnPane/
-│   └── SwitchCell/
-├── utils/
-│   ├── cellKey.ts
-│   ├── columnLabel.ts
-│   ├── computeVisibleRange.ts
-│   ├── dataAdapter.ts
-│   ├── clipboard.ts
-│   ├── columnFilter.ts
-│   ├── rowSort.ts
-│   ├── visibleRowLayout.ts
-│   ├── resolveCellMeta.ts
-│   ├── mergeCell.ts
-│   └── dateUtils.ts
-└── styles/spreadsheet.module.scss
-```
+MIT

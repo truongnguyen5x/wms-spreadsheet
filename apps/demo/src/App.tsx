@@ -5,7 +5,7 @@ import {
   type ISpreadsheetColumn,
   type ISpreadsheetError,
   type ISpreadsheetRef
-} from "@wms/spreadsheet";
+} from "wms-spreadsheet";
 import styles from "./App.module.scss";
 
 const SELECT_OPTIONS = [

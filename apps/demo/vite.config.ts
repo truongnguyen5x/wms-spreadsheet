@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@wms/spreadsheet": resolve(__dirname, "../../packages/spreadsheet/src/index.ts"),
+      "wms-spreadsheet": resolve(__dirname, "../../packages/spreadsheet/src/index.ts"),
     },
   },
   css: {

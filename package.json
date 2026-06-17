@@ -7,8 +7,10 @@
   ],
   "scripts": {
     "dev": "pnpm --filter demo dev",
-    "build": "pnpm --filter @wms/spreadsheet build",
-    "build:all": "pnpm -r build"
+    "build": "pnpm --filter wms-spreadsheet build",
+    "build:all": "pnpm -r build",
+    "pack:spreadsheet": "pnpm build && pnpm --filter wms-spreadsheet exec npm pack --dry-run",
+    "publish:spreadsheet": "pnpm build && pnpm --filter wms-spreadsheet publish --no-git-checks"
   },
   "devDependencies": {
     "typescript": "^5.7.2"

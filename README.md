@@ -27,7 +27,7 @@ Thư viện Spreadsheet cho React — giao diện giống Google Sheets, hỗ tr
 
 ```
 wms-sheets/
-├── packages/spreadsheet/   # @wms/spreadsheet — thư viện chính
+├── packages/spreadsheet/   # wms-spreadsheet — thư viện chính
 └── apps/demo/              # App demo 20.000 rows × 26 cols
 ```
 
@@ -69,8 +69,8 @@ import {
   Spreadsheet,
   type ISpreadsheetColumn,
   type ISpreadsheetRef,
-} from "@wms/spreadsheet";
-import "@wms/spreadsheet/style.css";
+} from "wms-spreadsheet";
+import "wms-spreadsheet/style.css";
 ```
 
 ### Ví dụ với columns (khuyến nghị)
@@ -323,7 +323,7 @@ Prop `locale` nhận `DeepPartial<ISpreadsheetLocale>` — merge shallow với `
 - `datepicker` — UI date picker (`monthNames` cần đủ 12 phần tử, `weekdayLabels` cần đủ 7)
 
 ```tsx
-import { Spreadsheet } from "@wms/spreadsheet";
+import { Spreadsheet } from "wms-spreadsheet";
 
 <Spreadsheet
   locale={{
@@ -497,7 +497,7 @@ import {
   DEFAULT_DATE_FORMAT,
   DEFAULT_SPREADSHEET_LOCALE,
   resolveSpreadsheetLocale,
-} from "@wms/spreadsheet";
+} from "wms-spreadsheet";
 
 cellKey(14, 2);    // "14:2"
 columnLabel(2);    // "C"
@@ -505,6 +505,25 @@ columnLabel(2);    // "C"
 
 Types export thêm: `ISpreadsheetLocale`, `IMergedRange`, `INormalizedRange`, `ISpreadsheetError`, `TSpreadsheetErrorCode`, `TCellValue`, `TSheetRowRecord`, `DeepPartial`, …
 
+## Publish lên npm
+
+```bash
+# Kiểm tra nội dung package trước khi publish
+pnpm pack:spreadsheet
+
+# Đăng nhập npm (lần đầu)
+npm login
+
+# Publish public lên npm
+pnpm publish:spreadsheet
+```
+
+Sau khi publish, cài từ npm:
+
+```bash
+pnpm add wms-spreadsheet
+```
+
 ## License
 
-Private — WMS internal use.
+MIT — xem [packages/spreadsheet/LICENSE](packages/spreadsheet/LICENSE).
