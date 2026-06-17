@@ -186,6 +186,59 @@ export interface ISpreadsheetRef {
   hasMergedCells(): boolean;
 }
 
+export type DeepPartial<T> = {
+  [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
+};
+
+export type TFilterCondition =
+  | "none"
+  | "isEmpty"
+  | "isNotEmpty"
+  | "isEqualTo"
+  | "isNotEqualTo"
+  | "beginsWith"
+  | "endsWith"
+  | "contains"
+  | "doesNotContain";
+
+export interface ISpreadsheetLocale {
+  errors: {
+    mergeInvalidRange: string;
+    mergeOverlap: string;
+    mergeWhileSortFilterActive: string;
+    filterWhileMerged: string;
+    sortWhileMerged: string;
+    copyMergedNotAllowed: string;
+    pasteMergedNotAllowed: string;
+  };
+  filter: {
+    columnAriaLabel: string;
+    dialogAriaLabel: string;
+    sortAsc: string;
+    sortDesc: string;
+    filterByCondition: string;
+    filterByValue: string;
+    valuePlaceholder: string;
+    searchPlaceholder: string;
+    selectAll: string;
+    clear: string;
+    reset: string;
+    ok: string;
+    cancel: string;
+    blankCells: string;
+    conditions: Record<TFilterCondition, string>;
+  };
+  datepicker: {
+    dialogAriaLabel: string;
+    prevMonthAriaLabel: string;
+    nextMonthAriaLabel: string;
+    today: string;
+    clear: string;
+    monthNames: readonly string[];
+    weekdayLabels: readonly string[];
+  };
+}
+
 export interface ISpreadsheetProps {
   rowCount: number;
   columnCount: number;
@@ -205,18 +258,10 @@ export interface ISpreadsheetProps {
   frozenColumnCount?: number;
   /** Registry custom cell render/editor theo customKey. */
   customCellRegistry?: Record<string, ICustomCellDefinition>;
+  /** UI strings; mặc định tiếng Anh. Truyền partial để override đa ngôn ngữ. */
+  locale?: DeepPartial<ISpreadsheetLocale>;
 }
 
-export type TFilterCondition =
-  | "none"
-  | "isEmpty"
-  | "isNotEmpty"
-  | "isEqualTo"
-  | "isNotEqualTo"
-  | "beginsWith"
-  | "endsWith"
-  | "contains"
-  | "doesNotContain";
 export type TSortDirection = "asc" | "desc";
 export interface IColumnSortState {
   col: number;

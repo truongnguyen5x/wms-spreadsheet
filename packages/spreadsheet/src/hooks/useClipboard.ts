@@ -8,6 +8,7 @@ import type {
   IClipboardData,
   ISpreadsheetColumn,
   ISpreadsheetError,
+  ISpreadsheetLocale,
   ISelection,
 } from "../types";
 import {
@@ -29,6 +30,7 @@ export interface IUseClipboardOptions {
   visibleRowIndicesRef: RefObject<readonly number[]>;
   onChange?: (changes: ICellInput[]) => void;
   onError?: (error: ISpreadsheetError) => void;
+  locale: ISpreadsheetLocale;
 }
 
 export interface IUseClipboardResult {
@@ -48,6 +50,7 @@ export function useClipboard({
   visibleRowIndicesRef,
   onChange,
   onError,
+  locale,
 }: IUseClipboardOptions): IUseClipboardResult {
   const [clipboard, setClipboard] = useState<IClipboardData | null>(null);
   const canWriteCell = useCallback(
@@ -72,7 +75,7 @@ export function useClipboard({
       if (mergeStore.rangeIntersectsMerge(range)) {
         onError?.({
           code: "MERGE_COPY_NOT_ALLOWED",
-          message: "Không thể sao chép vùng có ô đã gộp.",
+          message: locale.errors.copyMergedNotAllowed,
         });
         return;
       }
@@ -89,7 +92,7 @@ export function useClipboard({
         // Permission denied or clipboard unavailable — internal clipboard still works
       });
     },
-    [store, rowCount, visibleRowIndicesRef, mergeStore, onError],
+    [store, rowCount, visibleRowIndicesRef, mergeStore, onError, locale],
   );
   const handlePaste = useCallback(
     async (focusCell: ICellAddress) => {
@@ -120,7 +123,7 @@ export function useClipboard({
       if (mergeStore.rangeIntersectsMerge(pasteRange)) {
         onError?.({
           code: "MERGE_PASTE_NOT_ALLOWED",
-          message: "Không thể dán vào vùng có ô đã gộp.",
+          message: locale.errors.pasteMergedNotAllowed,
         });
         return;
       }
@@ -152,6 +155,7 @@ export function useClipboard({
       visibleRowIndicesRef,
       mergeStore,
       onError,
+      locale,
     ],
   );
   return { clipboard, handleCopy, handlePaste, clearClipboard };

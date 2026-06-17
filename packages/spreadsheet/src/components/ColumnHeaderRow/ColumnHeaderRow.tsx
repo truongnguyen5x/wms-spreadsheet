@@ -10,6 +10,7 @@ import type { IGridDimensions } from "../../hooks/useGridDimensions";
 import { getColumnHeaderContent } from "../../utils/columnHeaderContent";
 import { getScrollableColumnLeft } from "../../utils/frozenColumns";
 import { isColumnFilterActive } from "../../utils/columnFilter";
+import { useSpreadsheetLocale } from "../../context/SpreadsheetLocaleContext";
 import styles from "../../styles/spreadsheet.module.scss";
 
 export type TColumnHeaderMode = "frozen" | "scrollable";
@@ -39,6 +40,7 @@ const ColumnHeaderCell = memo(function ColumnHeaderCell({
   onColumnMouseEnter,
   onFilterIconClick,
 }: IColumnHeaderCellProps) {
+  const { filter: filterLocale } = useSpreadsheetLocale();
   const column = columns?.[col];
   const showFilter = column?.showFilter === true;
   const isFilterActive = showFilter
@@ -81,7 +83,7 @@ const ColumnHeaderCell = memo(function ColumnHeaderCell({
               event.stopPropagation();
               onFilterIconClick(col, event.currentTarget.getBoundingClientRect());
             }}
-            aria-label="Filter column"
+            aria-label={filterLocale.columnAriaLabel}
           >
             <svg viewBox="0 0 24 24" aria-hidden focusable="false">
               <path

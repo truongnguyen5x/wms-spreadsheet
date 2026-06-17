@@ -17,7 +17,6 @@ import {
 } from "../../utils/dateFieldSections";
 import {
   DEFAULT_DATE_FORMAT,
-  WEEKDAY_LABELS_VI,
   addMonths,
   formatDate,
   getCalendarMonth,
@@ -27,6 +26,7 @@ import {
   parseDateBounds,
   parseDateString,
 } from "../../utils/dateUtils";
+import { useSpreadsheetLocale } from "../../context/SpreadsheetLocaleContext";
 import { DateFieldSectionList } from "./DateFieldSectionList";
 import styles from "./DateCellEditor.module.scss";
 
@@ -97,6 +97,7 @@ export function DateCellEditor({
   onCommit,
   onCancel,
 }: IDateCellEditorProps) {
+  const { datepicker: datepickerLocale } = useSpreadsheetLocale();
   const rootRef = useRef<HTMLDivElement>(null);
   const fieldRootRef = useRef<HTMLDivElement>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
@@ -277,7 +278,7 @@ export function DateCellEditor({
           : { visibility: "hidden" }
       }
       role="dialog"
-      aria-label="Chọn ngày"
+      aria-label={datepickerLocale.dialogAriaLabel}
       onWheel={(e) => e.stopPropagation()}
     >
       <div className={styles.header}>
@@ -286,25 +287,25 @@ export function DateCellEditor({
           className={styles.navButton}
           onMouseDown={(e) => e.preventDefault()}
           onClick={handlePrevMonth}
-          aria-label="Tháng trước"
+          aria-label={datepickerLocale.prevMonthAriaLabel}
         >
           ‹
         </button>
         <span className={styles.monthLabel}>
-          {getMonthLabel(viewYear, viewMonth)}
+          {getMonthLabel(viewYear, viewMonth, datepickerLocale.monthNames)}
         </span>
         <button
           type="button"
           className={styles.navButton}
           onMouseDown={(e) => e.preventDefault()}
           onClick={handleNextMonth}
-          aria-label="Tháng sau"
+          aria-label={datepickerLocale.nextMonthAriaLabel}
         >
           ›
         </button>
       </div>
       <div className={styles.weekdays}>
-        {WEEKDAY_LABELS_VI.map((label) => (
+        {datepickerLocale.weekdayLabels.map((label) => (
           <span key={label} className={styles.weekday}>
             {label}
           </span>
@@ -356,7 +357,7 @@ export function DateCellEditor({
           onMouseDown={(e) => e.preventDefault()}
           onClick={handleToday}
         >
-          Hôm nay
+          {datepickerLocale.today}
         </button>
         <button
           type="button"
@@ -364,7 +365,7 @@ export function DateCellEditor({
           onMouseDown={(e) => e.preventDefault()}
           onClick={handleClear}
         >
-          Xóa
+          {datepickerLocale.clear}
         </button>
       </div>
     </div>

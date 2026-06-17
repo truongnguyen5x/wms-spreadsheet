@@ -19,6 +19,7 @@ export type {
   IColumnSortState,
   ISelectOption,
   ISpreadsheetColumn,
+  ISpreadsheetLocale,
   ISpreadsheetProps,
   ISpreadsheetRef,
   TFilterCondition,
@@ -31,6 +32,7 @@ export type {
   TSheetDataInput,
   TSheetDataOutput,
   TSheetRowDataOutput,
+  DeepPartial,
 } from "./types";
 export {
   DEFAULT_COLUMN_WIDTH,
@@ -40,6 +42,8 @@ export {
   FILTER_BLANK_VALUE,
   ROW_HEADER_WIDTH,
 } from "./types";
+export { DEFAULT_SPREADSHEET_LOCALE } from "./locale/defaultLocale";
+export { resolveSpreadsheetLocale } from "./locale/resolveSpreadsheetLocale";
 export { CellStore } from "./store/CellStore";
 export { MetaStore } from "./store/MetaStore";
 export { MergeStore } from "./store/MergeStore";

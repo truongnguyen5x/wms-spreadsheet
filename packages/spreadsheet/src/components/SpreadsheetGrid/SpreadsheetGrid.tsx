@@ -52,6 +52,7 @@ import { FrozenColumnPane } from "../FrozenColumnPane";
 import { CellEditorRouter } from "../CellEditor";
 import { SelectionOverlay } from "../SelectionOverlay";
 import { ClipboardOverlay } from "../ClipboardOverlay";
+import { useSpreadsheetLocale } from "../../context/SpreadsheetLocaleContext";
 import styles from "../../styles/spreadsheet.module.scss";
 
 function getMergedCellSize(
@@ -155,6 +156,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
   onCancelEdit,
   onBooleanToggle,
 }: ISpreadsheetGridProps) {
+  const { filter: filterLocale } = useSpreadsheetLocale();
   const mergeRevision = useMergeRevision(mergeStore);
   void mergeRevision;
   const columnHeaderRef = useRef<HTMLDivElement>(null);
@@ -794,6 +796,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
                   }),
                 ),
               ].sort((left, right) => left.localeCompare(right)),
+              filterLocale.blankCells,
             )}
             onSort={handleSortColumn}
             onApply={handleApplyColumnFilter}

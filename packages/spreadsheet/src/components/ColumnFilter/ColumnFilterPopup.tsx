@@ -12,7 +12,8 @@ import {
   isConditionWithInput,
 } from "../../utils/columnFilter";
 import { computePopupPosition, type IPopupPosition } from "../../utils/popupPosition";
-import { FILTER_BLANK_VALUE, type IColumnFilterState, type TSortDirection } from "../../types";
+import { FILTER_BLANK_VALUE, type IColumnFilterState, type TFilterCondition, type TSortDirection } from "../../types";
+import { useSpreadsheetLocale } from "../../context/SpreadsheetLocaleContext";
 import styles from "./ColumnFilterPopup.module.scss";
 
 const POPUP_MIN_WIDTH = 284;
@@ -35,17 +36,17 @@ export interface IColumnFilterPopupProps {
   onCancel: () => void;
 }
 
-const CONDITION_OPTIONS = [
-  { value: "none", label: "None" },
-  { value: "isEmpty", label: "Is empty" },
-  { value: "isNotEmpty", label: "Is not empty" },
-  { value: "isEqualTo", label: "Is equal to" },
-  { value: "isNotEqualTo", label: "Is not equal to" },
-  { value: "beginsWith", label: "Begins with" },
-  { value: "endsWith", label: "Ends with" },
-  { value: "contains", label: "Contains" },
-  { value: "doesNotContain", label: "Does not contain" },
-] as const;
+const FILTER_CONDITIONS: TFilterCondition[] = [
+  "none",
+  "isEmpty",
+  "isNotEmpty",
+  "isEqualTo",
+  "isNotEqualTo",
+  "beginsWith",
+  "endsWith",
+  "contains",
+  "doesNotContain",
+];
 
 function resolveAllValues(options: readonly IFilterValueOption[]): string[] {
   return options.map((option) => option.value);
@@ -72,6 +73,8 @@ export function ColumnFilterPopup({
   onReset,
   onCancel,
 }: IColumnFilterPopupProps) {
+  const locale = useSpreadsheetLocale();
+  const { filter: filterLocale } = locale;
   const rootRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [draftFilter, setDraftFilter] = useState<IColumnFilterState>(filterState);
@@ -187,7 +190,7 @@ export function ColumnFilterPopup({
           : { visibility: "hidden" }
       }
       role="dialog"
-      aria-label="Column filter"
+      aria-label={filterLocale.dialogAriaLabel}
       onMouseDown={(event) => event.stopPropagation()}
     >
       <button
@@ -201,7 +204,7 @@ export function ColumnFilterPopup({
           <span className={styles.sortIndicator} aria-hidden>
             {activeSortDirection === "asc" ? "✓" : ""}
           </span>
-          Sắp xếp A-Z
+          {filterLocale.sortAsc}
         </span>
       </button>
       <button
@@ -215,23 +218,23 @@ export function ColumnFilterPopup({
           <span className={styles.sortIndicator} aria-hidden>
             {activeSortDirection === "desc" ? "✓" : ""}
           </span>
-          Sắp xếp Z-A
+          {filterLocale.sortDesc}
         </span>
       </button>
 
       <div className={styles.divider} />
 
       <div className={styles.section}>
-        <p className={styles.label}>Filter by condition:</p>
+        <p className={styles.label}>{filterLocale.filterByCondition}</p>
         <select
           className={styles.select}
           value={draftFilter.condition}
           disabled={sortFilterDisabled}
           onChange={handleConditionChange}
         >
-          {CONDITION_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
+          {FILTER_CONDITIONS.map((condition) => (
+            <option key={condition} value={condition}>
+              {filterLocale.conditions[condition]}
             </option>
           ))}
         </select>
@@ -246,26 +249,26 @@ export function ColumnFilterPopup({
                 conditionValue: event.target.value,
               }))
             }
-            placeholder="Value"
+            placeholder={filterLocale.valuePlaceholder}
           />
         )}
       </div>
 
       <div className={styles.section}>
-        <p className={styles.label}>Filter by value:</p>
+        <p className={styles.label}>{filterLocale.filterByValue}</p>
         <input
           type="text"
           className={styles.input}
-          placeholder="Search"
+          placeholder={filterLocale.searchPlaceholder}
           value={searchQuery}
           onChange={(event) => setSearchQuery(event.target.value)}
         />
         <div className={styles.inlineActions}>
           <button type="button" className={styles.linkButton} onClick={handleSelectAll}>
-            Select all
+            {filterLocale.selectAll}
           </button>
           <button type="button" className={styles.linkButton} onClick={handleClearValues}>
-            Clear
+            {filterLocale.clear}
           </button>
         </div>
       </div>
@@ -285,14 +288,14 @@ export function ColumnFilterPopup({
 
       <div className={styles.footer}>
         <button type="button" className={styles.secondaryButton} onClick={onReset}>
-          Đặt lại
+          {filterLocale.reset}
         </button>
         <div className={styles.footerRight}>
           <button type="button" className={styles.primaryButton} onClick={handleApply}>
-            OK
+            {filterLocale.ok}
           </button>
           <button type="button" className={styles.secondaryButton} onClick={onCancel}>
-            Cancel
+            {filterLocale.cancel}
           </button>
         </div>
       </div>
@@ -302,7 +305,10 @@ export function ColumnFilterPopup({
   return createPortal(popupContent, document.body);
 }
 
-export function createFilterValueOptions(values: readonly string[]): IFilterValueOption[] {
+export function createFilterValueOptions(
+  values: readonly string[],
+  blankLabel: string,
+): IFilterValueOption[] {
   const options: IFilterValueOption[] = [];
   let hasBlank = false;
   for (const value of values) {
@@ -313,7 +319,7 @@ export function createFilterValueOptions(values: readonly string[]): IFilterValu
     options.push({ value, label: value });
   }
   if (hasBlank) {
-    options.unshift({ value: FILTER_BLANK_VALUE, label: "(Blank cells)" });
+    options.unshift({ value: FILTER_BLANK_VALUE, label: blankLabel });
   }
   return options;
 }

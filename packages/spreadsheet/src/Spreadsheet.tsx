@@ -61,6 +61,8 @@ import {
 } from "./utils/columnFilter";
 import { sortDisplayRowOrder } from "./utils/rowSort";
 import { buildVisibleRowLayout } from "./utils/visibleRowLayout";
+import { resolveSpreadsheetLocale } from "./locale/resolveSpreadsheetLocale";
+import { SpreadsheetLocaleProvider } from "./context/SpreadsheetLocaleContext";
 
 function buildIdentityRowOrder(rowCount: number): number[] {
   return Array.from({ length: rowCount }, (_, index) => index);
@@ -84,7 +86,12 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       initialData,
       frozenColumnCount,
       customCellRegistry,
+      locale: localePartial,
     } = props;
+    const locale = useMemo(
+      () => resolveSpreadsheetLocale(localePartial),
+      [localePartial],
+    );
     const effectiveColumnCount = getEffectiveColumnCount(columnCount, columns);
     const initialColumnWidths = useMemo(
       () => buildInitialColumnWidths(columnCount, columnWidth, columns),
@@ -189,6 +196,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         visibleRowIndicesRef,
         onChange,
         onError,
+        locale,
       },
     );
     const setActiveCell = useCallback(
@@ -325,14 +333,14 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           if (!targetRange) {
             onError?.({
               code: "MERGE_INVALID_RANGE",
-              message: "Vui lòng chọn vùng ô để gộp.",
+              message: locale.errors.mergeInvalidRange,
             });
             return false;
           }
           if (!mergeStore.canMerge(targetRange)) {
             onError?.({
               code: "MERGE_OVERLAP",
-              message: "Không thể gộp ô vì vùng chọn không hợp lệ hoặc bị chồng lấn.",
+              message: locale.errors.mergeOverlap,
             });
             return false;
           }
@@ -345,7 +353,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           ) {
             onError?.({
               code: "MERGE_SORT_FILTER_ACTIVE",
-              message: "Không thể gộp ô khi đang lọc hoặc sắp xếp.",
+              message: locale.errors.mergeWhileSortFilterActive,
             });
             return false;
           }
@@ -391,6 +399,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         onError,
         columnFilters,
         columnSort,
+        locale,
       ],
     );
     useEffect(() => {
@@ -526,14 +535,14 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         if (mergeStore.hasAny()) {
           onError?.({
             code: "MERGE_SORT_FILTER_ACTIVE",
-            message: "Không thể lọc khi bảng có ô đã gộp.",
+            message: locale.errors.filterWhileMerged,
           });
           return;
         }
         setOpenFilterCol(col);
         setFilterAnchorRect(anchorRect);
       },
-      [mergeStore, onError],
+      [mergeStore, onError, locale],
     );
     const handleCloseColumnFilter = useCallback(() => {
       setOpenFilterCol(null);
@@ -544,7 +553,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         if (mergeStore.hasAny()) {
           onError?.({
             code: "MERGE_SORT_FILTER_ACTIVE",
-            message: "Không thể lọc khi bảng có ô đã gộp.",
+            message: locale.errors.filterWhileMerged,
           });
           return;
         }
@@ -558,14 +567,14 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           return next;
         });
       },
-      [mergeStore, onError],
+      [mergeStore, onError, locale],
     );
     const handleSortColumn = useCallback(
       (col: number, direction: TSortDirection) => {
         if (mergeStore.hasAny()) {
           onError?.({
             code: "MERGE_SORT_FILTER_ACTIVE",
-            message: "Không thể sắp xếp khi bảng có ô đã gộp.",
+            message: locale.errors.sortWhileMerged,
           });
           return;
         }
@@ -574,7 +583,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         );
         setColumnSort({ col, direction });
       },
-      [store, mergeStore, onError],
+      [store, mergeStore, onError, locale],
     );
     const handleResetColumnFilter = useCallback((col: number) => {
       setDisplayRowOrder(baselineRowOrderRef.current);
@@ -625,13 +634,14 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
     });
     const hasMergedCells = mergeStore.hasAny();
     return (
-      <div
-        ref={gridContainerRef}
-        className={className}
-        style={{ width: "100%", height: "100%", outline: "none" }}
-        tabIndex={0}
-      >
-        <SpreadsheetGrid
+      <SpreadsheetLocaleProvider locale={locale}>
+        <div
+          ref={gridContainerRef}
+          className={className}
+          style={{ width: "100%", height: "100%", outline: "none" }}
+          tabIndex={0}
+        >
+          <SpreadsheetGrid
           store={store}
           metaStore={metaStore}
           mergeStore={mergeStore}
@@ -672,7 +682,8 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           onCancelEdit={handleCancelEdit}
           onBooleanToggle={handleBooleanToggle}
         />
-      </div>
+        </div>
+      </SpreadsheetLocaleProvider>
     );
   },
 );

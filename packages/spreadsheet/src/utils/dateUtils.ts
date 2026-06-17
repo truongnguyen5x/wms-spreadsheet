@@ -1,21 +1,21 @@
 export const DEFAULT_DATE_FORMAT = "DD/MM/YYYY";
 
-const MONTH_NAMES_VI = [
-  "Tháng 1",
-  "Tháng 2",
-  "Tháng 3",
-  "Tháng 4",
-  "Tháng 5",
-  "Tháng 6",
-  "Tháng 7",
-  "Tháng 8",
-  "Tháng 9",
-  "Tháng 10",
-  "Tháng 11",
-  "Tháng 12",
+const DEFAULT_MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
-export const WEEKDAY_LABELS_VI = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+export const DEFAULT_WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export interface ICalendarDay {
   date: Date;
@@ -119,8 +119,12 @@ export function formatDateValue(
   return formatDate(parsed, format);
 }
 
-export function getMonthLabel(year: number, month: number): string {
-  return `${MONTH_NAMES_VI[month]} ${year}`;
+export function getMonthLabel(
+  year: number,
+  month: number,
+  monthNames: readonly string[] = DEFAULT_MONTH_NAMES,
+): string {
+  return `${monthNames[month]} ${year}`;
 }
 
 export function isDateInRange(
