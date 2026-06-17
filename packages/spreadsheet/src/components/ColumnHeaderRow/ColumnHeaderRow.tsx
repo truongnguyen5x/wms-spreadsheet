@@ -22,7 +22,6 @@ interface IColumnHeaderCellProps {
   isActive: boolean;
   columns?: ISpreadsheetColumn[];
   activeFilterColumns: ReadonlyMap<number, IColumnFilterState>;
-  sortFilterDisabled?: boolean;
   onColumnMouseDown: (col: number) => void;
   onColumnMouseEnter: (col: number) => void;
   onFilterIconClick: (col: number, anchorRect: DOMRect) => void;
@@ -36,7 +35,6 @@ const ColumnHeaderCell = memo(function ColumnHeaderCell({
   isActive,
   columns,
   activeFilterColumns,
-  sortFilterDisabled = false,
   onColumnMouseDown,
   onColumnMouseEnter,
   onFilterIconClick,
@@ -70,7 +68,7 @@ const ColumnHeaderCell = memo(function ColumnHeaderCell({
         <div className={styles.headerCellText}>
           {getColumnHeaderContent(col, columns)}
         </div>
-        {showFilter && !sortFilterDisabled && (
+        {showFilter && (
           <button
             type="button"
             className={`${styles.filterIconBtn}${isFilterActive ? ` ${styles.filterIconBtnActive}` : ""}`}
@@ -155,7 +153,6 @@ export interface IColumnHeaderRowProps {
   hoveredHandle: IResizeHandle | null;
   columns?: ISpreadsheetColumn[];
   activeFilterColumns: ReadonlyMap<number, IColumnFilterState>;
-  sortFilterDisabled?: boolean;
   onColumnMouseDown: (col: number) => void;
   onColumnMouseEnter: (col: number) => void;
   onFilterIconClick: (col: number, anchorRect: DOMRect) => void;
@@ -250,7 +247,6 @@ export const ColumnHeaderRow = memo(function ColumnHeaderRow({
   hoveredHandle,
   columns,
   activeFilterColumns,
-  sortFilterDisabled = false,
   onColumnMouseDown,
   onColumnMouseEnter,
   onFilterIconClick,
@@ -281,7 +277,6 @@ export const ColumnHeaderRow = memo(function ColumnHeaderRow({
           isActive={isActive}
           columns={columns}
           activeFilterColumns={activeFilterColumns}
-          sortFilterDisabled={sortFilterDisabled}
           onColumnMouseDown={onColumnMouseDown}
           onColumnMouseEnter={onColumnMouseEnter}
           onFilterIconClick={onFilterIconClick}

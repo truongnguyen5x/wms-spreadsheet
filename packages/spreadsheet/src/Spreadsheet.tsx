@@ -57,6 +57,7 @@ import { selectionFromExpandedRange } from "./utils/mergeCell";
 import {
   computeVisibleRowIndices,
   createDefaultColumnFilterState,
+  hasActiveSortOrFilter,
 } from "./utils/columnFilter";
 import { sortDisplayRowOrder } from "./utils/rowSort";
 import { buildVisibleRowLayout } from "./utils/visibleRowLayout";
@@ -177,11 +178,6 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
     const baselineRowOrderRef = useRef<number[]>(buildIdentityRowOrder(rowCount));
     const [openFilterCol, setOpenFilterCol] = useState<number | null>(null);
     const [filterAnchorRect, setFilterAnchorRect] = useState<DOMRect | null>(null);
-    const resetSortAndFilter = useCallback(() => {
-      setDisplayRowOrder([...baselineRowOrderRef.current]);
-      setColumnFilters(new Map());
-      setColumnSort(null);
-    }, []);
     const { clipboard, handleCopy, handlePaste, clearClipboard } = useClipboard(
       {
         store,
@@ -340,7 +336,19 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
             });
             return false;
           }
-          resetSortAndFilter();
+          if (
+            hasActiveSortOrFilter(
+              columnFilters,
+              columnSort,
+              columnsRef.current,
+            )
+          ) {
+            onError?.({
+              code: "MERGE_SORT_FILTER_ACTIVE",
+              message: "Không thể gộp ô khi đang lọc hoặc sắp xếp.",
+            });
+            return false;
+          }
           const merged = mergeStore.merge(targetRange, store, metaStore);
           if (merged) {
             setSelection(
@@ -381,7 +389,8 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         setSelection,
         rowCount,
         onError,
-        resetSortAndFilter,
+        columnFilters,
+        columnSort,
       ],
     );
     useEffect(() => {

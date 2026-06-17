@@ -1,6 +1,7 @@
 import type { CellStore } from "../store/CellStore";
 import type {
   IColumnFilterState,
+  IColumnSortState,
   ISpreadsheetColumn,
   TFilterCondition,
 } from "../types";
@@ -88,6 +89,20 @@ export function matchesCondition(
 
 export function isColumnFilterActive(filter: IColumnFilterState): boolean {
   return filter.condition !== "none" || filter.selectedValues !== null;
+}
+
+export function hasActiveSortOrFilter(
+  columnFilters: ReadonlyMap<number, IColumnFilterState>,
+  columnSort: IColumnSortState | null,
+  columns?: ISpreadsheetColumn[],
+): boolean {
+  if (columnSort !== null) return true;
+  for (const [col, filter] of columnFilters) {
+    if (columns?.[col]?.showFilter && isColumnFilterActive(filter)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 export function createDefaultColumnFilterState(): IColumnFilterState {
