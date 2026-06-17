@@ -1,4 +1,11 @@
-import type { ICellAddress, IMergedRange, INormalizedRange } from "../types";
+import type { MergeStore } from "../store/MergeStore";
+import type {
+  ICellAddress,
+  IMergedRange,
+  INormalizedRange,
+  ISelection,
+} from "../types";
+import { isHeaderStyleSelection, normalizeSelection } from "./normalizeRange";
 
 export type TMergeCellRole = "anchor" | "covered" | "none";
 
@@ -137,6 +144,19 @@ export function rangeIntersectsAnyMerge(
     }
   }
   return false;
+}
+
+export function resolveSelectionRange(
+  selection: ISelection,
+  mergeStore: MergeStore,
+  rowCount: number,
+  columnCount: number,
+): INormalizedRange {
+  const range = normalizeSelection(selection);
+  if (isHeaderStyleSelection(selection, rowCount, columnCount)) {
+    return range;
+  }
+  return mergeStore.expandRange(range);
 }
 
 export function selectionFromExpandedRange(

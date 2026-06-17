@@ -48,7 +48,11 @@ import {
   toStoreValue,
 } from "./utils/dataAdapter";
 import { resolveCellMeta, isCellEditable, isCellDisabled } from "./utils/resolveCellMeta";
-import { createSelection, normalizeSelection } from "./utils/normalizeRange";
+import {
+  createSelection,
+  isHeaderStyleSelection,
+  normalizeSelection,
+} from "./utils/normalizeRange";
 import { selectionFromExpandedRange } from "./utils/mergeCell";
 import {
   computeVisibleRowIndices,
@@ -113,10 +117,13 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
     );
     const expandSelection = useCallback(
       (next: ISelection) => {
+        if (isHeaderStyleSelection(next, rowCount, effectiveColumnCount)) {
+          return next;
+        }
         const expanded = mergeStore.expandRange(normalizeSelection(next));
         return selectionFromExpandedRange(expanded, next);
       },
-      [mergeStore],
+      [mergeStore, rowCount, effectiveColumnCount],
     );
     const initialLoadedRef = useRef(false);
     useEffect(() => {

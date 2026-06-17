@@ -22,8 +22,8 @@ import {
   areRangesEqual,
   isHeaderStyleSelection,
   isSingleCellSelection,
-  normalizeSelection,
 } from "../../utils/normalizeRange";
+import { resolveSelectionRange } from "../../utils/mergeCell";
 import {
   getScrollableColumnLeft,
   getSplitRangePaneBorderFlags,
@@ -222,8 +222,11 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
   const selectionFocusRow = selection?.focus.row ?? null;
   const selectionFocusCol = selection?.focus.col ?? null;
   const selectionRange = useMemo(
-    () => (selection ? mergeStore.expandRange(normalizeSelection(selection)) : null),
-    [selection, selectionAnchorRow, selectionAnchorCol, selectionFocusRow, selectionFocusCol, mergeStore],
+    () =>
+      selection
+        ? resolveSelectionRange(selection, mergeStore, rowCount, columnCount)
+        : null,
+    [selection, selectionAnchorRow, selectionAnchorCol, selectionFocusRow, selectionFocusCol, mergeStore, rowCount, columnCount],
   );
   const frozenActiveCell = useMemo<ICellAddress | null>(() => {
     if (selectionFocusRow === null || selectionFocusCol === null) return null;
