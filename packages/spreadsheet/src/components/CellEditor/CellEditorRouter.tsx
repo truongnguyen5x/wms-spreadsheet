@@ -11,6 +11,7 @@ import { CellEditor } from "./CellEditor";
 import { SelectCellEditor } from "./SelectCellEditor";
 import { MultiSelectCellEditor } from "./MultiSelectCellEditor";
 import { DateCellEditor } from "./DateCellEditor";
+import { NumberCellEditor } from "./NumberCellEditor";
 
 function CustomEditorContainer({
   top,
@@ -170,6 +171,23 @@ export function CellEditorRouter({
         height={height}
         initialInput={initialInput}
         onCommit={(nextValue) => onCommit(nextValue, "stay")}
+        onCancel={onCancel}
+      />
+    );
+  }
+
+  if (type === "number") {
+    return (
+      <NumberCellEditor
+        value={value}
+        maxValue={meta.maxValue}
+        decimalPlaces={meta.decimalPlaces}
+        top={top}
+        left={left}
+        width={width}
+        height={height}
+        initialInput={initialInput}
+        onCommit={onCommit}
         onCancel={onCancel}
       />
     );

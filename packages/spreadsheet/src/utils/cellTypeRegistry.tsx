@@ -10,6 +10,7 @@ import {
   DEFAULT_DATE_FORMAT,
   formatDateValue,
 } from "./dateUtils";
+import { formatNumberDisplay } from "./numberUtils";
 import {
   DEFAULT_MULTI_SELECT_CHIP_COLOR,
   parseMultiSelectValue,
@@ -141,6 +142,11 @@ function renderDate({ value, meta }: ICellRenderParams): ReactNode {
   );
 }
 
+function renderNumber({ value, meta }: ICellRenderParams): ReactNode {
+  const display = formatNumberDisplay(value, meta.decimalPlaces);
+  return <span className={styles.numberCellValue}>{display}</span>;
+}
+
 function renderCustom(
   params: ICellRenderParams,
   column: ISpreadsheetColumn | undefined,
@@ -183,6 +189,8 @@ export function renderCellContent({
       return renderSwitch({ ...params, onToggle: onBooleanToggle });
     case "date":
       return renderDate(params);
+    case "number":
+      return renderNumber(params);
     case "custom":
       return renderCustom(params, column, customCellRegistry);
     default:

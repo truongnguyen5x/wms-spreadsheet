@@ -211,6 +211,17 @@ export function useKeyboardNavigation({
               }
               break;
             }
+            if (meta.type === "number") {
+              const allowDecimal = (meta.decimalPlaces ?? 0) > 0;
+              if (
+                (e.key >= "0" && e.key <= "9") ||
+                (e.key === "." && allowDecimal)
+              ) {
+                e.preventDefault();
+                tryStartEditing(selection.focus, e.key);
+              }
+              break;
+            }
             e.preventDefault();
             tryStartEditing(selection.focus, e.key);
           }

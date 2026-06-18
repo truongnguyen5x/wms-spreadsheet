@@ -78,6 +78,8 @@ const COLUMNS: ISpreadsheetColumn[] = [
     colText: "SL",
     width: 110,
     showFilter: true,
+    horizontalAlign: "right",
+    meta: { type: "number", maxValue: 9999, decimalPlaces: 0 },
     colRender: () => (
       <div
         style={{
@@ -204,6 +206,24 @@ export default function App() {
     sheetRef.current?.unmergeCells();
   };
 
+  const mergeFixedRange = () => {
+    sheetRef.current?.mergeCells({
+      startRow: 0,
+      endRow: 1,
+      startCol: 0,
+      endCol: 1,
+    });
+  };
+
+  const unmergeFixedRange = () => {
+    sheetRef.current?.unmergeCells({
+      startRow: 0,
+      endRow: 1,
+      startCol: 0,
+      endCol: 1,
+    });
+  };
+
   useEffect(() => {
     const ref = sheetRef.current;
     if (!ref) return;
@@ -298,6 +318,12 @@ export default function App() {
           </button>
           <button type="button" onClick={unmergeSelection}>
             Bỏ gộp (unmerge)
+          </button>
+          <button type="button" onClick={mergeFixedRange}>
+            Merge A1:B2
+          </button>
+          <button type="button" onClick={unmergeFixedRange}>
+            Unmerge A1:B2
           </button>
         </div>
         <span className={styles.stats}>

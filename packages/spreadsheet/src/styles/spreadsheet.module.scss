@@ -272,6 +272,16 @@
   z-index: 3;
 }
 
+.numberCellEditor {
+  text-align: right;
+}
+
+.numberCellValue {
+  display: block;
+  width: 100%;
+  text-align: right;
+}
+
 .cellEditor {
   position: absolute;
   box-sizing: border-box;

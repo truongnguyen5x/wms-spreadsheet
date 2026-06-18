@@ -138,12 +138,16 @@ export function rangeIntersectsAnyMerge(
   range: INormalizedRange,
   merges: readonly IMergedRange[],
 ): boolean {
-  for (const merge of merges) {
-    if (rangesOverlap(range, mergedRangeToBounds(merge))) {
-      return true;
-    }
-  }
-  return false;
+  return getMergesIntersectingRange(range, merges).length > 0;
+}
+
+export function getMergesIntersectingRange(
+  range: INormalizedRange,
+  merges: readonly IMergedRange[],
+): IMergedRange[] {
+  return merges.filter((merge) =>
+    rangesOverlap(range, mergedRangeToBounds(merge)),
+  );
 }
 
 export function resolveSelectionRange(

@@ -7,6 +7,7 @@ export type TCellType =
   | "boolean"
   | "switch"
   | "date"
+  | "number"
   | "custom";
 export type TCellValue = string | string[];
 export type THorizontalAlign = "left" | "center" | "right";
@@ -27,6 +28,10 @@ export interface ICellMeta {
   minDate?: string;
   /** Ngày muộn nhất được chọn (chuỗi theo dateFormat của cell/cột) */
   maxDate?: string;
+  /** Giá trị tối đa được nhập (số không âm) */
+  maxValue?: number;
+  /** Số chữ số thập phân. Mặc định 0 (số nguyên) */
+  decimalPlaces?: number;
   customKey?: string;
   customProps?: Record<string, unknown>;
   invalid?: boolean;
@@ -181,7 +186,7 @@ export interface ISpreadsheetRef {
   getCellMeta(row: number, col: number | null, colName?: string): ICellMeta;
   setCellsMeta(cells: ICellMetaInput[]): void;
   mergeCells(range?: INormalizedRange): boolean;
-  unmergeCells(row?: number, col?: number): boolean;
+  unmergeCells(range?: INormalizedRange): boolean;
   getMergedRanges(): IMergedRange[];
   hasMergedCells(): boolean;
 }

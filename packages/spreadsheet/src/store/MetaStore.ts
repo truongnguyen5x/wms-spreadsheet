@@ -15,6 +15,8 @@ function isDefaultMeta(meta: ICellMeta): boolean {
     meta.dateFormat === undefined &&
     meta.minDate === undefined &&
     meta.maxDate === undefined &&
+    meta.maxValue === undefined &&
+    meta.decimalPlaces === undefined &&
     meta.customKey === undefined &&
     meta.customProps === undefined &&
     meta.invalid !== true &&

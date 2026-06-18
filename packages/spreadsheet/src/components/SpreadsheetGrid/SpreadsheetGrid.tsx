@@ -158,7 +158,6 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
 }: ISpreadsheetGridProps) {
   const { filter: filterLocale } = useSpreadsheetLocale();
   const mergeRevision = useMergeRevision(mergeStore);
-  void mergeRevision;
   const columnHeaderRef = useRef<HTMLDivElement>(null);
   const frozenColumnHeaderRef = useRef<HTMLDivElement>(null);
   const frozenBodyRef = useRef<HTMLDivElement>(null);
@@ -228,7 +227,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
       selection
         ? resolveSelectionRange(selection, mergeStore, rowCount, columnCount)
         : null,
-    [selection, selectionAnchorRow, selectionAnchorCol, selectionFocusRow, selectionFocusCol, mergeStore, rowCount, columnCount],
+    [selection, selectionAnchorRow, selectionAnchorCol, selectionFocusRow, selectionFocusCol, mergeStore, mergeRevision, rowCount, columnCount],
   );
   const frozenActiveCell = useMemo<ICellAddress | null>(() => {
     if (selectionFocusRow === null || selectionFocusCol === null) return null;
@@ -364,6 +363,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     store,
     metaStore,
     mergeStore,
+    mergeRevision,
     dimensions,
     frozenColumnCount,
     columns,

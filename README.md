@@ -164,8 +164,24 @@ sheetRef.current?.setCellMeta(1, null, { disabled: true }, "sku");
 // Gộp selection hiện tại
 sheetRef.current?.mergeCells();
 
-// Bỏ gộp tại ô focus
+// Gộp range cụ thể
+sheetRef.current?.mergeCells({
+  startRow: 0,
+  endRow: 1,
+  startCol: 0,
+  endCol: 2,
+});
+
+// Bỏ gộp mọi merge giao với selection hiện tại
 sheetRef.current?.unmergeCells();
+
+// Bỏ gộp theo range cụ thể
+sheetRef.current?.unmergeCells({
+  startRow: 0,
+  endRow: 1,
+  startCol: 0,
+  endCol: 2,
+});
 ```
 
 ---
@@ -213,7 +229,7 @@ sheetRef.current?.unmergeCells();
 | `getCellMeta(row, col, colName?)` | Đọc meta đã merge (column + cell) |
 | `setCellsMeta(cells)` | Set meta hàng loạt |
 | `mergeCells(range?)` | Gộp selection hiện tại hoặc `INormalizedRange`; trả `boolean` |
-| `unmergeCells(row?, col?)` | Bỏ gộp tại ô (mặc định focus cell) |
+| `unmergeCells(range?)` | Bỏ gộp mọi merge giao với selection hoặc `INormalizedRange` |
 | `getMergedRanges()` | Trả `IMergedRange[]` |
 | `hasMergedCells()` | Trả `boolean` |
 
@@ -242,6 +258,7 @@ sheetRef.current?.unmergeCells();
 | `boolean` | Click toggle | Không vào edit mode |
 | `switch` | Click toggle | Giá trị `"true"` / `"false"` |
 | `date` | Date picker | `dateFormat`, `minDate`, `maxDate` |
+| `number` | Input số | `maxValue`, `decimalPlaces`; chỉ `>= 0` |
 | `custom` | Theo `customCellRegistry` | `customKey` trong meta |
 
 Cell `disabled` không cho edit/paste; `invalid` hiển thị trạng thái lỗi.
@@ -293,8 +310,16 @@ sheetRef.current?.mergeCells({
   endCol: 2,
 });
 
-// Bỏ gộp tại ô focus (hoặc chỉ định row/col)
+// Bỏ gộp range đang chọn (mọi merge giao với selection)
 sheetRef.current?.unmergeCells();
+
+// Bỏ gộp theo range cụ thể
+sheetRef.current?.unmergeCells({
+  startRow: 0,
+  endRow: 1,
+  startCol: 0,
+  endCol: 2,
+});
 
 // Kiểm tra trạng thái
 sheetRef.current?.hasMergedCells();

@@ -7,6 +7,7 @@ import type {
   ISpreadsheetColumn,
 } from "../../types";
 import type { IGridDimensions } from "../../hooks/useGridDimensions";
+import { useMergeRevision } from "../../hooks/useMergeRevision";
 import { renderCells } from "../../utils/renderCells";
 
 export interface IFrozenCellsLayerProps {
@@ -44,6 +45,7 @@ export const FrozenCellsLayer = memo(function FrozenCellsLayer({
   onCellDoubleClick,
   onBooleanToggle,
 }: IFrozenCellsLayerProps) {
+  const mergeRevision = useMergeRevision(mergeStore);
   const getColumnLeft = useCallback(
     (col: number) => dimensions.getColumnLeft(col),
     [dimensions],
@@ -73,6 +75,7 @@ export const FrozenCellsLayer = memo(function FrozenCellsLayer({
       store,
       metaStore,
       mergeStore,
+      mergeRevision,
       dimensions.columnWidths,
       dimensions.rowHeights,
       startRow,

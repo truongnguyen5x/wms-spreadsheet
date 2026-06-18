@@ -368,18 +368,22 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           }
           return merged;
         },
-        unmergeCells(row?: number, col?: number) {
-          const targetRow = row ?? selection?.focus.row;
-          const targetCol = col ?? selection?.focus.col;
-          if (targetRow === undefined || targetCol === undefined) {
+        unmergeCells(range?: INormalizedRange) {
+          const targetRange =
+            range ?? (selection ? normalizeSelection(selection) : null);
+          if (!targetRange) {
             return false;
           }
-          const unmerged = mergeStore.unmerge(targetRow, targetCol);
-          if (unmerged) {
-            const anchor = mergeStore.resolveAnchor(targetRow, targetCol);
-            setSelection(createSelection(anchor));
+          const count = mergeStore.unmergeInRange(targetRange);
+          if (count > 0) {
+            setSelection(
+              createSelection({
+                row: targetRange.startRow,
+                col: targetRange.startCol,
+              }),
+            );
           }
-          return unmerged;
+          return count > 0;
         },
         getMergedRanges() {
           return mergeStore.getAll();

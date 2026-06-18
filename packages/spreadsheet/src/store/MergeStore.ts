@@ -4,6 +4,7 @@ import type { ICellAddress, IMergedRange, INormalizedRange } from "../types";
 import { cellKey } from "../utils/cellKey";
 import {
   expandRangeWithMerges,
+  getMergesIntersectingRange,
   getRoleInMerge,
   isValidMergeRange,
   mergedRangeToBounds,
@@ -135,6 +136,14 @@ export class MergeStore {
     this.anchors.delete(anchorKey);
     this.notify();
     return true;
+  }
+
+  unmergeInRange(range: INormalizedRange): number {
+    const targets = getMergesIntersectingRange(range, this.getAll());
+    for (const merge of targets) {
+      this.unmerge(merge.anchorRow, merge.anchorCol);
+    }
+    return targets.length;
   }
 
   clear(): void {
