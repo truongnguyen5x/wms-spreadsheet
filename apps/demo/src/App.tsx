@@ -9,24 +9,24 @@ import {
 import styles from "./App.module.scss";
 
 const SELECT_OPTIONS = [
-  { id: "1", label: "Lựa chọn 1", color: "#e8eaed" },
-  { id: "2", label: "Lựa chọn 2", color: "#d2e3fc" },
-  { id: "3", label: "Lựa chọn 3", color: "#ceead6" },
-  { id: "4", label: "Giao hàng nhanhhhhhhhhhhhhhhh", color: "#fce8e6" },
-  { id: "5", label: "Giao hàng tiêu chuẩn", color: "#fff3e0" },
-  { id: "6", label: "Lưu kho tạm", color: "#e6f4ea" },
-  { id: "7", label: "Hủy đơn", color: "#f1f3f4" },
-  { id: "8", label: "Lựa chọn đặc biệt A", color: "#d2e3fc" },
-  { id: "9", label: "Lựa chọn đặc biệt B", color: "#ceead6" }
+  { id: "1", label: "Option 1", color: "#e8eaed" },
+  { id: "2", label: "Option 2", color: "#d2e3fc" },
+  { id: "3", label: "Option 3", color: "#ceead6" },
+  { id: "4", label: "Express deliveryhhhhhhhhhhhhhhhh", color: "#fce8e6" },
+  { id: "5", label: "Standard delivery", color: "#fff3e0" },
+  { id: "6", label: "Temporary storage", color: "#e6f4ea" },
+  { id: "7", label: "Cancel order", color: "#f1f3f4" },
+  { id: "8", label: "Special option A", color: "#d2e3fc" },
+  { id: "9", label: "Special option B", color: "#ceead6" }
 ];
 
 const MULTI_SELECT_OPTIONS = [
   { id: "1", label: "Tag A", color: "#e8eaed" },
   { id: "2", label: "Tag B", color: "#d2e3fc" },
   { id: "3", label: "Tag C", color: "#ceead6" },
-  { id: "4", label: "Giao hàng nhanh", color: "#fce8e6" },
-  { id: "5", label: "Giao hàng tiêu chuẩn", color: "#fff3e0" },
-  { id: "6", label: "Lưu kho tạm", color: "#e6f4ea" }
+  { id: "4", label: "Express delivery", color: "#fce8e6" },
+  { id: "5", label: "Standard delivery", color: "#fff3e0" },
+  { id: "6", label: "Temporary storage", color: "#e6f4ea" }
 ];
 
 const CUSTOM_CELLS: Record<string, ICustomCellDefinition> = {
@@ -44,7 +44,7 @@ const CUSTOM_CELLS: Record<string, ICustomCellDefinition> = {
             fontWeight: 600
           }}
         >
-          {value === "done" ? "Hoàn thành" : "Chờ xử lý"}
+          {value === "done" ? "Done" : "Pending"}
         </span>
       ) : null,
     editor: ({ value, onCommit, onCancel }) => (
@@ -64,18 +64,18 @@ const CUSTOM_CELLS: Record<string, ICustomCellDefinition> = {
         onChange={(e) => onCommit(e.target.value)}
         onBlur={onCancel}
       >
-        <option value="pending">Chờ xử lý</option>
-        <option value="done">Hoàn thành</option>
+        <option value="pending">Pending</option>
+        <option value="done">Done</option>
       </select>
     )
   }
 };
 
 const COLUMNS: ISpreadsheetColumn[] = [
-  { colName: "sku", colText: "Mã SKU", width: 120, showFilter: true },
+  { colName: "sku", colText: "SKU", width: 120, showFilter: true },
   {
     colName: "qty",
-    colText: "SL",
+    colText: "Qty",
     width: 110,
     showFilter: true,
     horizontalAlign: "right",
@@ -96,7 +96,7 @@ const COLUMNS: ISpreadsheetColumn[] = [
             whiteSpace: "pre-line"
           }}
         >
-          Số lượng tối đa
+          Max quantity
         </p>
         <p style={{ color: "red" }}>*</p>
       </div>
@@ -105,7 +105,7 @@ const COLUMNS: ISpreadsheetColumn[] = [
   { colName: "name", width: 200, verticalAlign: "middle", showFilter: true },
   {
     colName: "choice",
-    colText: "Lựa chọn",
+    colText: "Choice",
     width: 140,
     meta: { type: "select", options: SELECT_OPTIONS },
     verticalAlign: "middle"
@@ -119,7 +119,7 @@ const COLUMNS: ISpreadsheetColumn[] = [
   },
   {
     colName: "active",
-    colText: "Kích hoạt",
+    colText: "Active",
     width: 90,
     meta: { type: "switch" },
     horizontalAlign: "center",
@@ -127,13 +127,13 @@ const COLUMNS: ISpreadsheetColumn[] = [
   },
   {
     colName: "status",
-    colText: "Trạng thái",
+    colText: "Status",
     width: 130,
     meta: { customKey: "statusBadge" }
   },
   {
     colName: "self_ship",
-    colText: "Tự ship",
+    colText: "Self ship",
     width: 90,
     meta: { type: "boolean" },
     horizontalAlign: "right",
@@ -141,7 +141,7 @@ const COLUMNS: ISpreadsheetColumn[] = [
   },
   {
     colName: "due_date",
-    colText: "Ngày hạn",
+    colText: "Due date",
     width: 130,
     meta: {
       type: "date",
@@ -314,10 +314,10 @@ export default function App() {
             Set option for cell
           </button>
           <button type="button" onClick={mergeSelection}>
-            Gộp ô (merge)
+            Merge cells
           </button>
           <button type="button" onClick={unmergeSelection}>
-            Bỏ gộp (unmerge)
+            Unmerge cells
           </button>
           <button type="button" onClick={mergeFixedRange}>
             Merge A1:B2
@@ -327,7 +327,7 @@ export default function App() {
           </button>
         </div>
         <span className={styles.stats}>
-          App renders: {renderCount} | Kéo chuột chọn range | Delete xóa
+          App renders: {renderCount} | Drag to select range | Delete to clear
         </span>
       </header>
       <main className={styles.sheetContainer}>

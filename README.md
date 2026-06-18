@@ -1,57 +1,57 @@
 # WMS Spreadsheet
 
-Thư viện Spreadsheet cho React — giao diện giống Google Sheets, hỗ trợ **10.000+ dòng** mượt mà nhờ virtual window tự xây.
+React Spreadsheet library — Google Sheets-like UI, smoothly handles **10,000+ rows** via a custom virtual window.
 
-## Tính năng
+## Features
 
-- Virtual window 2 chiều — chỉ render cell trong viewport (~600 cell thay vì hàng trăm nghìn)
-- **API imperative qua `ref`** — set/get cell mà không re-render parent hay cả bảng
-- `CellStore` + `MetaStore` + `MergeStore` ngoài React tree — mỗi cell subscribe riêng qua `useSyncExternalStore`
-- Zero UI dependency — không MUI, không react-virtual
-- **Định nghĩa cột** (`columns`) — `colName`, width, meta mặc định, căn lề, custom render/editor
-- **Cell types** — `text`, `select`, `multiSelect`, `boolean`, `switch`, `date`, `custom` (qua `customCellRegistry`)
-- **Cell meta** — `disabled`, `invalid`, override meta theo cell/cột
-- **Copy/paste range** — Ctrl+C / Ctrl+V (Cmd trên macOS), định dạng TSV; clipboard nội bộ fallback khi system clipboard không khả dụng
-- **Range selection** — kéo cell, kéo header cột/hàng; Delete/Backspace xóa cả range
-- **Filter & sort cột** — UI popup trên header (`showFilter: true`); state nội bộ, chưa expose qua ref
-- **Merge cells** — gộp/bỏ gộp qua `ref.mergeCells()` / `ref.unmergeCells()`; hiển thị span trên grid
+- Two-dimensional virtual window — only renders cells in the viewport (~600 cells instead of hundreds of thousands)
+- **Imperative API via `ref`** — set/get cells without re-rendering the parent or the entire grid
+- `CellStore` + `MetaStore` + `MergeStore` outside the React tree — each cell subscribes individually via `useSyncExternalStore`
+- Zero UI dependency — no MUI, no react-virtual
+- **Column definitions** (`columns`) — `colName`, width, default meta, alignment, custom render/editor
+- **Cell types** — `text`, `select`, `multiSelect`, `boolean`, `switch`, `date`, `custom` (via `customCellRegistry`)
+- **Cell meta** — `disabled`, `invalid`, per-cell/column meta overrides
+- **Copy/paste range** — Ctrl+C / Ctrl+V (Cmd on macOS), TSV format; internal clipboard fallback when the system clipboard is unavailable
+- **Range selection** — drag cells, drag column/row headers; Delete/Backspace clears the entire range
+- **Column filter & sort** — popup UI on headers (`showFilter: true`); internal state, not yet exposed via ref
+- **Merge cells** — merge/unmerge via `ref.mergeCells()` / `ref.unmergeCells()`; span display on the grid
 - **Frozen columns** — `frozenColumnCount`
-- **Resize** — kéo viền header cột/hàng; callback `onColumnResize` / `onRowResize`
-- **Đa ngôn ngữ** — prop `locale` (partial override), mặc định tiếng Anh qua `DEFAULT_SPREADSHEET_LOCALE`
-- **Xử lý lỗi** — callback `onError` với mã lỗi typed (`TSpreadsheetErrorCode`)
-- **Chiều cao header cột** — prop `colHeaderHeight`
+- **Resize** — drag column/row header borders; `onColumnResize` / `onRowResize` callbacks
+- **Internationalization** — `locale` prop (partial override), English default via `DEFAULT_SPREADSHEET_LOCALE`
+- **Error handling** — `onError` callback with typed error codes (`TSpreadsheetErrorCode`)
+- **Column header height** — `colHeaderHeight` prop
 - Keyboard navigation: Arrow, Tab, Shift+Tab, Enter, Escape, F2, Delete, Backspace, Ctrl+C/V
-- **Filter-aware ops** — copy/paste/delete chỉ thao tác trên **visible rows** khi đang filter
+- **Filter-aware ops** — copy/paste/delete only operate on **visible rows** when a filter is active
 
-## Cấu trúc monorepo
+## Monorepo structure
 
 ```
 wms-sheets/
-├── packages/spreadsheet/   # wms-spreadsheet — thư viện chính
-└── apps/demo/              # App demo 20.000 rows × 26 cols
+├── packages/spreadsheet/   # wms-spreadsheet — main library
+└── apps/demo/              # Demo app: 20,000 rows × 26 cols
 ```
 
-## Cài đặt
+## Install
 
 ```bash
 pnpm install
 ```
 
-## Chạy demo
+## Run demo
 
 ```bash
 pnpm dev
-# hoặc
+# or
 cd apps/demo && npx vite
 ```
 
-Mở http://localhost:5173
+Open http://localhost:5173
 
-## Build thư viện
+## Build library
 
 ```bash
 pnpm build
-# hoặc
+# or
 cd packages/spreadsheet && npx vite build
 ```
 
@@ -59,7 +59,7 @@ Output: `dist/index.js`, `dist/spreadsheet.css`, `dist/index.d.ts`
 
 ---
 
-## Sử dụng
+## Usage
 
 ### Import
 
@@ -73,15 +73,15 @@ import {
 import "wms-spreadsheet/style.css";
 ```
 
-### Ví dụ với columns (khuyến nghị)
+### Example with columns (recommended)
 
 ```tsx
 const COLUMNS: ISpreadsheetColumn[] = [
-  { colName: "sku", colText: "Mã SKU", width: 120, showFilter: true },
-  { colName: "qty", colText: "SL", width: 80, meta: { type: "text" } },
+  { colName: "sku", colText: "SKU", width: 120, showFilter: true },
+  { colName: "qty", colText: "Qty", width: 80, meta: { type: "text" } },
   {
     colName: "active",
-    colText: "Kích hoạt",
+    colText: "Active",
     width: 90,
     meta: { type: "switch" },
     horizontalAlign: "center",
@@ -117,14 +117,14 @@ function App() {
 }
 ```
 
-### Ví dụ sparse (không có columns)
+### Sparse example (no columns)
 
 ```tsx
 function SimpleSheet() {
   const sheetRef = useRef<ISpreadsheetRef>(null);
 
   const fillRow = () => {
-    // Parent KHÔNG re-render — chỉ các cell thay đổi cập nhật
+    // Parent does NOT re-render — only changed cells update
     sheetRef.current?.setCellValues(
       Array.from({ length: 26 }, (_, col) => ({
         row: 0,
@@ -150,21 +150,21 @@ function SimpleSheet() {
 }
 ```
 
-### Dùng `colName` qua ref
+### Using `colName` via ref
 
 ```tsx
-// col có thể null khi truyền colName (cần prop columns)
+// col can be null when passing colName (requires columns prop)
 sheetRef.current?.setCellValue(0, null, "99", "qty");
 sheetRef.current?.setCellMeta(1, null, { disabled: true }, "sku");
 ```
 
-### Merge cells qua ref
+### Merge cells via ref
 
 ```tsx
-// Gộp selection hiện tại
+// Merge current selection
 sheetRef.current?.mergeCells();
 
-// Gộp range cụ thể
+// Merge a specific range
 sheetRef.current?.mergeCells({
   startRow: 0,
   endRow: 1,
@@ -172,10 +172,10 @@ sheetRef.current?.mergeCells({
   endCol: 2,
 });
 
-// Bỏ gộp mọi merge giao với selection hiện tại
+// Unmerge all merges intersecting the current selection
 sheetRef.current?.unmergeCells();
 
-// Bỏ gộp theo range cụ thể
+// Unmerge a specific range
 sheetRef.current?.unmergeCells({
   startRow: 0,
   endRow: 1,
@@ -190,105 +190,105 @@ sheetRef.current?.unmergeCells({
 
 ### `ISpreadsheetProps`
 
-| Prop | Kiểu | Mặc định | Mô tả |
-|------|------|----------|-------|
-| `rowCount` | `number` | — | Số hàng (bắt buộc) |
-| `columnCount` | `number` | — | Số cột (bắt buộc) |
-| `columns` | `ISpreadsheetColumn[]` | — | Định nghĩa cột (width, meta, filter, render) |
-| `rowHeight` | `number` | `28` | Chiều cao mỗi hàng (px) |
-| `colHeaderHeight` | `number` | `28` | Chiều cao hàng header cột (px) |
-| `columnWidth` | `number` | `100` | Chiều rộng mỗi cột mặc định (px) |
-| `overscan` | `number` | `3` | Số hàng/cột buffer ngoài viewport |
-| `className` | `string` | — | Class CSS cho wrapper |
-| `initialData` | `TSheetDataInput` | — | Dữ liệu ban đầu (load 1 lần lúc mount) |
-| `onChange` | `(changes: ICellInput[]) => void` | — | Callback khi **user** thao tác (edit, paste, delete, toggle) |
-| `onError` | `(error: ISpreadsheetError) => void` | — | Callback khi thao tác bị chặn (merge, copy/paste, filter/sort) |
-| `onColumnResize` | `(col, width) => void` | — | Sau khi user resize cột |
-| `onRowResize` | `(row, height) => void` | — | Sau khi user resize hàng |
-| `frozenColumnCount` | `number` | `0` | Số cột cố định từ trái (ví dụ `2` → cột A, B) |
-| `customCellRegistry` | `Record<string, ICustomCellDefinition>` | — | Registry render/editor cho `meta.customKey` |
-| `locale` | `DeepPartial<ISpreadsheetLocale>` | — | Override UI strings; mặc định tiếng Anh |
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `rowCount` | `number` | — | Number of rows (required) |
+| `columnCount` | `number` | — | Number of columns (required) |
+| `columns` | `ISpreadsheetColumn[]` | — | Column definitions (width, meta, filter, render) |
+| `rowHeight` | `number` | `28` | Row height (px) |
+| `colHeaderHeight` | `number` | `28` | Column header row height (px) |
+| `columnWidth` | `number` | `100` | Default column width (px) |
+| `overscan` | `number` | `3` | Rows/columns buffered outside the viewport |
+| `className` | `string` | — | CSS class for the wrapper |
+| `initialData` | `TSheetDataInput` | — | Initial data (loaded once on mount) |
+| `onChange` | `(changes: ICellInput[]) => void` | — | Callback when the **user** edits (edit, paste, delete, toggle) |
+| `onError` | `(error: ISpreadsheetError) => void` | — | Callback when an operation is blocked (merge, copy/paste, filter/sort) |
+| `onColumnResize` | `(col, width) => void` | — | After the user resizes a column |
+| `onRowResize` | `(row, height) => void` | — | After the user resizes a row |
+| `frozenColumnCount` | `number` | `0` | Number of columns frozen from the left (e.g. `2` → columns A, B) |
+| `customCellRegistry` | `Record<string, ICustomCellDefinition>` | — | Render/editor registry for `meta.customKey` |
+| `locale` | `DeepPartial<ISpreadsheetLocale>` | — | Override UI strings; English by default |
 
-> **Lưu ý:** `onChange` nhận mảng `{ row, col?, colName?, value }` và **không** fire khi gọi `ref.setCellValue`, `ref.setCellValues`, `ref.loadData`. Không có prop `data` controlled — tránh re-render toàn bảng.
+> **Note:** `onChange` receives an array of `{ row, col?, colName?, value }` and does **not** fire when calling `ref.setCellValue`, `ref.setCellValues`, or `ref.loadData`. There is no controlled `data` prop — avoids re-rendering the entire grid.
 
 ### `ISpreadsheetRef`
 
-| Method | Mô tả |
-|--------|-------|
-| `setCellValue(row, col, value, colName?)` | Set 1 cell — `col` có thể `null` nếu dùng `colName` |
-| `getCellValue(row, col, colName?)` | Đọc giá trị 1 cell |
-| `setCellValues(cells)` | Set hàng loạt — chỉ cell thay đổi re-render |
-| `loadData(data)` | Bulk load / thay thế data; reset filter, sort và merge |
-| `getData()` | Export toàn bộ data (format phụ thuộc có `columns` hay không) |
-| `getRowData(row)` | Export 1 dòng (cùng format với `getData()`) |
-| `getActiveCell()` | Lấy cell focus (điểm cuối selection) |
-| `setActiveCell({ row, col })` | Chọn 1 cell (collapse range) |
-| `getSelection()` | Lấy `{ anchor, focus }` |
+| Method | Description |
+|--------|-------------|
+| `setCellValue(row, col, value, colName?)` | Set one cell — `col` can be `null` when using `colName` |
+| `getCellValue(row, col, colName?)` | Read one cell value |
+| `setCellValues(cells)` | Batch set — only changed cells re-render |
+| `loadData(data)` | Bulk load / replace data; resets filter, sort, and merge |
+| `getData()` | Export all data (format depends on whether `columns` is set) |
+| `getRowData(row)` | Export one row (same format as `getData()`) |
+| `getActiveCell()` | Get the focused cell (selection endpoint) |
+| `setActiveCell({ row, col })` | Select one cell (collapse range) |
+| `getSelection()` | Get `{ anchor, focus }` |
 | `setSelection({ anchor, focus })` | Set range selection |
-| `setCellMeta(row, col, meta, colName?)` | Set meta cell — merge với column meta |
-| `getCellMeta(row, col, colName?)` | Đọc meta đã merge (column + cell) |
-| `setCellsMeta(cells)` | Set meta hàng loạt |
-| `mergeCells(range?)` | Gộp selection hiện tại hoặc `INormalizedRange`; trả `boolean` |
-| `unmergeCells(range?)` | Bỏ gộp mọi merge giao với selection hoặc `INormalizedRange` |
-| `getMergedRanges()` | Trả `IMergedRange[]` |
-| `hasMergedCells()` | Trả `boolean` |
+| `setCellMeta(row, col, meta, colName?)` | Set cell meta — merged with column meta |
+| `getCellMeta(row, col, colName?)` | Read merged meta (column + cell) |
+| `setCellsMeta(cells)` | Batch set meta |
+| `mergeCells(range?)` | Merge current selection or `INormalizedRange`; returns `boolean` |
+| `unmergeCells(range?)` | Unmerge all merges intersecting selection or `INormalizedRange` |
+| `getMergedRanges()` | Returns `IMergedRange[]` |
+| `hasMergedCells()` | Returns `boolean` |
 
 ### `ISpreadsheetColumn`
 
-| Field | Kiểu | Mô tả |
-|-------|------|-------|
-| `colName` | `string` | Key trong object data và API `colName` (bắt buộc) |
-| `width` | `number` | Chiều rộng cột (px) |
-| `colText` | `string` | Text header; mặc định `colName` |
-| `colRender` | `(params) => ReactNode` | Custom render header; ưu tiên hơn `colText` |
-| `showFilter` | `boolean` | Hiển thị icon/filter popup ở header |
-| `meta` | `Partial<ICellMeta>` | Meta mặc định cho toàn cột |
-| `horizontalAlign` | `"left" \| "center" \| "right"` | Căn ngang body cell (mặc định `"left"`) |
-| `verticalAlign` | `"top" \| "middle" \| "bottom"` | Căn dọc body cell (mặc định `"top"`) |
-| `cellRender` | `(params) => ReactNode` | Override render body cell |
-| `cellEditor` | `(params) => ReactNode` | Override editor cell |
+| Field | Type | Description |
+|-------|------|-------------|
+| `colName` | `string` | Key in data objects and `colName` API (required) |
+| `width` | `number` | Column width (px) |
+| `colText` | `string` | Header text; defaults to `colName` |
+| `colRender` | `(params) => ReactNode` | Custom header render; takes precedence over `colText` |
+| `showFilter` | `boolean` | Show filter icon/popup on the header |
+| `meta` | `Partial<ICellMeta>` | Default meta for the entire column |
+| `horizontalAlign` | `"left" \| "center" \| "right"` | Horizontal body cell alignment (default `"left"`) |
+| `verticalAlign` | `"top" \| "middle" \| "bottom"` | Vertical body cell alignment (default `"top"`) |
+| `cellRender` | `(params) => ReactNode` | Override body cell render |
+| `cellEditor` | `(params) => ReactNode` | Override cell editor |
 
 ### Cell types
 
-| Type | Cách edit | Ghi chú |
-|------|-----------|---------|
-| `text` | Double-click / F2 / gõ ký tự | Mặc định |
-| `select` | Popup chọn | `options: ISelectOption[]` |
-| `multiSelect` | Popup chọn nhiều | `options: ISelectOption[]` (hỗ trợ `color`); giá trị `string[]` (id); view hiển thị nhiều pill màu |
-| `boolean` | Click toggle | Không vào edit mode |
-| `switch` | Click toggle | Giá trị `"true"` / `"false"` |
+| Type | How to edit | Notes |
+|------|-------------|-------|
+| `text` | Double-click / F2 / type | Default |
+| `select` | Selection popup | `options: ISelectOption[]` |
+| `multiSelect` | Multi-select popup | `options: ISelectOption[]` (supports `color`); value is `string[]` (ids); view shows colored pills |
+| `boolean` | Click toggle | Does not enter edit mode |
+| `switch` | Click toggle | Values `"true"` / `"false"` |
 | `date` | Date picker | `dateFormat`, `minDate`, `maxDate` |
-| `number` | Input số | `maxValue`, `decimalPlaces`; chỉ `>= 0` |
-| `custom` | Theo `customCellRegistry` | `customKey` trong meta |
+| `number` | Number input | `maxValue`, `decimalPlaces`; only `>= 0` |
+| `custom` | Via `customCellRegistry` | `customKey` in meta |
 
-Cell `disabled` không cho edit/paste; `invalid` hiển thị trạng thái lỗi.
+`disabled` cells cannot be edited or pasted into; `invalid` shows an error state.
 
-### Định dạng dữ liệu
+### Data formats
 
 **Input (`initialData` / `loadData`)** — `TSheetDataInput`:
 
-| Format | Ví dụ | Ghi chú |
-|--------|-------|---------|
+| Format | Example | Notes |
+|--------|---------|-------|
 | Sparse | `{ "0:0": "A1", "14:2": "Hello" }` | Key `"row:col"` (zero-based) |
 | 2D array | `[["A1", "B1"], ["A2", "B2"]]` | |
-| Object array | `[{ sku: "A001", qty: "10" }]` | **Bắt buộc** có prop `columns` |
+| Object array | `[{ sku: "A001", qty: "10" }]` | **Requires** `columns` prop |
 
 **Output (`getData` / `getRowData`)**:
 
-| Có `columns` | `getData()` | `getRowData(row)` |
-|--------------|-------------|-------------------|
-| Không | `ISheetData` sparse | Sparse keys của dòng đó |
-| Có | `TSheetRowRecord[]` (chỉ dòng có data) | `TSheetRowRecord` |
+| Has `columns` | `getData()` | `getRowData(row)` |
+|---------------|-------------|-------------------|
+| No | `ISheetData` sparse | Sparse keys for that row |
+| Yes | `TSheetRowRecord[]` (rows with data only) | `TSheetRowRecord` |
 
-`TCellValue = string | string[]` — cột `multiSelect` trả `string[]` (mảng id).
+`TCellValue = string | string[]` — `multiSelect` columns return `string[]` (array of ids).
 
-`ICellInput` và `ICellMetaInput` hỗ trợ chỉ định cột bằng `col` (index) hoặc `colName`.
+`ICellInput` and `ICellMetaInput` support specifying columns via `col` (index) or `colName`.
 
 ```typescript
 type ISheetData = Record<string, string>;
 type TSheetRowRecord = Record<string, TCellValue>;
 
-// Ví dụ sparse: cell C15 (row=14, col=2)
+// Sparse example: cell C15 (row=14, col=2)
 const data: ISheetData = { "14:2": "Hello", "0:0": "A1" };
 ```
 
@@ -296,13 +296,13 @@ const data: ISheetData = { "14:2": "Hello", "0:0": "A1" };
 
 ## Merge cells
 
-Gộp/bỏ gộp ô qua ref API — không có UI toolbar tích hợp.
+Merge/unmerge cells via the ref API — no built-in toolbar UI.
 
 ```tsx
-// Gộp range đang chọn
+// Merge current selection
 const merged = sheetRef.current?.mergeCells();
 
-// Gộp range cụ thể
+// Merge a specific range
 sheetRef.current?.mergeCells({
   startRow: 0,
   endRow: 1,
@@ -310,10 +310,10 @@ sheetRef.current?.mergeCells({
   endCol: 2,
 });
 
-// Bỏ gộp range đang chọn (mọi merge giao với selection)
+// Unmerge current selection (all merges intersecting selection)
 sheetRef.current?.unmergeCells();
 
-// Bỏ gộp theo range cụ thể
+// Unmerge a specific range
 sheetRef.current?.unmergeCells({
   startRow: 0,
   endRow: 1,
@@ -321,31 +321,31 @@ sheetRef.current?.unmergeCells({
   endCol: 2,
 });
 
-// Kiểm tra trạng thái
+// Check state
 sheetRef.current?.hasMergedCells();
 sheetRef.current?.getMergedRanges();
 ```
 
-**Hạn chế:**
+**Limitations:**
 
-- Không merge khi đang filter hoặc sort
-- Không filter/sort khi sheet có merged cells (UI filter bị disable; gọi filter/sort fire `onError`)
-- Copy range chứa merged cell → `MERGE_COPY_NOT_ALLOWED`
-- Paste vào range chứa merged cell → `MERGE_PASTE_NOT_ALLOWED`
-- `loadData()` reset merge cùng filter và sort
-- Thao tác meta/value trên vùng merge luôn resolve về **anchor cell** (ô góc trên-trái)
+- Cannot merge while filtering or sorting
+- Cannot filter/sort when the sheet has merged cells (filter UI disabled; filter/sort calls fire `onError`)
+- Copy range containing merged cells → `MERGE_COPY_NOT_ALLOWED`
+- Paste into range containing merged cells → `MERGE_PASTE_NOT_ALLOWED`
+- `loadData()` resets merge along with filter and sort
+- Meta/value operations on merged regions always resolve to the **anchor cell** (top-left cell)
 
 ---
 
 ## Locale / i18n
 
-Prop `locale` nhận `DeepPartial<ISpreadsheetLocale>` — merge shallow với `DEFAULT_SPREADSHEET_LOCALE` (tiếng Anh).
+The `locale` prop accepts `DeepPartial<ISpreadsheetLocale>` — shallow-merged with `DEFAULT_SPREADSHEET_LOCALE` (English).
 
-3 nhóm string:
+Three string groups:
 
-- `errors` — thông báo lỗi merge, copy/paste, filter/sort
-- `filter` — UI popup filter/sort (bao gồm `conditions` cho từng điều kiện lọc)
-- `datepicker` — UI date picker (`monthNames` cần đủ 12 phần tử, `weekdayLabels` cần đủ 7)
+- `errors` — merge, copy/paste, filter/sort error messages
+- `filter` — filter/sort popup UI (includes `conditions` for each filter condition)
+- `datepicker` — date picker UI (`monthNames` must have 12 entries, `weekdayLabels` must have 7)
 
 ```tsx
 import { Spreadsheet } from "wms-spreadsheet";
@@ -353,49 +353,49 @@ import { Spreadsheet } from "wms-spreadsheet";
 <Spreadsheet
   locale={{
     filter: {
-      sortAsc: "Sắp xếp A-Z",
-      sortDesc: "Sắp xếp Z-A",
-      ok: "Đồng ý",
-      cancel: "Hủy",
+      sortAsc: "Sort A-Z",
+      sortDesc: "Sort Z-A",
+      ok: "OK",
+      cancel: "Cancel",
     },
     datepicker: {
-      today: "Hôm nay",
-      clear: "Xóa",
+      today: "Today",
+      clear: "Clear",
       monthNames: [
-        "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4",
-        "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8",
-        "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12",
+        "January", "February", "March", "April",
+        "May", "June", "July", "August",
+        "September", "October", "November", "December",
       ],
-      weekdayLabels: ["T2", "T3", "T4", "T5", "T6", "T7", "CN"],
+      weekdayLabels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     },
     errors: {
-      mergeInvalidRange: "Vui lòng chọn vùng ô để gộp.",
+      mergeInvalidRange: "Please select a cell range to merge.",
     },
   }}
 />
 ```
 
-Export hỗ trợ: `DEFAULT_SPREADSHEET_LOCALE`, `resolveSpreadsheetLocale(partial?)`.
+Exported helpers: `DEFAULT_SPREADSHEET_LOCALE`, `resolveSpreadsheetLocale(partial?)`.
 
 ---
 
 ## `onError`
 
-Callback `onError` fire khi thao tác bị chặn. Payload: `ISpreadsheetError` với `code` và `message` (message lấy từ `locale`).
+The `onError` callback fires when an operation is blocked. Payload: `ISpreadsheetError` with `code` and `message` (message from `locale`).
 
-| Code | Khi nào |
-|------|---------|
-| `MERGE_INVALID_RANGE` | Merge không có range hợp lệ |
-| `MERGE_OVERLAP` | Range chồng lấn merge khác |
-| `MERGE_SORT_FILTER_ACTIVE` | Merge khi filter/sort active; hoặc filter/sort khi có merge |
-| `MERGE_COPY_NOT_ALLOWED` | Copy range có merged cell |
-| `MERGE_PASTE_NOT_ALLOWED` | Paste vào range có merged cell |
+| Code | When |
+|------|------|
+| `MERGE_INVALID_RANGE` | Merge with no valid range |
+| `MERGE_OVERLAP` | Range overlaps another merge |
+| `MERGE_SORT_FILTER_ACTIVE` | Merge while filter/sort active; or filter/sort while merges exist |
+| `MERGE_COPY_NOT_ALLOWED` | Copy range contains merged cells |
+| `MERGE_PASTE_NOT_ALLOWED` | Paste into range contains merged cells |
 
 ```tsx
 <Spreadsheet
   onError={(error) => {
     // error.code: TSpreadsheetErrorCode
-    // error.message: string (đã localize)
+    // error.message: string (localized)
     toast.error(error.message);
   }}
 />
@@ -405,67 +405,67 @@ Callback `onError` fire khi thao tác bị chặn. Payload: `ISpreadsheetError` 
 
 ## Filter & sort
 
-- Bật bằng `showFilter: true` trên `ISpreadsheetColumn`
-- Popup filter hỗ trợ sort asc/desc, điều kiện lọc (`isEqualTo`, `contains`, `isEmpty`, …) và checkbox chọn giá trị
-- Khi filter active: thứ tự hiển thị hàng thay đổi; copy/paste/delete map theo **visible rows** (không ảnh hưởng row bị ẩn)
-- Filter/sort state **chưa expose** qua ref — reset khi `loadData()` hoặc đổi `rowCount`
+- Enable with `showFilter: true` on `ISpreadsheetColumn`
+- Filter popup supports sort asc/desc, filter conditions (`isEqualTo`, `contains`, `isEmpty`, …), and value checkboxes
+- When a filter is active: row display order changes; copy/paste/delete map to **visible rows** (hidden rows unaffected)
+- Filter/sort state is **not yet exposed** via ref — reset on `loadData()` or when `rowCount` changes
 
-**Tương tác với merge cells:**
+**Interaction with merge cells:**
 
-- Khi `hasMergedCells()` → sort/filter UI bị disable
-- Khi filter hoặc sort đang active → `mergeCells()` bị chặn (fire `onError`)
-
----
-
-## Phím tắt
-
-| Phím | Hành động |
-|------|-----------|
-| Click | Chọn 1 cell |
-| Giữ chuột + kéo (body) | Chọn cell range |
-| Giữ chuột + kéo (header cột) | Chọn cả cột |
-| Giữ chuột + kéo (header hàng) | Chọn cả hàng |
-| Double-click / Enter / F2 | Bắt đầu edit (nếu cell editable) |
-| Gõ ký tự | Edit (thay thế nội dung); không áp cell `date` |
-| Arrow keys | Di chuyển (collapse range về 1 cell) |
-| Tab / Shift+Tab | Di chuyển sang phải / trái |
-| Enter (khi edit) | Commit + xuống cell dưới |
-| Tab (khi edit) | Commit + sang cell phải |
-| Ctrl+C / Cmd+C | Copy range (ghi TSV ra clipboard) |
-| Ctrl+V / Cmd+V | Paste tại focus cell |
-| Delete / Backspace | Xóa nội dung cell hoặc cả range |
-| Escape | Hủy edit |
-| Kéo viền header | Resize cột / hàng |
-
-> **Chưa hỗ trợ:** Shift+Click, Shift+Arrow mở rộng range.
+- When `hasMergedCells()` → sort/filter UI is disabled
+- When filter or sort is active → `mergeCells()` is blocked (fires `onError`)
 
 ---
 
-## Hiệu năng — phạm vi re-render
+## Keyboard shortcuts
 
-| Hành động | Parent | Spreadsheet | Cell |
-|-----------|--------|-------------|------|
-| `ref.setCellValue(r,c,v)` | Không | Không | Chỉ cell (r,c) nếu visible |
-| `ref.setCellValues([...])` | Không | Không | Chỉ cell thay đổi |
-| `ref.setCellMeta` / `setCellsMeta` | Không | Không | Chỉ cell meta thay đổi |
-| `ref.mergeCells` / `unmergeCells` | Không | Có (merge layout) | Re-mount cell trong vùng merge |
-| User scroll | Không | Grid (virtual range) | Mount/unmount visible |
-| User kéo range | Không | Có (selection state) | Không (overlay 1 DOM) |
-| Copy range | Không | Có (clipboard overlay) | Không |
-| Paste range | Không | Không | Chỉ cell được ghi |
-| Delete range | Không | Không | Chỉ cell có data trong range |
-| User edit cell | Không | Không | Cell được edit sau commit |
-| Filter / sort | Không | Có (display row order) | Re-mount theo visible rows |
+| Key | Action |
+|-----|--------|
+| Click | Select one cell |
+| Hold + drag (body) | Select cell range |
+| Hold + drag (column header) | Select entire column |
+| Hold + drag (row header) | Select entire row |
+| Double-click / Enter / F2 | Start editing (if cell is editable) |
+| Type | Edit (replace content); does not apply to `date` cells |
+| Arrow keys | Move (collapse range to one cell) |
+| Tab / Shift+Tab | Move right / left |
+| Enter (while editing) | Commit + move down |
+| Tab (while editing) | Commit + move right |
+| Ctrl+C / Cmd+C | Copy range (writes TSV to clipboard) |
+| Ctrl+V / Cmd+V | Paste at focus cell |
+| Delete / Backspace | Clear cell content or entire range |
+| Escape | Cancel edit |
+| Drag header border | Resize column / row |
+
+> **Not yet supported:** Shift+Click, Shift+Arrow to extend range.
 
 ---
 
-## Kiến trúc
+## Performance — re-render scope
+
+| Action | Parent | Spreadsheet | Cell |
+|--------|--------|-------------|------|
+| `ref.setCellValue(r,c,v)` | No | No | Only cell (r,c) if visible |
+| `ref.setCellValues([...])` | No | No | Only changed cells |
+| `ref.setCellMeta` / `setCellsMeta` | No | No | Only cells with meta changes |
+| `ref.mergeCells` / `unmergeCells` | No | Yes (merge layout) | Re-mount cells in merge region |
+| User scroll | No | Grid (virtual range) | Mount/unmount visible |
+| User drag range | No | Yes (selection state) | No (single overlay DOM) |
+| Copy range | No | Yes (clipboard overlay) | No |
+| Paste range | No | No | Only written cells |
+| Delete range | No | No | Only cells with data in range |
+| User edit cell | No | No | Edited cell after commit |
+| Filter / sort | No | Yes (display row order) | Re-mount by visible rows |
+
+---
+
+## Architecture
 
 ```
 App (ref)
   ↓
 CellStore (values) + MetaStore (meta) + MergeStore (merged ranges)
-  ↓ notify theo key "row:col"
+  ↓ notify by key "row:col"
 SpreadsheetLocaleContext (locale strings)
   ↓
 SpreadsheetCell (useSyncExternalStore)
@@ -476,35 +476,35 @@ SpreadsheetGrid (useVirtualWindow + frozen pane)
 
 ### Virtual window
 
-- `computeVisibleRange` — tính hàng/cột visible từ scroll position
-- `useVirtualWindow` — rAF batch scroll, ResizeObserver cho viewport
-- Layout 4 pane: corner, column header, row header, body (headers sync qua CSS transform)
-- `FrozenColumnPane` — cột cố định tách pane scrollable
+- `computeVisibleRange` — compute visible rows/columns from scroll position
+- `useVirtualWindow` — rAF-batched scroll, ResizeObserver for viewport
+- 4-pane layout: corner, column header, row header, body (headers synced via CSS transform)
+- `FrozenColumnPane` — frozen columns in a separate scrollable pane
 
-### Hooks & utils chính
+### Key hooks & utils
 
-- `useClipboard` — copy/paste TSV, clipboard nội bộ
+- `useClipboard` — copy/paste TSV, internal clipboard
 - `useRangeSelection` — cell / column / row selection
-- `useKeyboardNavigation` — phím tắt
-- `useHeaderResize` — resize cột/hàng
-- `useMergeRevision` — subscribe thay đổi merge layout
+- `useKeyboardNavigation` — keyboard shortcuts
+- `useHeaderResize` — column/row resize
+- `useMergeRevision` — subscribe to merge layout changes
 - `columnFilter` / `rowSort` — filter & sort UI
-- `visibleRowLayout` — map selection/clipboard theo visible rows khi filter
-- `mergeCell` — logic validate/expand merge range
+- `visibleRowLayout` — map selection/clipboard to visible rows when filtered
+- `mergeCell` — validate/expand merge range logic
 
 ---
 
-## Phạm vi v1 (chưa hỗ trợ)
+## v1 scope (not yet supported)
 
-- Công thức / formula bar
+- Formulas / formula bar
 - Drag fill handle
-- Shift+Click / Shift+Arrow mở rộng range
+- Shift+Click / Shift+Arrow to extend range
 - Controlled `data` prop
-- Expose filter/sort state qua ref API
+- Expose filter/sort state via ref API
 
 ---
 
-## Export khác
+## Other exports
 
 ```typescript
 import {
@@ -528,22 +528,22 @@ cellKey(14, 2);    // "14:2"
 columnLabel(2);    // "C"
 ```
 
-Types export thêm: `ISpreadsheetLocale`, `IMergedRange`, `INormalizedRange`, `ISpreadsheetError`, `TSpreadsheetErrorCode`, `TCellValue`, `TSheetRowRecord`, `DeepPartial`, …
+Additional exported types: `ISpreadsheetLocale`, `IMergedRange`, `INormalizedRange`, `ISpreadsheetError`, `TSpreadsheetErrorCode`, `TCellValue`, `TSheetRowRecord`, `DeepPartial`, …
 
-## Publish lên npm
+## Publish to npm
 
 ```bash
-# Kiểm tra nội dung package trước khi publish
+# Inspect package contents before publishing
 pnpm pack:spreadsheet
 
-# Đăng nhập npm (lần đầu)
+# Log in to npm (first time)
 npm login
 
-# Publish public lên npm
+# Publish publicly to npm
 pnpm publish:spreadsheet
 ```
 
-Sau khi publish, cài từ npm:
+After publishing, install from npm:
 
 ```bash
 pnpm add wms-spreadsheet
@@ -551,4 +551,4 @@ pnpm add wms-spreadsheet
 
 ## License
 
-MIT — xem [packages/spreadsheet/LICENSE](packages/spreadsheet/LICENSE).
+MIT — see [packages/spreadsheet/LICENSE](packages/spreadsheet/LICENSE).

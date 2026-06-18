@@ -1,18 +1,18 @@
 # wms-spreadsheet
 
-Thư viện Spreadsheet cho React — giao diện giống Google Sheets, hỗ trợ **10.000+ dòng** mượt mà nhờ virtual window.
+React Spreadsheet library — Google Sheets-like UI, smoothly handles **10,000+ rows** via a virtual window.
 
-## Cài đặt
+## Install
 
 ```bash
 npm install wms-spreadsheet
-# hoặc
+# or
 pnpm add wms-spreadsheet
 ```
 
-**Peer dependencies:** `react` và `react-dom` (^18 hoặc ^19).
+**Peer dependencies:** `react` and `react-dom` (^18 or ^19).
 
-## Sử dụng nhanh
+## Quick start
 
 ```tsx
 import { useRef } from "react";
@@ -24,9 +24,9 @@ import {
 import "wms-spreadsheet/style.css";
 
 const COLUMNS: ISpreadsheetColumn[] = [
-  { colName: "sku", colText: "Mã SKU", width: 120, showFilter: true },
-  { colName: "qty", colText: "SL", width: 80 },
-  { colName: "active", colText: "Kích hoạt", width: 90, meta: { type: "switch" } },
+  { colName: "sku", colText: "SKU", width: 120, showFilter: true },
+  { colName: "qty", colText: "Qty", width: 80 },
+  { colName: "active", colText: "Active", width: 90, meta: { type: "switch" } },
 ];
 
 const INITIAL_DATA = [
@@ -50,17 +50,17 @@ function App() {
 }
 ```
 
-## Tính năng
+## Features
 
-- Virtual window 2 chiều — chỉ render cell trong viewport
-- API imperative qua `ref` — `setCellValue`, `loadData`, `mergeCells`, …
+- Two-dimensional virtual window — only renders cells in the viewport
+- Imperative API via `ref` — `setCellValue`, `loadData`, `mergeCells`, …
 - Cell types: `text`, `select`, `multiSelect`, `boolean`, `switch`, `date`, `custom`
-- Copy/paste range (Ctrl+C / Ctrl+V), filter & sort cột, frozen columns
-- Merge cells, resize cột/hàng, đa ngôn ngữ (`locale` prop)
+- Copy/paste range (Ctrl+C / Ctrl+V), column filter & sort, frozen columns
+- Merge cells, column/row resize, internationalization (`locale` prop)
 
-## Tài liệu đầy đủ
+## Full documentation
 
-Xem [README trên GitHub](https://github.com/truongnguyen5x/wms-spreadsheet#readme) để biết API ref, cell meta, custom cells, locale, xử lý lỗi, v.v.
+See the [README on GitHub](https://github.com/truongnguyen5x/wms-spreadsheet#readme) for ref API, cell meta, custom cells, locale, error handling, and more.
 
 ## License
 
