@@ -15,7 +15,7 @@ export interface INumberCellEditorProps {
   width: number;
   height: number;
   initialInput?: string;
-  onCommit: (value: string, direction?: ICommitDirection) => void;
+  onCommit: (value: string, direction: ICommitDirection) => void;
   onCancel: () => void;
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "wms-spreadsheet",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "React spreadsheet với virtual window, API imperative qua ref — hỗ trợ 10.000+ dòng mượt mà",
   "type": "module",
   "main": "./dist/index.js",

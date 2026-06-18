@@ -191,7 +191,6 @@ export function applyBackspace(state: IDateFieldState): IDateFieldState {
   if (activeSection.query === "") {
     if (activeIndex > 0) {
       const prevIndex = activeIndex - 1;
-      const prevSection = state.sections[prevIndex];
       const sections = state.sections.map((s, i) =>
         i === prevIndex ? { ...s, query: "" } : s,
       );
