@@ -17,6 +17,7 @@ import { useRangeSelection } from "./hooks/useRangeSelection";
 import { useGridDimensions } from "./hooks/useGridDimensions";
 import { useHeaderResize } from "./hooks/useHeaderResize";
 import { useMergeRevision } from "./hooks/useMergeRevision";
+import { useSpreadsheetHostHeight } from "./hooks/useSpreadsheetHostHeight";
 import {
   CELL_LINE_HEIGHT,
   CELL_VERTICAL_PADDING,
@@ -63,6 +64,7 @@ import { sortDisplayRowOrder } from "./utils/rowSort";
 import { buildVisibleRowLayout } from "./utils/visibleRowLayout";
 import { resolveSpreadsheetLocale } from "./locale/resolveSpreadsheetLocale";
 import { SpreadsheetLocaleProvider } from "./context/SpreadsheetLocaleContext";
+import styles from "./styles/spreadsheet.module.scss";
 
 function buildIdentityRowOrder(rowCount: number): number[] {
   return Array.from({ length: rowCount }, (_, index) => index);
@@ -637,12 +639,25 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       onPaste,
     });
     const hasMergedCells = mergeStore.hasAny();
+    const { needsViewportFallback, fallbackHeightPx } =
+      useSpreadsheetHostHeight(gridContainerRef);
+    const hostClassName = [
+      styles.host,
+      needsViewportFallback ? styles.hostFallback : "",
+      className,
+    ]
+      .filter(Boolean)
+      .join(" ");
     return (
       <SpreadsheetLocaleProvider locale={locale}>
         <div
           ref={gridContainerRef}
-          className={className}
-          style={{ width: "100%", height: "100%", outline: "none" }}
+          className={hostClassName}
+          style={
+            needsViewportFallback && fallbackHeightPx !== null
+              ? { height: fallbackHeightPx, maxHeight: "100vh" }
+              : undefined
+          }
           tabIndex={0}
         >
           <SpreadsheetGrid

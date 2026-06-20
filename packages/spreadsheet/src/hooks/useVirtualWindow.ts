@@ -106,13 +106,25 @@ export function useVirtualWindow(
     const el = scrollRef.current;
     if (!el) return;
     const updateViewport = () => {
-      setState((prev) => ({
-        ...prev,
-        viewportWidth: el.clientWidth,
-        viewportHeight: el.clientHeight,
-        scrollTop: el.scrollTop,
-        scrollLeft: el.scrollLeft,
-      }));
+      const nextWidth = el.clientWidth;
+      const nextHeight = el.clientHeight;
+      setState((prev) => {
+        if (
+          prev.viewportWidth === nextWidth &&
+          prev.viewportHeight === nextHeight &&
+          prev.scrollTop === el.scrollTop &&
+          prev.scrollLeft === el.scrollLeft
+        ) {
+          return prev;
+        }
+        return {
+          ...prev,
+          viewportWidth: nextWidth,
+          viewportHeight: nextHeight,
+          scrollTop: el.scrollTop,
+          scrollLeft: el.scrollLeft,
+        };
+      });
     };
     updateViewport();
     const observer = new ResizeObserver(updateViewport);
