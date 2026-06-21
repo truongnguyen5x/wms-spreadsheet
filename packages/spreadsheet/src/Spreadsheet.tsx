@@ -209,8 +209,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
       },
       [setSelection],
     );
-    useImperativeHandle(
-      ref,
+    const spreadsheetApi = useMemo<ISpreadsheetRef>(
       () => ({
         setCellValue(
           row: number,
@@ -408,6 +407,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
         locale,
       ],
     );
+    useImperativeHandle(ref, () => spreadsheetApi, [spreadsheetApi]);
     useEffect(() => {
       const identity = buildIdentityRowOrder(rowCount);
       baselineRowOrderRef.current = identity;
@@ -669,6 +669,7 @@ export const Spreadsheet = forwardRef<ISpreadsheetRef, ISpreadsheetProps>(
           frozenColumnCount={frozenColumnCount}
           columns={columns}
           customCellRegistry={customCellRegistry}
+          api={spreadsheetApi}
           dimensions={dimensions}
           visibleRowLayout={visibleRowLayout}
           overscan={overscan}

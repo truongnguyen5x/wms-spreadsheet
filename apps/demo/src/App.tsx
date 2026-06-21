@@ -47,7 +47,7 @@ const CUSTOM_CELLS: Record<string, ICustomCellDefinition> = {
           {value === "done" ? "Done" : "Pending"}
         </span>
       ) : null,
-    editor: ({ value, onCommit, onCancel }) => (
+    editor: ({ value, onCommit, onCancel, api, row }) => (
       <select
         style={{
           position: "absolute",
@@ -61,7 +61,10 @@ const CUSTOM_CELLS: Record<string, ICustomCellDefinition> = {
         }}
         value={value}
         autoFocus
-        onChange={(e) => onCommit(e.target.value)}
+        onChange={(e) => {
+          onCommit(e.target.value);
+          console.log("Row data:", api.getRowData(row));
+        }}
         onBlur={onCancel}
       >
         <option value="pending">Pending</option>

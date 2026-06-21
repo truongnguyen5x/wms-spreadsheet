@@ -53,6 +53,7 @@ export interface ICellEditorParams extends ICellRenderParams {
   height: number;
   onCommit: (value: string, direction?: ICommitDirection) => void;
   onCancel: () => void;
+  api: ISpreadsheetRef;
 }
 
 export interface ICustomCellDefinition {

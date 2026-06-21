@@ -5,6 +5,7 @@ import type {
   ICustomCellDefinition,
   ICommitDirection,
   ISpreadsheetColumn,
+  ISpreadsheetRef,
 } from "../../types";
 import styles from "../../styles/spreadsheet.module.scss";
 import { CellEditor } from "./CellEditor";
@@ -71,6 +72,7 @@ export interface ICellEditorRouterProps {
   meta: ICellMeta;
   column?: ISpreadsheetColumn;
   customCellRegistry?: Record<string, ICustomCellDefinition>;
+  api: ISpreadsheetRef;
   top: number;
   left: number;
   width: number;
@@ -87,6 +89,7 @@ export function CellEditorRouter({
   meta,
   column,
   customCellRegistry,
+  api,
   top,
   left,
   width,
@@ -110,6 +113,7 @@ export function CellEditorRouter({
       onCommit: (nextValue: string, direction?: ICommitDirection) =>
         onCommit(nextValue, direction ?? "stay"),
       onCancel,
+      api,
     };
 
     const customEditor = renderCustomEditor(

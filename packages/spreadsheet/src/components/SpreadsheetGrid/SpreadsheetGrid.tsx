@@ -11,6 +11,7 @@ import {
   type ISelection,
   type INormalizedRange,
   type ISpreadsheetColumn,
+  type ISpreadsheetRef,
   type TSortDirection,
 } from "../../types";
 import { useVirtualWindow } from "../../hooks/useVirtualWindow";
@@ -77,6 +78,7 @@ export interface ISpreadsheetGridProps {
   frozenColumnCount?: number;
   columns?: ISpreadsheetColumn[];
   customCellRegistry?: Record<string, ICustomCellDefinition>;
+  api: ISpreadsheetRef;
   dimensions: IGridDimensions;
   visibleRowLayout: IVisibleRowLayout;
   overscan: number;
@@ -124,6 +126,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
   frozenColumnCount: frozenColumnCountProp,
   columns,
   customCellRegistry,
+  api,
   dimensions,
   visibleRowLayout,
   overscan,
@@ -470,6 +473,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
         meta={meta}
         column={columns?.[col]}
         customCellRegistry={customCellRegistry}
+        api={api}
         top={getRowTopByDisplayIndex(displayRow)}
         left={dimensions.getColumnLeft(col)}
         width={width}
@@ -490,6 +494,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     mergeStore,
     columns,
     customCellRegistry,
+    api,
     dimensions,
     onCommitEdit,
     onCancelEdit,
@@ -596,6 +601,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
         meta={meta}
         column={columns?.[col]}
         customCellRegistry={customCellRegistry}
+        api={api}
         top={getRowTopByDisplayIndex(displayRow)}
         left={left}
         width={width}
@@ -617,6 +623,7 @@ export const SpreadsheetGrid = memo(function SpreadsheetGrid({
     mergeStore,
     columns,
     customCellRegistry,
+    api,
     dimensions,
     frozenWidth,
     onCommitEdit,
